@@ -30,7 +30,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, WebSocket
-from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
@@ -93,25 +93,28 @@ class ServerManager:
         in-process via ws_proxy.py.
         """
         port = self._find_free_port()
+        logger.info("Found free port %d for %s game", port, game_type)
 
         freeciv_bin = os.getenv("FREECIV_BIN", os.path.expanduser("~/freeciv/bin/freeciv-web"))
         freeciv_data = os.getenv("FREECIV_DATA_PATH", os.path.expanduser("~/freeciv/share/freeciv/"))
+        logger.info("freeciv binary: %s, data: %s", freeciv_bin, freeciv_data)
 
         env = {**os.environ, "FREECIV_DATA_PATH": freeciv_data}
 
         serv_script = f"pubscript_{game_type}.serv"
+        log_file = self._log_dir / f"server-{port}.log"
         self._servers[port] = subprocess.Popen(
             [freeciv_bin, "--debug", "1", "--port", str(port),
              "--Announce", "none", "--exit-on-end", "--quitidle", "120",
              "--read", serv_script],
-            stdout=open(self._log_dir / f"server-{port}.log", "w"),
+            stdout=open(log_file, "w"),
             stderr=subprocess.STDOUT,
             env=env,
             cwd=str(PROJECT_ROOT / "publite2"),
         )
 
-        logger.info("Spawned freeciv-server on port %d (pid %d)",
-                     port, self._servers[port].pid)
+        logger.info("Spawned freeciv-server on port %d (pid %d), log=%s",
+                     port, self._servers[port].pid, log_file)
         return port
 
     def kill_game(self, port: int):
@@ -147,6 +150,48 @@ class ServerManager:
 
 
 # ---------------------------------------------------------------------------
+# Event Bus for SSE observer
+# ---------------------------------------------------------------------------
+class EventBus:
+    """Simple pub/sub for server-sent events to observer clients."""
+
+    def __init__(self, max_history: int = 200):
+        self._subscribers: list[asyncio.Queue] = []
+        self._history: list[dict] = []
+        self._max_history = max_history
+
+    def publish(self, event: dict):
+        self._history.append(event)
+        if len(self._history) > self._max_history:
+            self._history = self._history[-self._max_history:]
+        dead = []
+        for q in self._subscribers:
+            try:
+                q.put_nowait(event)
+            except asyncio.QueueFull:
+                dead.append(q)
+        for q in dead:
+            self._subscribers.remove(q)
+
+    def subscribe(self) -> asyncio.Queue:
+        q: asyncio.Queue = asyncio.Queue(maxsize=100)
+        for evt in self._history[-20:]:
+            try:
+                q.put_nowait(evt)
+            except asyncio.QueueFull:
+                break
+        self._subscribers.append(q)
+        return q
+
+    def unsubscribe(self, q: asyncio.Queue):
+        if q in self._subscribers:
+            self._subscribers.remove(q)
+
+
+event_bus = EventBus()
+
+
+# ---------------------------------------------------------------------------
 # Agent Orchestrator
 # ---------------------------------------------------------------------------
 class AgentOrchestrator:
@@ -159,7 +204,10 @@ class AgentOrchestrator:
 
     async def create_game(self, agent_configs: list[dict], server_port: int = None,
                           aifill: int = 0):
+        logger.info("Creating game with %d agents, server_port=%s, aifill=%d",
+                     len(agent_configs), server_port, aifill)
         if self.agents:
+            logger.info("Shutting down existing game before creating new one")
             await self.shutdown()
 
         first_client = GameClient(username=agent_configs[0]["name"])
@@ -191,7 +239,8 @@ class AgentOrchestrator:
             llm_model = cfg.get("llm_model")
             prompt = STRATEGY_PROMPT_TEMPLATE.format(name=cfg["name"], strategy=strategy)
             agent = XBWorldAgent(client, name=cfg["name"],
-                                 system_prompt=prompt, llm_model=llm_model)
+                                 system_prompt=prompt, llm_model=llm_model,
+                                 event_bus=event_bus)
             self.agents[cfg["name"]] = agent
 
         first_client = self.clients[agent_configs[0]["name"]]
@@ -380,6 +429,52 @@ async def api_servers():
     return server_mgr.status()
 
 
+# --- SSE Event Stream for Observer ---
+
+@app.get("/game/events")
+async def game_events():
+    """Server-Sent Events stream for the observer UI."""
+    queue = event_bus.subscribe()
+
+    async def event_generator():
+        try:
+            while True:
+                try:
+                    evt = await asyncio.wait_for(queue.get(), timeout=30)
+                    yield f"data: {json.dumps(evt, ensure_ascii=False, default=str)}\n\n"
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+        except asyncio.CancelledError:
+            pass
+        finally:
+            event_bus.unsubscribe(queue)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+# --- Observer UI ---
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+
+@app.get("/observer", response_class=HTMLResponse)
+@app.get("/observer.html", response_class=HTMLResponse)
+async def observer_page():
+    """Serve the AI game observer dashboard."""
+    observer_path = STATIC_DIR / "observer.html"
+    if observer_path.exists():
+        return observer_path.read_text()
+    return HTMLResponse("<h1>Observer not found</h1>", status_code=404)
+
+
 # --- In-process WebSocket proxy (replaces Tornado freeciv-proxy) ---
 
 @app.websocket("/civsocket/{proxy_port}")
@@ -403,6 +498,14 @@ if WEBAPP_DIR.exists():
     webclient_dir = WEBAPP_DIR / "webclient"
     if webclient_dir.exists():
         app.mount("/webclient", StaticFiles(directory=str(webclient_dir), html=True), name="webclient")
+
+
+@app.get("/motd.js")
+async def motd_js():
+    motd_path = WEBAPP_DIR / "motd.js"
+    if motd_path.exists():
+        return PlainTextResponse(motd_path.read_text(), media_type="application/javascript")
+    return PlainTextResponse("var defined_motd = 'Welcome to XBWorld!';", media_type="application/javascript")
 
 
 @app.get("/", response_class=HTMLResponse)

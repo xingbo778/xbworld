@@ -46,15 +46,19 @@ class CivBridge:
         self._flush_task: Optional[asyncio.Task] = None
 
     async def connect_to_server(self, login_packet: str) -> bool:
+        logger.info("[proxy:%s] Connecting to civserver at 127.0.0.1:%d", self.username, self.server_port)
         try:
             self._reader, self._writer = await asyncio.wait_for(
                 asyncio.open_connection("127.0.0.1", self.server_port),
                 timeout=5.0,
             )
         except (OSError, asyncio.TimeoutError) as e:
+            logger.error("[proxy:%s] Failed to connect to civserver port %d: %s",
+                         self.username, self.server_port, e)
             await self._send_error(f"Proxy unable to connect to civserver on port {self.server_port}: {e}")
             return False
 
+        logger.info("[proxy:%s] TCP connected to civserver, forwarding login packet", self.username)
         await self._send_to_server(login_packet)
         self._flush_task = asyncio.create_task(self._server_reader_loop())
         return True
@@ -63,6 +67,7 @@ class CivBridge:
         await self._send_to_server(message)
 
     async def close(self):
+        logger.info("[proxy:%s] Closing bridge (server_port=%d)", self.username, self.server_port)
         self._stopped = True
         if self._flush_task and not self._flush_task.done():
             self._flush_task.cancel()
@@ -77,6 +82,7 @@ class CivBridge:
             except Exception:
                 pass
         _connections.pop(self.key, None)
+        logger.info("[proxy:%s] Bridge closed, active connections=%d", self.username, len(_connections))
 
     async def _send_to_server(self, message: str):
         if self._writer is None or self._stopped:
@@ -161,9 +167,11 @@ async def handle_civsocket(ws: WebSocket, proxy_port: int):
     username and server port. Subsequent messages are forwarded to the
     freeciv-server.
     """
+    logger.info("[proxy] New WebSocket connection on proxy_port=%d, active=%d", proxy_port, len(_connections))
     await ws.accept()
 
     if len(_connections) >= CONNECTION_LIMIT:
+        logger.error("[proxy] Connection limit reached (%d), rejecting", CONNECTION_LIMIT)
         await ws.close(code=1013, reason="Connection limit reached")
         return
 
@@ -178,25 +186,30 @@ async def handle_civsocket(ws: WebSocket, proxy_port: int):
                 try:
                     login = json.loads(message)
                 except json.JSONDecodeError:
+                    logger.warning("[proxy] Invalid login JSON from client")
                     await ws.send_text('[{"pid":5,"message":"Invalid login packet","you_can_join":false,"conn_id":-1}]')
                     continue
 
                 username = login.get("username", "")
                 if not validate_username(username):
+                    logger.warning("[proxy] Invalid username: '%s'", username)
                     await ws.send_text('[{"pid":5,"message":"Invalid username","you_can_join":false,"conn_id":-1}]')
                     continue
 
                 server_port = int(login.get("port", 0))
                 if server_port < 5000:
+                    logger.warning("[proxy] Invalid server port: %d from user '%s'", server_port, username)
                     await ws.send_text('[{"pid":5,"message":"Invalid server port","you_can_join":false,"conn_id":-1}]')
                     continue
 
+                logger.info("[proxy] Login: user='%s' server_port=%d conn_id=%s", username, server_port, conn_id[:8])
                 key = f"{username}{server_port}{conn_id}"
                 bridge = CivBridge(ws, username, server_port, key)
                 _connections[key] = bridge
 
                 ok = await bridge.connect_to_server(message)
                 if not ok:
+                    logger.error("[proxy] Bridge connect failed for user='%s' port=%d", username, server_port)
                     _connections.pop(key, None)
                     bridge = None
                 continue
@@ -204,9 +217,9 @@ async def handle_civsocket(ws: WebSocket, proxy_port: int):
             await bridge.send_from_client(message)
 
     except WebSocketDisconnect:
-        pass
+        logger.info("[proxy] WebSocket disconnected for conn_id=%s", conn_id[:8])
     except Exception as e:
-        logger.warning("WebSocket error: %s", e)
+        logger.warning("[proxy] WebSocket error for conn_id=%s: %s", conn_id[:8], e)
     finally:
         if bridge:
             await bridge.close()

@@ -79,11 +79,16 @@ class GeminiProvider(LLMProvider):
         if system_text:
             body["systemInstruction"] = {"parts": [{"text": system_text}]}
 
+        logger.debug("[gemini] POST %s (contents=%d, tools=%d)", url, len(contents), len(tool_definitions))
         async with session.post(url, json=body, headers=headers) as resp:
             if resp.status != 200:
                 text = await resp.text()
+                logger.error("[gemini] HTTP %d: %s", resp.status, text[:300])
                 raise RuntimeError(f"Gemini HTTP {resp.status}: {text[:500]}")
-            return await resp.json()
+            data = await resp.json()
+            candidates = data.get("candidates", [])
+            logger.debug("[gemini] Response: %d candidates", len(candidates))
+            return data
 
     def parse_response(self, data):
         if not data:
@@ -224,11 +229,17 @@ class OpenAIProvider(LLMProvider):
             "tools": tool_definitions,
         }
 
+        logger.debug("[openai] POST %s model=%s (msgs=%d, tools=%d)", url, self.model, len(clean_msgs), len(tool_definitions))
         async with session.post(url, json=body, headers=headers) as resp:
             if resp.status != 200:
                 text = await resp.text()
+                logger.error("[openai] HTTP %d: %s", resp.status, text[:300])
                 raise RuntimeError(f"OpenAI HTTP {resp.status}: {text[:500]}")
-            return await resp.json()
+            data = await resp.json()
+            choices = data.get("choices", [])
+            usage = data.get("usage", {})
+            logger.debug("[openai] Response: %d choices, usage=%s", len(choices), usage)
+            return data
 
     def parse_response(self, data):
         if not data:

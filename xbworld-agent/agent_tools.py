@@ -69,14 +69,19 @@ class ToolRegistry:
     async def execute(self, client: GameClient, name: str, args: dict) -> str:
         entry = self._tools.get(name)
         if not entry:
+            logger.warning("[tools] Unknown tool requested: %s", name)
             return f"Unknown tool: {name}"
         try:
+            logger.debug("[tools] Executing %s(%s)", name, args)
             bound_args = self._bind_args(entry.fn, client, args)
             if entry.is_async:
-                return await entry.fn(**bound_args)
-            return entry.fn(**bound_args)
+                result = await entry.fn(**bound_args)
+            else:
+                result = entry.fn(**bound_args)
+            logger.debug("[tools] %s result: %s", name, str(result)[:200])
+            return result
         except Exception as e:
-            logger.error("Tool %s failed: %s", name, e)
+            logger.error("[tools] Tool %s(%s) failed: %s", name, args, e, exc_info=True)
             return f"Error: {e}"
 
     @staticmethod
@@ -171,12 +176,24 @@ def get_game_overview(client: GameClient) -> str:
     bulbs = s.research.get("bulbs_researched", 0)
     tech_cost = s.research.get("researching_cost", 0)
     tech_nm = _tech_name(client, researching) if researching >= 0 else "None"
+
+    inventions = s.research.get("inventions", [])
+    known_techs = [t.get("name", "?") for tid, t in s.techs.items()
+                   if tid < len(inventions) and inventions[tid] == 1]
+
+    research_line = f"Researching: {tech_nm} ({bulbs}/{tech_cost} bulbs)"
+    if researching < 0 or tech_nm == "None":
+        research_line += " ⚠️ NO RESEARCH — call set_research_target NOW!"
+    elif tech_cost > 0:
+        research_line += f" [{int(bulbs/tech_cost*100)}%]"
+
     return (
         f"Turn {s.turn} | Phase: {s.phase}\n"
         f"Gold: {gold} | Tax: {tax}% Sci: {sci}% Lux: {lux}%\n"
         f"Government: {gov}\n"
         f"Cities: {len(s.my_cities())} | Units: {len(s.my_units())}\n"
-        f"Researching: {tech_nm} ({bulbs}/{tech_cost} bulbs)\n"
+        f"{research_line}\n"
+        f"Known techs ({len(known_techs)}): {', '.join(known_techs[:10]) if known_techs else 'None'}\n"
         f"Players: {len(s.players)}"
     )
 
@@ -210,7 +227,18 @@ def get_research_status(client: GameClient) -> str:
     inventions = r.get("inventions", [])
     known = [t.get("name", f"tech_{tid}") for tid, t in client.state.techs.items()
              if tid < len(inventions) and inventions[tid] == 1]
-    return f"Researching: {tech_nm} ({r.get('bulbs_researched', 0)}/{r.get('researching_cost', 0)})\nKnown techs: {', '.join(known[:20]) if known else 'None'}"
+    bulbs = r.get("bulbs_researched", 0)
+    cost = r.get("researching_cost", 0)
+    status = f"Researching: {tech_nm} ({bulbs}/{cost} bulbs)"
+    if researching < 0 or tech_nm == "None":
+        status += "\n⚠️ NO ACTIVE RESEARCH — you MUST call set_research_target now!"
+    elif cost > 0:
+        pct = int(bulbs / cost * 100)
+        status += f" [{pct}% complete]"
+    status += f"\nKnown techs: {', '.join(known[:20]) if known else 'None'}"
+    if known:
+        status += f" ({len(known)} total)"
+    return status
 
 
 @tool("get_visible_enemies", "Get all visible enemy units with type, location, and HP.")
@@ -269,14 +297,20 @@ async def set_tax_rates(client: GameClient, tax: int, luxury: int, science: int)
     return f"Rates set: tax={tax}% luxury={luxury}% science={science}%"
 
 
-@tool("set_research_target", "Set research target by tech name.",
+@tool("set_research_target", "Set research target by tech name. Stick with it until completed!",
       params={"type": "object", "properties": {"tech_name": {"type": "string", "description": "Technology name"}}, "required": ["tech_name"]})
 async def set_research_target(client: GameClient, tech_name: str) -> str:
+    inventions = client.state.research.get("inventions", [])
     for tid, t in client.state.techs.items():
         if t.get("name", "").lower() == tech_name.lower():
+            if tid < len(inventions) and inventions[tid] == 1:
+                return f"Tech '{t.get('name')}' is already known. Pick a different tech."
             await client.set_research(tid)
-            return f"Now researching: {t.get('name')}"
-    return f"Tech '{tech_name}' not found."
+            cost = client.state.research.get("researching_cost", 0)
+            return f"Now researching: {t.get('name')} (cost: {cost} bulbs). Stick with it until completed!"
+    available = [t.get("name", "?") for tid, t in client.state.techs.items()
+                 if tid < len(inventions) and inventions[tid] != 1][:10]
+    return f"Tech '{tech_name}' not found. Available: {', '.join(available)}"
 
 
 @tool("change_city_production", "Change what a city is producing by name.",
@@ -358,7 +392,7 @@ async def move_unit(client: GameClient, unit_id: int, direction: str) -> str:
     return f"Moved {type_name} [{unit_id}] direction {direction}."
 
 
-@tool("found_city", "Found a new city with a Settler unit on its current tile. You MUST provide a city_name.",
+@tool("found_city", "Found a new city with a Settler unit on its current tile. You MUST provide a city_name. Make sure the settler is far enough from existing cities (at least 4 tiles away).",
       params={"type": "object", "properties": {
           "unit_id": {"type": "integer", "description": "Settler unit ID"},
           "city_name": {"type": "string", "description": "Name for the new city (REQUIRED — server rejects empty names)"},
@@ -375,6 +409,24 @@ async def found_city(client: GameClient, unit_id: int, city_name: str = "") -> s
         return (f"CANNOT found city: Settler [{unit_id}] has 0 movement points. "
                 f"Do NOT move a settler and found a city in the same turn. "
                 f"Call end_turn and found the city next turn when it has MP.")
+
+    xsize = client.state.map_info.get("xsize", 0)
+    if xsize > 0:
+        tile_data = client.state.tiles.get(tile, {})
+        tx = tile_data.get("x", tile % xsize if xsize else 0)
+        ty = tile_data.get("y", tile // xsize if xsize else 0)
+        for cid, c in client.state.my_cities().items():
+            ct = c.get("tile", -1)
+            ct_data = client.state.tiles.get(ct, {})
+            cx = ct_data.get("x", ct % xsize if xsize else 0)
+            cy = ct_data.get("y", ct // xsize if xsize else 0)
+            dist = abs(tx - cx) + abs(ty - cy)
+            if dist < 4:
+                return (f"TOO CLOSE: Settler [{unit_id}] at tile {tile} is only {dist} tiles from "
+                        f"city '{c.get('name', '?')}'. Move the settler at least 4 tiles away "
+                        f"from all existing cities before founding. Use auto_explore_unit or "
+                        f"move_unit to relocate it.")
+
     if not city_name or not city_name.strip():
         city_name = f"City{len(client.state.my_cities()) + 1}"
     from urllib.parse import quote
@@ -393,7 +445,7 @@ async def found_city(client: GameClient, unit_id: int, city_name: str = "") -> s
     continent = tile_data.get("continent", 0)
     return (f"FAILED: Settler [{unit_id}] at tile {tile} (MP={mp}, terrain={terrain}, continent={continent}). "
             f"City NOT founded — tile may be invalid (ocean/existing city/too close to another city). "
-            f"Move the settler to a different tile and try again next turn.")
+            f"Move the settler at least 4-5 tiles away from existing cities and try next turn.")
 
 
 @tool("fortify_unit", "Fortify a military unit for a defense bonus.",

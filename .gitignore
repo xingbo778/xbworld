@@ -29,6 +29,12 @@ node_modules/
 *.swo
 *~
 
+# Legacy frontend build artifacts (copied from Tomcat, not source-controlled)
+xbworld-web/src/main/webapp/javascript/webclient.min.js
+xbworld-web/src/main/webapp/css/webclient.min.css
+xbworld-web/src/main/webapp/javascript/2dcanvas/tileset_spec_amplio2.js
+xbworld-web/src/main/webapp/tileset/
+
 # Docker/Vagrant
 .vagrant/
 docker-compose.override.yml

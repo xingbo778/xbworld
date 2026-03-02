@@ -117,12 +117,29 @@ Your capabilities:
 - Use batch tools (move_units, set_productions) for efficiency
 - End turns when done
 
-Strategy guidelines:
-- Early game: found cities ASAP, explore with warriors, research key techs
-- Build a mix of military and economic units
-- Keep science rate high unless gold is critically low
-- Expand aggressively but defend your cities
-- Prefer move_units over individual move_unit calls when moving multiple units
+CRITICAL RULES (follow strictly):
+1. RESEARCH: Always keep a research target active. If "Researching: None", \
+call set_research_target IMMEDIATELY before doing anything else. \
+Good early techs: Alphabet -> Code of Laws -> Republic. \
+NEVER change research mid-way unless the current tech is completed. \
+Stick with your chosen tech until it finishes.
+2. CITY PRODUCTION: Build a balanced mix — not just Warriors! Priority: \
+   - Granary (food growth), Temple (culture/happiness), Marketplace (gold) \
+   - Workers (for terrain improvement) \
+   - Settlers (when city size >= 3, to expand) \
+   - Phalanx/Archers for defense, Warriors only for early exploration \
+   After building 2-3 Warriors, switch to Granary or other buildings.
+3. CITY FOUNDING: When founding a city with a Settler: \
+   - Move the settler at least 4-5 tiles away from existing cities \
+   - Do NOT found a city on the same turn you move the settler \
+   - Check the tile is on land (not ocean) and not adjacent to another city \
+   - If found_city FAILS, move the settler further away and try next turn
+4. TAX RATES: Set science to at least 60% (e.g. tax=10 luxury=30 science=60) \
+   to ensure research progress. Adjust only if gold is negative.
+5. EXPLORATION: Set Warriors and Explorers to auto_explore_unit early. \
+   Don't manually move every unit each turn — it wastes time.
+6. EFFICIENCY: Issue ALL actions in one batch, then call end_turn. \
+   Prefer move_units/set_productions batch tools over individual calls.
 
 When no instructions are given, play autonomously and report what you did.
 Always be concise. Respond in the same language as the user."""
@@ -156,10 +173,12 @@ class XBWorldAgent:
         return self._http_session
 
     async def close(self):
+        logger.info("[%s] Closing agent (turn=%d, actions=%d)", self.name, self.client.state.turn, len(self.action_log))
         if self._http_session and not self._http_session.closed:
             await self._http_session.close()
         if self.engine:
             await self.engine.close()
+        logger.info("[%s] Agent closed", self.name)
 
     def _publish_event(self, event_type: str, data: dict = None):
         """Publish an event to the event bus if available."""
@@ -205,13 +224,16 @@ class XBWorldAgent:
     async def run_game_loop(self):
         """Main game loop — waits for turns and processes them.
         Does NOT read stdin; use submit_command() for external input."""
+        logger.info("[%s] Game loop started (phase=%s, turn=%d, connected=%s)",
+                     self.name, self.client.state.phase, self.client.state.turn, self.client.state.connected)
         last_counter = self.client._turn_counter
 
         if self.client.state.phase == "playing" and self.client.state.turn >= 1:
+            logger.info("[%s] Processing initial turn %d", self.name, self.client.state.turn)
             try:
                 await self._run_turn_with_timeout()
             except Exception as e:
-                logger.error("[%s] Error on initial turn: %s", self.name, e)
+                logger.error("[%s] Error on initial turn: %s", self.name, e, exc_info=True)
 
         while self.client.state.connected:
             if self.client._turn_counter > last_counter:
@@ -246,6 +268,7 @@ class XBWorldAgent:
     async def _run_turn_with_timeout(self):
         """Run autonomous turn with a hard timeout."""
         turn = self.client.state.turn
+        logger.debug("[%s] _run_turn_with_timeout: turn=%d timeout=%ds", self.name, turn, TURN_TIMEOUT_SECONDS)
         try:
             await asyncio.wait_for(self._autonomous_turn(), timeout=TURN_TIMEOUT_SECONDS)
         except asyncio.TimeoutError:
@@ -254,8 +277,8 @@ class XBWorldAgent:
             self._log_action("timeout", f"turn {turn}")
             try:
                 await self.client.end_turn()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error("[%s] Failed to force-end turn after timeout: %s", self.name, e)
 
     def _drain_command(self):
         """Get the latest command, discarding older ones if multiple queued."""
@@ -283,6 +306,13 @@ class XBWorldAgent:
         self.perf.start_turn(turn_before)
         self._log_action("autonomous_turn", f"turn {turn_before}")
         self._publish_event("turn_start", {"year": self.client.state.year})
+
+        p = self.client.state.my_player() or {}
+        logger.info("[%s] === TURN %d START === gold=%s cities=%d units=%d phase=%s",
+                     self.name, turn_before, p.get("gold", "?"),
+                     len(self.client.state.my_cities()), len(self.client.state.my_units()),
+                     self.client.state.phase)
+
         overview = get_game_overview(self.client)
         cities = get_my_cities(self.client)
         units = get_my_units(self.client)
@@ -297,11 +327,27 @@ class XBWorldAgent:
             "enemies": enemies,
         })
 
+        research_hint = ""
+        if "Researching: None" in research or "Researching: tech_" in research:
+            research_hint = (
+                "\n⚠️ WARNING: No active research! Call set_research_target FIRST. "
+                "Good choices: Alphabet, Bronze Working, Pottery, Code of Laws, Republic."
+            )
+
+        production_hint = ""
+        city_count = len(self.client.state.my_cities())
+        if city_count > 0 and "Warriors" in cities and turn_before > 10:
+            production_hint = (
+                "\n💡 TIP: Consider building Granary, Temple, or Marketplace instead of Warriors. "
+                "Build Settlers when city size >= 3 to expand."
+            )
+
         self.conversation.append({
             "role": "user",
             "content": (
                 f"Turn {turn_before}. Issue ALL actions in ONE batch, then call end_turn. "
-                f"Do NOT call query tools — state is below. Be fast.\n\n"
+                f"Do NOT call query tools — state is below. Be fast."
+                f"{research_hint}{production_hint}\n\n"
                 f"{overview}\n{cities}\n{units}\n{research}\n{enemies}"
             ),
         })
@@ -314,11 +360,16 @@ class XBWorldAgent:
 
         perf_summary = self.perf.end_turn()
         self._log_llm_detail("turn_perf", perf_summary)
-        logger.info("[%s] Turn %d perf: total=%.1fs llm=%.1fs tool=%.1fs idle=%.1fs calls=%d/%d",
+
+        p = self.client.state.my_player() or {}
+        logger.info("[%s] === TURN %d END === perf: total=%.1fs llm=%.1fs tool=%.1fs idle=%.1fs "
+                     "calls=%d/%d | gold=%s cities=%d units=%d",
                      self.name, turn_before,
                      perf_summary["total_s"], perf_summary["llm_s"],
                      perf_summary["tool_s"], perf_summary["idle_s"],
-                     perf_summary["llm_calls"], perf_summary["tool_calls"])
+                     perf_summary["llm_calls"], perf_summary["tool_calls"],
+                     p.get("gold", "?"), len(self.client.state.my_cities()),
+                     len(self.client.state.my_units()))
 
         checkpoint = self.perf.checkpoint_summary(every_n=5)
         if checkpoint:
@@ -351,17 +402,19 @@ class XBWorldAgent:
     async def _llm_loop(self):
         """Call LLM with tools, execute tool calls, repeat until done."""
         max_iterations = 5
-        for _ in range(max_iterations):
+        for iteration in range(max_iterations):
+            logger.debug("[%s] LLM loop iteration %d/%d", self.name, iteration + 1, max_iterations)
             try:
                 data = await self._llm_call()
             except Exception as e:
-                logger.error("[%s] LLM call failed: %s", self.name, e)
+                logger.error("[%s] LLM call failed on iteration %d: %s", self.name, iteration + 1, e, exc_info=True)
                 self._log_action("llm_error", str(e))
                 break
 
             parsed = self._provider.parse_response(data)
             if parsed is None:
-                logger.warning("[%s] LLM returned unparseable response, rolling back", self.name)
+                logger.warning("[%s] LLM returned unparseable response on iteration %d, rolling back",
+                               self.name, iteration + 1)
                 self._log_action("llm_empty", "unparseable response")
                 while self.conversation and self.conversation[-1].get("role") in ("tool", "assistant"):
                     self.conversation.pop()
@@ -370,6 +423,8 @@ class XBWorldAgent:
             text_content = parsed.get("text", "")
             func_calls = parsed.get("tool_calls", [])
             raw_assistant = parsed.get("raw_assistant")
+            logger.info("[%s] LLM response: text=%d chars, tool_calls=%d",
+                        self.name, len(text_content), len(func_calls))
 
             self.conversation.append(raw_assistant or {
                 "role": "assistant", "content": text_content,
@@ -420,6 +475,13 @@ class XBWorldAgent:
         """Return a JSON-serializable status summary for API consumers."""
         s = self.client.state
         p = s.my_player() or {}
+
+        researching_id = s.research.get("researching", -1)
+        tech_name = s.techs.get(researching_id, {}).get("name", "None") if researching_id >= 0 else "None"
+        inventions = s.research.get("inventions", [])
+        known_techs = [t.get("name", "?") for tid, t in s.techs.items()
+                       if tid < len(inventions) and inventions[tid] == 1]
+
         status = {
             "name": self.name,
             "username": self.client.username,
@@ -428,8 +490,15 @@ class XBWorldAgent:
             "turn": s.turn,
             "player_id": s.my_player_id,
             "gold": p.get("gold"),
+            "tax": p.get("tax"),
+            "science": p.get("science"),
+            "luxury": p.get("luxury"),
             "cities": len(s.my_cities()),
             "units": len(s.my_units()),
+            "researching": tech_name,
+            "bulbs": s.research.get("bulbs_researched", 0),
+            "tech_cost": s.research.get("researching_cost", 0),
+            "known_techs": len(known_techs),
             "last_report": self.last_report,
         }
         if self.perf.turn_history:

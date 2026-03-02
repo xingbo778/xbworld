@@ -186,24 +186,30 @@ class GameClient:
 
     async def start_new_game(self, game_type: str = "singleplayer"):
         """Request a server port and connect."""
+        logger.info("[%s] Starting new %s game...", self.username, game_type)
         self._session = aiohttp.ClientSession()
         port = await self._request_port(game_type)
         if port is None:
+            logger.error("[%s] Failed to get server port from civclientlauncher", self.username)
             raise ConnectionError("Failed to get server port from civclientlauncher")
         self.server_port = port
+        logger.info("[%s] Got server port %d, connecting WebSocket...", self.username, port)
         await self._connect_ws(port)
         self._recv_task = asyncio.create_task(self._recv_loop())
-        logger.info("Connected to game server on port %s", port)
+        logger.info("[%s] Connected to game server on port %s, recv loop started", self.username, port)
 
     async def join_game(self, civserverport: int):
         """Connect to an existing game server."""
+        logger.info("[%s] Joining existing game on port %d...", self.username, civserverport)
         self._session = aiohttp.ClientSession()
         self.server_port = civserverport
         await self._connect_ws(civserverport)
         self._recv_task = asyncio.create_task(self._recv_loop())
-        logger.info("Joined game server on port %s", civserverport)
+        logger.info("[%s] Joined game server on port %d, recv loop started", self.username, civserverport)
 
     async def close(self):
+        logger.info("[%s] Closing client (connected=%s, turn=%d, packets=%d)",
+                     self.username, self.state.connected, self.state.turn, self._packets_processed)
         if self._recv_task:
             self._recv_task.cancel()
         if self.ws and not self.ws.closed:
@@ -211,19 +217,25 @@ class GameClient:
         if self._session:
             await self._session.close()
         self.state.connected = False
+        logger.info("[%s] Client closed", self.username)
 
     # -- sending ------------------------------------------------------------
 
     async def send_packet(self, packet: dict):
         """Send a raw JSON packet to the server."""
         if self.ws and not self.ws.closed:
+            logger.debug("[%s] >> packet pid=%s", self.username, packet.get("pid"))
             await self.ws.send_str(json.dumps(packet))
+        else:
+            logger.warning("[%s] Cannot send packet pid=%s: WebSocket closed", self.username, packet.get("pid"))
 
     async def send_chat(self, message: str):
         """Send a chat/command message (e.g. '/set tax 30')."""
+        logger.info("[%s] Sending chat: %s", self.username, message[:100])
         await self.send_packet({"pid": PACKET_CHAT_MSG_REQ, "message": message})
 
     async def end_turn(self):
+        logger.info("[%s] Ending turn %d", self.username, self.state.turn)
         await self.send_packet({
             "pid": PACKET_PLAYER_PHASE_DONE,
             "turn": self.state.turn,
@@ -307,9 +319,12 @@ class GameClient:
         Directions: 0=NW, 1=N, 2=NE, 3=W, 4=E, 5=SW, 6=S, 7=SE."""
         unit = self.state.units.get(unit_id)
         if not unit:
+            logger.warning("[%s] unit_move: unit %d not found", self.username, unit_id)
             return
         src_tile = unit.get("tile", 0)
         dest_tile = self._compute_dest_tile(src_tile, direction)
+        logger.debug("[%s] unit_move: unit=%d dir=%d src_tile=%d dest_tile=%d mp=%d",
+                     self.username, unit_id, direction, src_tile, dest_tile, unit.get("movesleft", 0))
         await self.send_packet({
             "pid": PACKET_UNIT_ORDERS,
             "unit_id": unit_id,
@@ -337,11 +352,15 @@ class GameClient:
         """
         unit = self.state.units.get(unit_id)
         if not unit:
+            logger.warning("[%s] unit_found_city: unit %d not found", self.username, unit_id)
             return False
         tile = unit.get("tile", 0)
         mp = unit.get("movesleft", 0)
+        logger.info("[%s] unit_found_city: unit=%d tile=%d mp=%d name='%s'",
+                     self.username, unit_id, tile, mp, city_name)
         if mp <= 0:
-            logger.warning("unit_found_city: settler %d has 0 MP, action will likely fail", unit_id)
+            logger.warning("[%s] unit_found_city: settler %d has 0 MP, action will likely fail",
+                           self.username, unit_id)
 
         await self.send_packet({
             "pid": PACKET_UNIT_DO_ACTION,
@@ -445,19 +464,24 @@ class GameClient:
     async def _connect_ws(self, civserverport: int, max_retries: int = 5):
         proxyport = 1000 + civserverport
         ws_url = f"{WS_BASE_URL}/{proxyport}"
+        logger.info("[%s] Connecting WebSocket to %s (server port=%d, proxy port=%d)",
+                     self.username, ws_url, civserverport, proxyport)
 
         last_err = None
         for attempt in range(max_retries):
             try:
                 self.ws = await self._session.ws_connect(ws_url)
+                logger.info("[%s] WebSocket connected on attempt %d", self.username, attempt + 1)
                 break
             except Exception as e:
                 last_err = e
                 wait = 1.0 * (attempt + 1)
-                logger.warning("WS connect attempt %d/%d failed (%s), retrying in %.1fs",
-                               attempt + 1, max_retries, e, wait)
+                logger.warning("[%s] WS connect attempt %d/%d failed (%s), retrying in %.1fs",
+                               self.username, attempt + 1, max_retries, e, wait)
                 await asyncio.sleep(wait)
         else:
+            logger.error("[%s] Failed to connect to %s after %d attempts: %s",
+                         self.username, ws_url, max_retries, last_err)
             raise ConnectionError(
                 f"Failed to connect to {ws_url} after {max_retries} attempts: {last_err}"
             )
@@ -476,14 +500,21 @@ class GameClient:
             "port": civserverport,
             "password": "",
         }
+        logger.info("[%s] Sending login packet to server", self.username)
         await self.ws.send_str(json.dumps(login))
 
     # -- internal: receive loop ---------------------------------------------
 
     async def _recv_loop(self):
+        logger.info("[%s] recv_loop started", self.username)
         try:
             async for msg in self.ws:
                 self._ws_msg_count += 1
+                if self._ws_msg_count % 500 == 0:
+                    stats = self.get_ws_stats()
+                    logger.info("[%s] WS stats: %d msgs, %d pkts, %.1f msg/s, uptime=%.0fs",
+                                self.username, stats["total_ws_msgs"], stats["packets_processed"],
+                                stats["ws_msg_rate_per_s"], stats["uptime_s"])
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     try:
                         packets = json.loads(msg.data)
@@ -494,16 +525,19 @@ class GameClient:
                         elif isinstance(packets, dict):
                             self._handle_packet(packets)
                     except json.JSONDecodeError:
-                        logger.warning("Bad JSON from server: %s", msg.data[:200])
+                        logger.warning("[%s] Bad JSON from server: %s", self.username, msg.data[:200])
                 elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
+                    logger.warning("[%s] WebSocket msg type=%s, breaking recv loop", self.username, msg.type)
                     break
         except asyncio.CancelledError:
-            pass
+            logger.debug("[%s] recv_loop cancelled", self.username)
         except Exception as e:
-            logger.error("recv_loop error: %s", e)
+            logger.error("[%s] recv_loop error: %s", self.username, e, exc_info=True)
         finally:
             self.state.connected = False
-            logger.info("WebSocket connection closed")
+            stats = self.get_ws_stats()
+            logger.info("[%s] WebSocket closed. Final stats: %d msgs, %d pkts processed, turn=%d",
+                        self.username, stats["total_ws_msgs"], stats["packets_processed"], self.state.turn)
 
     # -- internal: packet dispatch ------------------------------------------
 
@@ -527,7 +561,7 @@ class GameClient:
     def _on_server_join_reply(self, pkt: dict):
         if pkt.get("you_can_join"):
             self.state.my_conn_id = pkt.get("conn_id", -1)
-            logger.info("Joined server, conn_id=%d", self.state.my_conn_id)
+            logger.info("[%s] Server accepted join, conn_id=%d", self.username, self.state.my_conn_id)
             client_info = {
                 "pid": PACKET_CLIENT_INFO,
                 "gui": GUI_WEB,
@@ -536,19 +570,23 @@ class GameClient:
             }
             asyncio.ensure_future(self.send_packet(client_info))
         else:
-            logger.error("Server rejected join: %s", pkt.get("message"))
+            logger.error("[%s] Server REJECTED join: %s", self.username, pkt.get("message"))
 
     def _on_conn_info(self, pkt: dict):
         if pkt.get("id") == self.state.my_conn_id:
             player_num = pkt.get("player_num", -1)
             if player_num >= 0:
                 self.state.my_player_id = player_num
+                logger.info("[%s] Assigned player_id=%d", self.username, player_num)
 
     def _on_conn_ping(self, pkt: dict):
         asyncio.ensure_future(self.send_packet({"pid": PACKET_CONN_PONG}))
 
     def _on_game_info(self, pkt: dict):
-        self.state.turn = pkt.get("turn", self.state.turn)
+        new_turn = pkt.get("turn", self.state.turn)
+        if new_turn != self.state.turn:
+            logger.debug("[%s] game_info: turn changed %d -> %d", self.username, self.state.turn, new_turn)
+        self.state.turn = new_turn
 
     def _on_calendar_info(self, pkt: dict):
         self.state.year = pkt.get("calendar_fragment_name", "")
@@ -588,7 +626,9 @@ class GameClient:
 
     def _on_city_remove(self, pkt: dict):
         cid = pkt.get("city_id")
-        self.state.cities.pop(cid, None)
+        removed = self.state.cities.pop(cid, None)
+        if removed:
+            logger.info("[%s] City removed: id=%d name=%s", self.username, cid, removed.get("name", "?"))
 
     def _on_unit_info(self, pkt: dict):
         uid = pkt.get("id")
@@ -604,7 +644,11 @@ class GameClient:
 
     def _on_unit_remove(self, pkt: dict):
         uid = pkt.get("unit_id")
-        self.state.units.pop(uid, None)
+        removed = self.state.units.pop(uid, None)
+        if removed and removed.get("owner") == self.state.my_player_id:
+            type_name = self.state.unit_types.get(removed.get("type", -1), {}).get("name", "?")
+            logger.info("[%s] My unit removed: id=%d type=%s tile=%d",
+                        self.username, uid, type_name, removed.get("tile", -1))
 
     def _on_player_info(self, pkt: dict):
         pno = pkt.get("playerno")
@@ -616,17 +660,56 @@ class GameClient:
         self.state.players.pop(pno, None)
 
     def _on_research_info(self, pkt: dict):
+        old_researching = self.state.research.get("researching", -1)
+        new_researching = pkt.get("researching", -1)
+        if old_researching != new_researching:
+            old_name = self.state.techs.get(old_researching, {}).get("name", "none")
+            new_name = self.state.techs.get(new_researching, {}).get("name", "none")
+            logger.info("[%s] Research changed: %s -> %s (bulbs=%d/%d)",
+                        self.username, old_name, new_name,
+                        pkt.get("bulbs_researched", 0), pkt.get("researching_cost", 0))
+            if old_researching >= 0 and new_researching < 0:
+                logger.info("[%s] Tech '%s' completed! Auto-picking next research...",
+                            self.username, old_name)
+                asyncio.ensure_future(self._auto_pick_research(pkt))
         self.state.research = pkt
+
+    async def _auto_pick_research(self, research_pkt: dict):
+        """Auto-pick next research when current one completes."""
+        inventions = research_pkt.get("inventions", [])
+        PRIORITY_TECHS = [
+            "Alphabet", "Bronze Working", "Pottery", "Masonry",
+            "Code of Laws", "Warrior Code", "Ceremonial Burial",
+            "The Wheel", "Horseback Riding", "Iron Working",
+            "Writing", "Literacy", "Map Making", "Currency",
+            "Construction", "Republic", "Mathematics",
+        ]
+        for tech_name in PRIORITY_TECHS:
+            for tid, t in self.state.techs.items():
+                if t.get("name", "").lower() == tech_name.lower():
+                    if tid < len(inventions) and inventions[tid] == 1:
+                        break
+                    logger.info("[%s] Auto-researching: %s", self.username, t.get("name"))
+                    await self.set_research(tid)
+                    return
+        for tid, t in self.state.techs.items():
+            if tid < len(inventions) and inventions[tid] != 1 and t.get("name", ""):
+                logger.info("[%s] Auto-researching (fallback): %s", self.username, t.get("name"))
+                await self.set_research(tid)
+                return
 
     def _on_begin_turn(self, pkt: dict):
         self.state.phase = "playing"
         self._turn_counter += 1
-        logger.debug("[%s] begin_turn: turn=%d counter=%d", self.username, self.state.turn, self._turn_counter)
+        logger.info("[%s] BEGIN_TURN: turn=%d counter=%d players=%d units=%d cities=%d",
+                     self.username, self.state.turn, self._turn_counter,
+                     len(self.state.players), len(self.state.my_units()), len(self.state.my_cities()))
         self._turn_event.set()
         for cb in self._on_turn_callbacks:
             asyncio.ensure_future(cb(self))
 
     def _on_end_turn(self, pkt: dict):
+        logger.info("[%s] END_TURN: turn=%d", self.username, self.state.turn)
         self.state.phase = "waiting"
 
     def _on_new_year(self, pkt: dict):
