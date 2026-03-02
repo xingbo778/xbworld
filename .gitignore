@@ -1,5 +1,5 @@
-# Compiled C server (huge binary)
-freeciv/
+# Freeciv C server — build artifacts only (source is a git submodule)
+freeciv/build/
 
 # Python virtual environment
 .venv/
