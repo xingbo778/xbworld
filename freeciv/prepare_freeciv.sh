@@ -18,7 +18,11 @@ cd "${DIR}"
 
 if [ ! -d freeciv/server ]; then
   echo "Freeciv source not found. Initializing submodule..."
-  ( cd .. && git submodule update --init --recursive freeciv/freeciv )
+  if ! ( cd .. && git submodule update --init --recursive freeciv/freeciv ); then
+    echo "ERROR: Failed to initialize freeciv submodule." >&2
+    echo "Make sure you are inside the xbworld repository." >&2
+    exit 1
+  fi
 fi
 
 if [ "${1:-}" = "clean" ]; then
@@ -28,9 +32,9 @@ fi
 
 export PATH=${HOME}/freeciv/meson-install:${PATH}
 
-EXTRA_MESON_PARAMS=""
+EXTRA_MESON_PARAMS=()
 if [ "${1:-}" = "TEST" ]; then
-  EXTRA_MESON_PARAMS="-Dwerror=true"
+  EXTRA_MESON_PARAMS+=("-Dwerror=true")
 fi
 
 mkdir -p build
@@ -42,8 +46,8 @@ if [ ! -f build/build.ninja ]; then
           -Dclients=[] -Dfcmp=cli -Djson-protocol=true -Dnls=false \
           -Daudio=none -Dtools=manual \
           -Dproject-definition=../freeciv-web.fcproj \
-          -Ddefault_library=static -Dprefix=${HOME}/freeciv \
-          -Doptimization=3 $EXTRA_MESON_PARAMS
+          -Ddefault_library=static -Dprefix="${HOME}/freeciv" \
+          -Doptimization=3 "${EXTRA_MESON_PARAMS[@]}"
   )
 else
   echo "Build already configured, skipping meson setup (use 'clean' to reconfigure)."
