@@ -1,5 +1,6 @@
 read web.serv
 
+rulesetdir xbworld
 cmdlevel ctrl first
 set topology ""
 set wrap WRAPX

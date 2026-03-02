@@ -1,5 +1,6 @@
 read web.serv
 
+rulesetdir xbworld
 mapimg define 'zoom=2:map=tcub:turns=5:format=png'
 cmdlevel ctrl first
 set topology ""
