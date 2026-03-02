@@ -75,40 +75,36 @@ research, diplomacy, and warfare.
 
 ## Quick Start
 
-### Option A: Full Stack (recommended)
+### 1. Clone with Submodule
 
 ```bash
-# 1. Install the Freeciv server (one-time)
-#    See install-macos.sh or build from source into ~/freeciv/
+git clone --recurse-submodules https://github.com/xingbo778/xbworld.git
+cd xbworld
+```
 
-# 2. Install Python dependencies
+### 2. Build the Freeciv Server
+
+```bash
+# Install build dependencies (macOS)
+brew install meson ninja jansson icu4c pkg-config lua
+
+# Build and install to ~/freeciv/
+cd freeciv && ./prepare_freeciv.sh && cd ..
+```
+
+### 3. Run AI Agents
+
+```bash
 cd xbworld-agent
 pip install -r requirements.txt
-
-# 3. Set your LLM API key
 export COMPASS_API_KEY="your-key-here"
 
-# 4. Start the unified server (serves web UI + API + game launcher)
-python server.py --port 8080
-
-# 5. Open http://localhost:8080 in your browser
-```
-
-### Option B: AI-Only Game (no browser needed)
-
-```bash
-cd xbworld-agent
+# AI-only game (no browser needed)
 python multi_main.py --agents 2 --standalone
-```
 
-### Option C: macOS Services
-
-```bash
-# Start everything (nginx + XBWorld server)
-./start-macos.sh
-
-# Stop everything
-./stop-macos.sh
+# Or: full stack with web UI
+python server.py --port 8080
+# Open http://localhost:8080
 ```
 
 ---
@@ -175,6 +171,63 @@ Interactive API docs available at `/docs` (Swagger UI).
 
 ---
 
+## Customizing the Game
+
+The Freeciv C server source is included as a git submodule at `freeciv/freeciv`
+(fork: [xingbo778/freeciv](https://github.com/xingbo778/freeciv), branch `xbworld`).
+You have full control over the game engine at three levels:
+
+### Rulesets (no C code changes)
+
+Edit files in `freeciv/freeciv/data/xbworld/` to change game rules:
+
+| File | What you can change |
+|------|-------------------|
+| `techs.ruleset` | Tech tree, research costs, prerequisites |
+| `units.ruleset` | Unit stats (attack, defense, HP, movement, cost) |
+| `buildings.ruleset` | Buildings and wonders |
+| `effects.ruleset` | Numeric effects of buildings/governments/techs |
+| `game.ruleset` | Victory conditions, start units, turn limits |
+| `terrain.ruleset` | Terrain output, movement costs |
+| `script.lua` | Lua event scripts (custom triggers, special events) |
+
+After editing, rebuild: `cd freeciv && ./prepare_freeciv.sh`
+
+### C Source (full engine control)
+
+Modify C source directly in the submodule for deeper changes:
+
+- `freeciv/freeciv/server/` — Server logic (turns, combat, diplomacy)
+- `freeciv/freeciv/common/` — Shared protocol, data structures, packets
+- `freeciv/freeciv/ai/` — Built-in AI logic
+
+```bash
+# Edit, rebuild, test
+cd freeciv && ./prepare_freeciv.sh
+cd ../xbworld-agent && python multi_main.py --agents 2 --standalone
+
+# Commit changes to the fork
+cd freeciv/freeciv
+git add -A && git commit -m "feat: my game change"
+git push origin xbworld
+
+# Update submodule ref in main repo
+cd ../..
+git add freeciv/freeciv && git commit -m "chore: update freeciv submodule"
+```
+
+### Syncing with Upstream Freeciv
+
+```bash
+cd freeciv/freeciv
+git remote add upstream https://github.com/freeciv/freeciv.git  # one-time
+git fetch upstream
+git merge upstream/main  # resolve conflicts if any
+git push origin xbworld
+```
+
+---
+
 ## Development
 
 ### Prerequisites
@@ -182,7 +235,8 @@ Interactive API docs available at `/docs` (Swagger UI).
 | Tool | Version | Required for |
 |------|---------|-------------|
 | Python | 3.10+ | Server, agent, proxy |
-| Freeciv server | 3.x | Game engine (compiled from C source) |
+| meson + ninja | Latest | Building Freeciv C server |
+| jansson, icu4c, lua | Latest | Freeciv build dependencies |
 | nginx | 1.11+ | Reverse proxy (optional, for production) |
 
 **No longer required:** Java, Maven, Tomcat, MariaDB.
@@ -206,29 +260,26 @@ python test_8agents_50turns.py
 
 ```
 xbworld/
+├── freeciv/                 # Freeciv C server
+│   ├── freeciv/             #   Git submodule → xingbo778/freeciv (xbworld branch)
+│   │   ├── server/          #     Server logic (C source, fully editable)
+│   │   ├── common/          #     Shared protocol & data structures
+│   │   ├── ai/              #     Built-in AI logic
+│   │   └── data/xbworld/   #     Custom ruleset (techs, units, buildings, …)
+│   ├── build/               #   Compiled artifacts (.gitignored)
+│   ├── patches/             #   Historical patch files (reference)
+│   └── prepare_freeciv.sh   #   Build script (meson + ninja)
 ├── xbworld-agent/           # AI agent system + unified server
-│   ├── server.py            #   Unified FastAPI server (replaces Tomcat+publite2)
+│   ├── server.py            #   Unified FastAPI server
 │   ├── agent.py             #   Core agent loop (LLM ↔ tools)
 │   ├── agent_tools.py       #   Tool definitions (move, build, query, …)
 │   ├── game_client.py       #   WebSocket client & game state
-│   ├── llm_providers.py     #   LLM provider abstraction (Gemini, OpenAI)
-│   ├── multi_main.py        #   Multi-agent CLI entry point
-│   ├── main.py              #   Single-agent entry point
-│   └── config.py            #   Configuration (env vars)
+│   ├── llm_providers.py     #   LLM provider abstraction
+│   └── multi_main.py        #   Multi-agent orchestrator
 ├── xbworld-proxy/           # WebSocket ↔ TCP bridge
-│   ├── freeciv-proxy.py     #   Tornado WebSocket server
-│   └── civcom.py            #   Protocol translation
-├── xbworld-web/             # Web client (static HTML + JS)
-│   └── src/main/webapp/
-│       ├── webclient/        #   index.html (game client)
-│       ├── javascript/       #   Game JS (2D canvas, controls, …)
-│       ├── css/              #   Stylesheets
-│       └── images/           #   Sprites, logos
-├── config/                  # Config templates (nginx)
-├── scripts/                 # Install & helper scripts
-├── start-macos.sh           # Start services (nginx + server.py)
-├── stop-macos.sh            # Stop services
-├── ARCHITECTURE.md          # Detailed architecture & roadmap
+├── xbworld-web/             # Web client (HTML5 2D renderer)
+├── ARCHITECTURE.md          # System architecture & roadmap
+├── CONTRIBUTING.md          # Contribution guide
 └── CHANGELOG.md             # Release notes
 ```
 

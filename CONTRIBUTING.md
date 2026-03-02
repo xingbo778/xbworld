@@ -10,8 +10,14 @@ workflow, code conventions, and how to submit changes.
 ### 1. Clone and Set Up
 
 ```bash
-git clone https://github.com/xingbo778/xbworld.git
+git clone --recurse-submodules https://github.com/xingbo778/xbworld.git
 cd xbworld
+```
+
+If you already cloned without `--recurse-submodules`:
+
+```bash
+git submodule update --init --recursive
 ```
 
 ### 2. Choose Your Focus Area
@@ -19,9 +25,10 @@ cd xbworld
 | Area | Setup needed | Key files |
 |------|-------------|-----------|
 | **AI Agent** | Python 3.10+, pip | `xbworld-agent/` |
-| **Web Client** | Java 17, Maven, Tomcat | `xbworld-web/` |
+| **Game Engine** | meson, ninja, C compiler | `freeciv/freeciv/` (submodule) |
+| **Rulesets** | Text editor + rebuild | `freeciv/freeciv/data/xbworld/` |
+| **Web Client** | HTML/JS/CSS | `xbworld-web/` |
 | **Proxy** | Python 3.10+, Tornado | `xbworld-proxy/` |
-| **Infrastructure** | macOS or Linux | `scripts/`, `config/`, `publite2/` |
 
 ### 3. Agent Development (most common)
 
@@ -38,17 +45,23 @@ export COMPASS_API_KEY="your-key"
 python test_connection.py
 ```
 
-### 4. Full Stack Development
+### 4. Building the Freeciv Server
 
 ```bash
-# One-time setup (installs Freeciv server, Tomcat, nginx, MariaDB, etc.)
-./install-macos.sh
+# Install build deps (macOS)
+brew install meson ninja jansson icu4c pkg-config lua
 
-# Start all services
-./start-macos.sh
+# Build and install to ~/freeciv/
+cd freeciv && ./prepare_freeciv.sh
+```
 
-# Verify
-open http://localhost:8000
+### 5. Full Stack Development
+
+```bash
+# Start the unified server
+cd xbworld-agent && python server.py --port 8080
+
+# Open http://localhost:8080
 ```
 
 ---
@@ -170,7 +183,10 @@ bash test_freeciv_web.sh
   exercises the tool
 - **Agent logic changes**: Run `test_multi.py` at minimum
 - **Protocol changes**: Run `test_connection.py` to verify packet handling
-- **Web UI changes**: Manual testing in browser + `test_freeciv_web.sh`
+- **Ruleset changes**: Rebuild server, run `test_multi.py` to verify game starts
+- **C source changes**: Rebuild server (`cd freeciv && ./prepare_freeciv.sh`),
+  run `test_connection.py` and `test_multi.py`
+- **Web UI changes**: Manual testing in browser
 
 ---
 
@@ -218,17 +234,69 @@ agent = XBWorldAgent(client, name="bot", engine=MyEngine())
 
 ---
 
+## Modifying the Freeciv Server
+
+The Freeciv C source is a git submodule at `freeciv/freeciv` (fork:
+[xingbo778/freeciv](https://github.com/xingbo778/freeciv), branch `xbworld`).
+
+### Editing Rulesets (easiest)
+
+Edit files in `freeciv/freeciv/data/xbworld/`, then rebuild:
+
+```bash
+cd freeciv && ./prepare_freeciv.sh
+```
+
+### Editing C Source
+
+```bash
+# Make changes in freeciv/freeciv/server/*.c, common/*.c, etc.
+cd freeciv && ./prepare_freeciv.sh    # rebuild
+cd ../xbworld-agent && python multi_main.py --agents 2 --standalone  # test
+```
+
+### Committing Server Changes
+
+Server changes involve two repos — the submodule and the main repo:
+
+```bash
+# 1. Commit inside the submodule
+cd freeciv/freeciv
+git add -A && git commit -m "feat: description of change"
+git push origin xbworld
+
+# 2. Update submodule ref in main repo
+cd ../..
+git add freeciv/freeciv
+git commit -m "chore: update freeciv submodule"
+```
+
+### Syncing with Upstream
+
+```bash
+cd freeciv/freeciv
+git remote add upstream https://github.com/freeciv/freeciv.git  # one-time
+git fetch upstream && git merge upstream/main
+git push origin xbworld
+```
+
+---
+
 ## Project Structure Reference
 
 ```
 xbworld/
+├── freeciv/              # Freeciv C server
+│   ├── freeciv/          #   Git submodule (xingbo778/freeciv, xbworld branch)
+│   │   ├── server/       #     C source: server logic
+│   │   ├── common/       #     C source: shared protocol
+│   │   ├── ai/           #     C source: built-in AI
+│   │   └── data/xbworld/ #     Custom ruleset
+│   ├── build/            #   Compiled artifacts (.gitignored)
+│   └── prepare_freeciv.sh #  Build script
 ├── xbworld-agent/        # AI agent (Python) — most active development
 ├── xbworld-proxy/        # WebSocket proxy (Python/Tornado)
-├── xbworld-web/          # Web client (Java/JSP/JS)
-├── publite2/             # Server process manager (Python)
-├── config/               # Config templates
-├── scripts/              # Install & helper scripts
-├── tests/                # Integration tests
+├── xbworld-web/          # Web client (HTML/JS/CSS)
 ├── ARCHITECTURE.md       # System architecture & roadmap
 ├── CHANGELOG.md          # Release notes
 ├── CONTRIBUTING.md       # This file
