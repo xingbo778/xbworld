@@ -4,6 +4,7 @@ LLM Agent for XBWorld.
 Runs an autonomous loop: each turn, analyzes state and executes actions via
 LLM function-calling.  Accepts natural language commands from the user at any
 time.  The LLM provider is pluggable (see ``llm_providers`` module).
+The decision engine is also pluggable (see ``decision_engine`` module).
 """
 
 import asyncio
@@ -27,6 +28,7 @@ from agent_tools import (
     get_visible_enemies,
 )
 from llm_providers import create_provider
+from state_api import game_state_to_json
 
 logger = logging.getLogger("xbworld-agent")
 
@@ -112,6 +114,7 @@ Your capabilities:
 - Send server commands (e.g. /set tax 30, /start, /save)
 - Change city production, set research targets, adjust tax rates
 - Move units, found cities, fortify, explore, disband, sentry
+- Use batch tools (move_units, set_productions) for efficiency
 - End turns when done
 
 Strategy guidelines:
@@ -119,6 +122,7 @@ Strategy guidelines:
 - Build a mix of military and economic units
 - Keep science rate high unless gold is critically low
 - Expand aggressively but defend your cities
+- Prefer move_units over individual move_unit calls when moving multiple units
 
 When no instructions are given, play autonomously and report what you did.
 Always be concise. Respond in the same language as the user."""
@@ -126,7 +130,8 @@ Always be concise. Respond in the same language as the user."""
 
 class XBWorldAgent:
     def __init__(self, client: GameClient, name: str = "Agent",
-                 system_prompt: str = None, llm_model: str = None):
+                 system_prompt: str = None, llm_model: str = None,
+                 engine=None, event_bus=None):
         self.client = client
         self.name = name
         self.llm_model = llm_model or LLM_MODEL
@@ -138,6 +143,8 @@ class XBWorldAgent:
         self._http_session: aiohttp.ClientSession | None = None
         self._provider = create_provider(self.llm_model, LLM_API_KEY, LLM_BASE_URL)
         self.perf = PerfTracker(name)
+        self.engine = engine
+        self._event_bus = event_bus
 
     async def _get_http_session(self) -> aiohttp.ClientSession:
         if self._http_session is None or self._http_session.closed:
@@ -151,6 +158,16 @@ class XBWorldAgent:
     async def close(self):
         if self._http_session and not self._http_session.closed:
             await self._http_session.close()
+        if self.engine:
+            await self.engine.close()
+
+    def _publish_event(self, event_type: str, data: dict = None):
+        """Publish an event to the event bus if available."""
+        if self._event_bus:
+            event = {"type": event_type, "agent": self.name, "turn": self.client.state.turn}
+            if data:
+                event.update(data)
+            self._event_bus.publish(event)
 
     def _log_action(self, action: str, detail: str = ""):
         entry = {
@@ -265,6 +282,7 @@ class XBWorldAgent:
         turn_before = self.client.state.turn
         self.perf.start_turn(turn_before)
         self._log_action("autonomous_turn", f"turn {turn_before}")
+        self._publish_event("turn_start", {"year": self.client.state.year})
         overview = get_game_overview(self.client)
         cities = get_my_cities(self.client)
         units = get_my_units(self.client)
@@ -374,6 +392,10 @@ class XBWorldAgent:
                         "elapsed_s": round(tool_elapsed, 3),
                     })
                     tool_results.append({"name": fn_name, "result": result})
+                    self._publish_event("agent_action", {
+                        "tool": fn_name, "args": fn_args,
+                        "result": result[:200],
+                    })
 
                 tool_msg = self._provider.format_tool_results(tool_results, func_calls)
                 self.conversation.append(tool_msg)

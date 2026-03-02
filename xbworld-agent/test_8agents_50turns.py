@@ -137,6 +137,14 @@ def scan_action_log(agent: XBWorldAgent, metrics: AgentMetrics):
             })
 
 
+MULTIPLAYER_PORT = int(os.getenv("GAME_PORT", "6001"))
+
+
+async def _find_multiplayer_port() -> int:
+    """Return the multiplayer server port (from env or default 6001)."""
+    return MULTIPLAYER_PORT
+
+
 async def run_test():
     clients: list[GameClient] = []
     agents: list[XBWorldAgent] = []
@@ -144,11 +152,13 @@ async def run_test():
 
     logger.info("=== Starting 8-agent test for %d turns ===", TARGET_TURNS)
 
+    port = await _find_multiplayer_port()
+    logger.info("Using game server on port %d", port)
+
     first = GameClient(username=AGENT_CONFIGS[0]["name"])
-    await first.start_new_game("multiplayer")
-    port = first.server_port
+    await first.join_game(port)
     clients.append(first)
-    logger.info("Game server on port %d", port)
+    logger.info("First agent connected to port %d", port)
     logger.info("Observe: http://%s:%d/webclient/?action=observe&civserverport=%d",
                 NGINX_HOST, NGINX_PORT, port)
 

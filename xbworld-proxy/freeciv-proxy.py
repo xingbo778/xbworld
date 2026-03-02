@@ -39,6 +39,7 @@ import hashlib
 
 PROXY_PORT = 8002
 CONNECTION_LIMIT = 1000
+NO_AUTH = "--no-auth" in sys.argv
 
 civcoms = {}
 
@@ -46,11 +47,16 @@ chdir(sys.path[0])
 settings = configparser.ConfigParser()
 settings.read("settings.ini")
 
-mysql_user = settings.get("Config", "mysql_user")
-mysql_database = settings.get("Config", "mysql_database")
-mysql_password = settings.get("Config", "mysql_password")
-
-google_signin = settings.get("Config", "google_signin")
+if NO_AUTH:
+    mysql_user = ""
+    mysql_database = ""
+    mysql_password = ""
+    google_signin = ""
+else:
+    mysql_user = settings.get("Config", "mysql_user")
+    mysql_database = settings.get("Config", "mysql_database")
+    mysql_password = settings.get("Config", "mysql_password")
+    google_signin = settings.get("Config", "google_signin")
 
 
 class IndexHandler(web.RequestHandler):
@@ -88,7 +94,10 @@ class WSHandler(websocket.WebSocketHandler):
               self.write_message("[{\"pid\":5,\"message\":\"Error: Could not authenticate user. If you find a bug, please report it.\",\"you_can_join\":false,\"conn_id\":-1}]")
               return
             self.civserverport = login_message['port']
-            auth_ok = self.check_user(
+            if NO_AUTH:
+                auth_ok = True
+            else:
+                auth_ok = self.check_user(
                     login_message['username'] if 'username' in login_message else None,
                     login_message['password'] if 'password' in login_message else None)
             if (not auth_ok):
@@ -220,9 +229,12 @@ def validate_username(name):
 if __name__ == "__main__":
     try:
         print('Started Freeciv-proxy. Use Control-C to exit')
+        if NO_AUTH:
+            print('Auth disabled (--no-auth mode)')
 
-        if len(sys.argv) == 2:
-            PROXY_PORT = int(sys.argv[1])
+        port_args = [a for a in sys.argv[1:] if a != "--no-auth"]
+        if port_args:
+            PROXY_PORT = int(port_args[0])
         print(('port: ' + str(PROXY_PORT)))
 
         LOG_FILENAME = '../logs/freeciv-proxy-logging-' + str(PROXY_PORT) + '.log'

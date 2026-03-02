@@ -437,6 +437,72 @@ async def sentry_unit(client: GameClient, unit_id: int) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Batch tools — reduce round-trips for multi-unit/multi-city actions
+# ---------------------------------------------------------------------------
+
+@tool("move_units", "Move multiple units in one call. More efficient than calling move_unit repeatedly.",
+      params={"type": "object", "properties": {
+          "moves": {"type": "array", "description": "List of {unit_id, direction} objects",
+                    "items": {"type": "object",
+                              "properties": {
+                                  "unit_id": {"type": "integer", "description": "Unit ID"},
+                                  "direction": {"type": "string", "description": "Direction: N, NE, E, SE, S, SW, W, NW"},
+                              }, "required": ["unit_id", "direction"]}}
+      }, "required": ["moves"]})
+async def move_units(client: GameClient, moves: list) -> str:
+    results = []
+    for m in moves:
+        uid = m.get("unit_id")
+        d = str(m.get("direction", "")).strip().lower()
+        dir_num = DIRECTION_NAMES.get(d)
+        if dir_num is None:
+            results.append(f"Unit {uid}: invalid direction '{m.get('direction')}'")
+            continue
+        unit, type_name = _resolve_unit(client, uid)
+        if not unit:
+            results.append(f"Unit {uid}: not found")
+            continue
+        await client.unit_move(uid, dir_num)
+        results.append(f"Unit {uid} ({type_name}): moved {m.get('direction')}")
+    return "\n".join(results)
+
+
+@tool("set_productions", "Set production for multiple cities in one call.",
+      params={"type": "object", "properties": {
+          "productions": {"type": "array", "description": "List of {city_id, production_name} objects",
+                          "items": {"type": "object",
+                                    "properties": {
+                                        "city_id": {"type": "integer", "description": "City ID"},
+                                        "production_name": {"type": "string", "description": "Unit or building name"},
+                                    }, "required": ["city_id", "production_name"]}}
+      }, "required": ["productions"]})
+async def set_productions(client: GameClient, productions: list) -> str:
+    results = []
+    for p in productions:
+        cid = p.get("city_id")
+        pname = str(p.get("production_name", "")).strip().lower()
+        found = False
+        for uid, ut in client.state.unit_types.items():
+            name = ut.get("name", "").lower()
+            if name == pname or name == pname + "s" or name.rstrip("s") == pname:
+                await client.city_change_production(cid, 1, uid)
+                results.append(f"City {cid}: now producing {ut.get('name')}")
+                found = True
+                break
+        if not found:
+            for bid, b in client.state.buildings.items():
+                name = b.get("name", "").lower()
+                if name == pname or name == pname + "s" or name.rstrip("s") == pname:
+                    await client.city_change_production(cid, 0, bid)
+                    results.append(f"City {cid}: now producing {b.get('name')}")
+                    found = True
+                    break
+        if not found:
+            results.append(f"City {cid}: '{p.get('production_name')}' not found")
+    return "\n".join(results)
+
+
+# ---------------------------------------------------------------------------
 # Dispatch (for backward compatibility)
 # ---------------------------------------------------------------------------
 
