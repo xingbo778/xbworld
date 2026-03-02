@@ -29,7 +29,7 @@ import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, WebSocket
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
@@ -39,6 +39,7 @@ from config import (
 )
 from game_client import GameClient
 from agent import XBWorldAgent, DEFAULT_SYSTEM_PROMPT
+from ws_proxy import handle_civsocket
 
 logger = logging.getLogger("xbworld-server")
 
@@ -64,11 +65,14 @@ Always be concise. Respond in the same language as the user."""
 # Server Process Manager (replaces publite2)
 # ---------------------------------------------------------------------------
 class ServerManager:
-    """Manages freeciv-server and freeciv-proxy processes."""
+    """Manages freeciv-server processes.
+
+    The WebSocket proxy is now in-process (ws_proxy.py), so we only need
+    to spawn freeciv-server C processes.
+    """
 
     def __init__(self):
         self._servers: dict[int, subprocess.Popen] = {}
-        self._proxies: dict[int, subprocess.Popen] = {}
         self._log_dir = PROJECT_ROOT / "logs"
         self._log_dir.mkdir(exist_ok=True)
 
@@ -83,22 +87,17 @@ class ServerManager:
         raise RuntimeError(f"No free port in {start}-{end}")
 
     def spawn_game(self, game_type: str = "multiplayer") -> int:
-        """Spawn a freeciv-server + freeciv-proxy pair. Returns server port."""
+        """Spawn a freeciv-server. Returns server port.
+
+        No separate proxy process is needed — the WebSocket proxy runs
+        in-process via ws_proxy.py.
+        """
         port = self._find_free_port()
-        proxy_port = 1000 + port
 
         freeciv_bin = os.path.expanduser("~/freeciv/bin/freeciv-web")
         freeciv_data = os.path.expanduser("~/freeciv/share/freeciv/")
-        proxy_script = PROJECT_ROOT / "xbworld-proxy" / "freeciv-proxy.py"
 
         env = {**os.environ, "FREECIV_DATA_PATH": freeciv_data}
-
-        self._proxies[port] = subprocess.Popen(
-            [sys.executable, str(proxy_script), str(proxy_port)],
-            stdout=open(self._log_dir / f"proxy-{proxy_port}.log", "w"),
-            stderr=subprocess.STDOUT,
-            env=env,
-        )
 
         serv_script = f"pubscript_{game_type}.serv"
         self._servers[port] = subprocess.Popen(
@@ -111,24 +110,22 @@ class ServerManager:
             cwd=str(PROJECT_ROOT / "publite2"),
         )
 
-        logger.info("Spawned game: server=%d proxy=%d (pids %d, %d)",
-                     port, proxy_port,
-                     self._servers[port].pid, self._proxies[port].pid)
+        logger.info("Spawned freeciv-server on port %d (pid %d)",
+                     port, self._servers[port].pid)
         return port
 
     def kill_game(self, port: int):
-        for store, label in [(self._servers, "server"), (self._proxies, "proxy")]:
-            proc = store.pop(port, None)
-            if proc and proc.poll() is None:
+        proc = self._servers.pop(port, None)
+        if proc and proc.poll() is None:
+            try:
+                os.kill(proc.pid, signal.SIGTERM)
+                proc.wait(timeout=3)
+            except Exception:
                 try:
-                    os.kill(proc.pid, signal.SIGTERM)
-                    proc.wait(timeout=3)
+                    proc.kill()
                 except Exception:
-                    try:
-                        proc.kill()
-                    except Exception:
-                        pass
-                logger.info("Stopped %s for port %d", label, port)
+                    pass
+            logger.info("Stopped server for port %d", port)
 
     def kill_all(self):
         for port in list(self._servers.keys()):
@@ -141,7 +138,6 @@ class ServerManager:
                 active.append(port)
             else:
                 self._servers.pop(port, None)
-                self._proxies.pop(port, None)
         return {
             "total": len(active),
             "single": 0,
@@ -382,6 +378,16 @@ async def api_agent_log(name: str, limit: int = 50):
 @app.get("/servers")
 async def api_servers():
     return server_mgr.status()
+
+
+# --- In-process WebSocket proxy (replaces Tornado freeciv-proxy) ---
+
+@app.websocket("/civsocket/{proxy_port}")
+async def ws_civsocket(ws: WebSocket, proxy_port: int):
+    """WebSocket proxy endpoint — bridges browser to freeciv-server via TCP.
+    The proxy_port in the URL is kept for client compatibility but the actual
+    server port is determined from the login packet."""
+    await handle_civsocket(ws, proxy_port)
 
 
 # --- Static file serving (replaces Tomcat + nginx for dev) ---

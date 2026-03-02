@@ -125,7 +125,12 @@ class GameOrchestrator:
         self.state_tracker = StateTracker()
 
     def _spawn_server(self, port: int) -> None:
-        """Start a freeciv-server + freeciv-proxy without Tomcat/publite2."""
+        """Start a freeciv-server + freeciv-proxy for standalone mode.
+
+        When running via server.py, the WebSocket proxy is in-process and
+        only the C server needs to be spawned. In standalone CLI mode we
+        still need the Tornado proxy as a separate process.
+        """
         freeciv_bin = os.path.expanduser("~/freeciv/bin/freeciv-web")
         freeciv_data = os.path.expanduser("~/freeciv/share/freeciv/")
         project_root = Path(__file__).resolve().parent.parent
@@ -137,7 +142,7 @@ class GameOrchestrator:
 
         proxy_port = 1000 + port
         self._proxy_proc = subprocess.Popen(
-            [sys.executable, str(proxy_script), str(proxy_port), "--no-auth"],
+            [sys.executable, str(proxy_script), str(proxy_port)],
             stdout=open(log_dir / f"proxy-{proxy_port}.log", "w"),
             stderr=subprocess.STDOUT,
             env=env,
