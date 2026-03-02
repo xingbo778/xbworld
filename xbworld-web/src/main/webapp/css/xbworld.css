@@ -1,0 +1,464 @@
+/**
+ * XBWorld unified stylesheet.
+ * Replaces: civclient.css, pregame.css, theme.dark.css, bluecurve.css,
+ *           jQuery UI CSS, and all plugin CSS.
+ */
+
+/* === CSS Custom Properties === */
+:root {
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-surface: #0f3460;
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --text-accent: #e94560;
+  --border-color: #2a2a4a;
+  --accent: #e94560;
+  --accent-hover: #ff6b81;
+  --gold: #ffd700;
+  --success: #4caf50;
+  --warning: #ff9800;
+  --danger: #f44336;
+  --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Cascadia Code', 'Fira Code', monospace;
+  --radius: 6px;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --transition: 0.2s ease;
+}
+
+/* === Reset === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-main);
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* === Buttons === */
+.xb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.xb-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.xb-btn:active { transform: scale(0.97); }
+.xb-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.xb-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.xb-btn-primary:hover { background: var(--accent-hover); }
+
+/* === Pregame === */
+#pregame_page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  padding: 20px;
+}
+#pregame_buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+#xbworld_logo {
+  width: 200px;
+  height: 60px;
+  margin: 0 auto 20px;
+  background: url('/images/xbworld-logo.svg') center/contain no-repeat;
+}
+#pregame_message_area {
+  list-style: none;
+  max-height: 200px;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 600px;
+  padding: 10px;
+  background: var(--bg-overlay);
+  border-radius: var(--radius);
+  font-size: 12px;
+}
+#pregame_message_area li { padding: 2px 0; }
+#pregame_chat_box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 600px;
+  margin-top: 10px;
+}
+#pregame_text_input, #game_text_input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+}
+#pregame_text_input:focus, #game_text_input:focus {
+  border-color: var(--accent);
+}
+
+/* === Game Page === */
+#game_page { height: 100vh; display: flex; flex-direction: column; }
+#tabs { flex: 1; display: flex; flex-direction: column; }
+
+/* === Tab Menu === */
+#tabs_menu {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  background: var(--bg-secondary);
+  border-bottom: 2px solid var(--border-color);
+  padding: 0 8px;
+  height: 42px;
+  gap: 2px;
+  overflow-x: auto;
+}
+#tabs_menu li {
+  display: flex;
+  align-items: center;
+}
+#tabs_menu li a {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+#tabs_menu li a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+#tabs_menu li.ui-state-active a {
+  color: var(--accent);
+  background: var(--bg-primary);
+  border-bottom: 2px solid var(--accent);
+}
+.tab-label { font-size: 12px; }
+#game_status_panel_top {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+#turn_done_button_div { display: flex; align-items: center; padding: 0 8px; }
+.lang-toggle-li a { padding: 8px !important; }
+
+/* === Map View === */
+#tabs-map { flex: 1; position: relative; overflow: hidden; }
+#mapview_canvas_div { position: relative; width: 100%; height: 100%; }
+#canvas_div {
+  position: absolute;
+  inset: 0;
+  background: #000;
+}
+#canvas_div canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* === Chat Panel === */
+#game_chatbox_panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 350px;
+  max-height: 250px;
+  background: var(--bg-overlay);
+  border-radius: 0 var(--radius) 0 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+#xbworld_custom_scrollbar_div {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+#game_message_area {
+  list-style: none;
+  font-size: 12px;
+  line-height: 1.4;
+}
+#game_message_area li { padding: 2px 0; }
+#game_chat_box { padding: 6px 8px; border-top: 1px solid var(--border-color); }
+
+/* === Unit Orders === */
+#game_unit_orders_default {
+  position: absolute;
+  bottom: 260px;
+  left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px;
+  background: var(--bg-overlay);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  z-index: 10;
+}
+.order_button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-surface);
+  cursor: pointer;
+  transition: all var(--transition);
+  padding: 2px;
+}
+.order_button:hover { background: var(--accent); border-color: var(--accent); }
+.order_button img { width: 28px; height: 28px; }
+
+/* === Overview Map === */
+#game_overview_panel {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  z-index: 10;
+  background: var(--bg-overlay);
+  border-radius: var(--radius) 0 0 0;
+  padding: 4px;
+}
+#overview_canvas { display: block; }
+
+/* === Unit Info === */
+#game_unit_panel {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  min-width: 200px;
+  padding: 8px 12px;
+  background: var(--bg-overlay);
+  border-radius: var(--radius);
+  font-size: 12px;
+  z-index: 10;
+}
+
+/* === Status Panel Bottom === */
+#game_status_panel_bottom {
+  position: absolute;
+  bottom: 0;
+  left: 350px;
+  right: 210px;
+  padding: 6px 12px;
+  background: var(--bg-overlay);
+  font-size: 12px;
+  text-align: center;
+  z-index: 10;
+}
+.negative_net_income { color: var(--danger); }
+
+/* === Tab Content Panels === */
+#tabs-civ, #tabs-tec, #tabs-nat, #tabs-cities, #tabs-opt, #tabs-hel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background: var(--bg-primary);
+}
+#tabs-civ h2, #tabs-cities h2, #tabs-opt h2 { margin-bottom: 12px; }
+
+/* === Civ/Government Tab === */
+.govbutton { margin: 4px 0; }
+
+/* === Tech Tab === */
+#tech_info_box { margin-bottom: 12px; }
+#progress_bg {
+  position: relative;
+  height: 20px;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  overflow: hidden;
+}
+#progress_fg {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+#tech_progress_text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+}
+#tech_canvas { max-width: 100%; }
+
+/* === Nations Tab === */
+#nations_button_div { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+#nations_list { width: 100%; }
+#nations_list table { width: 100%; border-collapse: collapse; }
+#nations_list th, #nations_list td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+#nations_list tr:hover { background: rgba(255,255,255,0.03); }
+
+/* === Cities Tab === */
+#cities_scroll { overflow-x: auto; }
+#cities_list table { width: 100%; border-collapse: collapse; }
+#cities_list th, #cities_list td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 12px;
+}
+
+/* === Dialog System === */
+.xb-dialog {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 0;
+  min-width: 300px;
+  max-width: 90vw;
+  max-height: 80vh;
+  box-shadow: var(--shadow);
+}
+.xb-dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+.xb-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  cursor: move;
+  user-select: none;
+}
+.xb-dialog-title { font-weight: 600; font-size: 14px; }
+.xb-dialog-controls { display: flex; gap: 4px; }
+.xb-dialog-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.xb-dialog-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+.xb-dialog-close:hover { background: var(--danger); color: #fff; }
+.xb-dialog-body {
+  padding: 14px;
+  overflow-y: auto;
+  max-height: 60vh;
+}
+.xb-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* === Block UI Overlay === */
+.xb-block-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+.xb-block-message {
+  padding: 24px 40px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 16px;
+  box-shadow: var(--shadow);
+}
+
+/* === Alert Types === */
+.xb-alert-info { color: var(--text-primary); }
+.xb-alert-error { color: var(--danger); }
+.xb-alert-warning { color: var(--warning); }
+
+/* === Nation Grid (Picker) === */
+.nation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.nation-option {
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-size: 12px;
+}
+.nation-option:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* === Responsive === */
+@media (max-width: 600px) {
+  #tabs_menu { height: 36px; }
+  #tabs_menu li a { padding: 6px 8px; font-size: 11px; }
+  .tab-label { display: none; }
+  #game_chatbox_panel { width: 100%; }
+  #game_status_panel_bottom { left: 0; right: 0; }
+  #game_unit_orders_default { bottom: auto; top: 50px; }
+  .order_button { width: 30px; height: 30px; }
+  .order_button img { width: 24px; height: 24px; }
+}

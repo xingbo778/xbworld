@@ -1,219 +1,157 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>XBWorld</title>
-<link rel="stylesheet" href="/css/font-awesome.min.css">
-<link rel="stylesheet" type="text/css" href="/css/webclient.min.css" />
-<meta name="description" content="XBWorld is an AI-powered civilization strategy game inspired by the history of human civilization.">
-<script type="text/javascript">
-var ts="";
-var fcwDebug=false;
-</script>
-<script type="text/javascript" src="/javascript/libs/jquery.min.js"></script>
-<script type="text/javascript" src="/javascript/webclient.min.js"></script>
-<script type="text/javascript" src="/music/audio.min.js"></script>
+  <meta charset="UTF-8">
+  <title>XBWorld</title>
+  <meta name="description" content="XBWorld is an AI-powered civilization strategy game inspired by the history of human civilization.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<link rel="shortcut icon" href="/images/xbworld-favicon.svg" />
-<link rel="apple-touch-icon" href="/images/xbworld-logo.svg" />
+  <link rel="shortcut icon" href="/src/main/webapp/images/xbworld-favicon.svg">
+  <link rel="apple-touch-icon" href="/src/main/webapp/images/xbworld-logo.svg">
+  <link rel="manifest" href="/static/manifest.json">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, minimal-ui" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<link rel="manifest" href="/static/manifest.json">
+  <link rel="stylesheet" href="/src/main/webapp/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/src/main/webapp/css/xbworld.css">
 </head>
 
 <body>
 
-<!-- pregame -->
+<!-- Pregame -->
 <div id="pregame_page">
   <div id="pregame_options">
     <div id="pregame_buttons">
-        <div id="xbworld_logo" style="cursor:pointer" onclick="window.open('/', '_new');"></div>
-        <button id="start_game_button" type="button" class="button"><i class="fa fa-check-circle-o" aria-hidden="true"></i> <b>Start Game</b></button>
-        <button id="load_game_button" type="button" class="button"><i class="fa fa-file-o" aria-hidden="true"></i> Load Game</button>
-        <button id="pick_nation_button" type="button" class="button"><i class="fa fa-flag" aria-hidden="true"></i> Pick Nation</button>
-        <button id="pregame_settings_button" type="button" class="button"><i class="fa fa-cogs" aria-hidden="true"></i> Game Settings</button>
+      <div id="xbworld_logo" style="cursor:pointer"></div>
+      <button id="start_game_button" type="button" class="xb-btn xb-btn-primary"><i class="fa fa-check-circle-o"></i> <b>Start Game</b></button>
+      <button id="load_game_button" type="button" class="xb-btn"><i class="fa fa-file-o"></i> Load Game</button>
+      <button id="pick_nation_button" type="button" class="xb-btn"><i class="fa fa-flag"></i> Pick Nation</button>
+      <button id="pregame_settings_button" type="button" class="xb-btn"><i class="fa fa-cogs"></i> Game Settings</button>
     </div>
   </div>
   <div id="pregame_player_list"></div>
   <div id="pregame_game_info"></div>
   <ol id="pregame_message_area"></ol>
   <div id="pregame_chat_box">
-    <i class="fa fa-commenting-o fa-2" aria-hidden="true" style="color: white; font-size: 160%;"></i>
+    <i class="fa fa-commenting-o fa-2" style="color: white; font-size: 160%;"></i>
     <input id="pregame_text_input" type="text" name="text_input" value=">" />
   </div>
 </div>
 <div id="pick_nation_dialog"></div>
 
-<!-- game page -->
+<!-- Game Page -->
 <div id="game_page" style="display: none;">
-    <div id="tabs">
-        <ul id="tabs_menu">
-            <div id="xbworld_logo"></div>
-            <li id="map_tab"><a href="#tabs-map" title="Map / 地图"><i class="fa fa-globe" aria-hidden="true"></i> <span class="tab-label" data-i18n="tab_map">Map</span></a></li>
-            <li id="civ_tab"><a href="#tabs-civ" title="Government / 政府"><i class="fa fa-university" aria-hidden="true"></i> <span class="tab-label" data-i18n="tab_gov">Government</span></a></li>
-            <li id="tech_tab"><a id="tech_tab_item" href="#tabs-tec" title="Research / 科研"><i class="fa fa-flask" aria-hidden="true"></i> <span class="tab-label" data-i18n="tab_research">Research</span></a></li>
-            <li id="players_tab"><a href="#tabs-nat" title="Nations / 国家"><i class="fa fa-flag" aria-hidden="true"></i> <span class="tab-label" data-i18n="tab_nations">Nations</span></a></li>
-            <li id="cities_tab"><a href="#tabs-cities" title="Cities / 城市"><i class="fa fa-fort-awesome" aria-hidden="true"></i> <span class="tab-label" data-i18n="tab_cities">Cities</span></a></li>
-            <li id="opt_tab"><a href="#tabs-opt" title="Options / 选项"><i class="fa fa-cogs" aria-hidden="true"></i> <span class="tab-label" data-i18n="tab_options">Options</span></a></li>
-            <li id="hel_tab"><a href="#tabs-hel" title="Manual / 手册"><i class="fa fa-question-circle-o" aria-hidden="true"></i> <span class="tab-label" data-i18n="tab_manual">Manual</span></a></li>
-            <li id="lang_toggle" class="lang-toggle-li"><a href="javascript:void(0)" onclick="toggleLanguage()" title="中文/EN"><i class="fa fa-language" aria-hidden="true"></i></a></li>
-            <div id="game_status_panel_top"></div>
-            <div id="turn_done_button_div">
-                <button id="turn_done_button" type="button" class="button" title="Ends your turn. (Shift+Enter)" data-i18n="btn_turn_done">Turn Done</button>
-            </div>
-        </ul>
+  <div id="tabs">
+    <ul id="tabs_menu">
+      <div id="xbworld_logo_tabs"></div>
+      <li id="map_tab" class="ui-state-active"><a href="#tabs-map" title="Map"><i class="fa fa-globe"></i> <span class="tab-label" data-i18n="tab_map">Map</span></a></li>
+      <li id="civ_tab"><a href="#tabs-civ" title="Government"><i class="fa fa-university"></i> <span class="tab-label" data-i18n="tab_gov">Government</span></a></li>
+      <li id="tech_tab"><a id="tech_tab_item" href="#tabs-tec" title="Research"><i class="fa fa-flask"></i> <span class="tab-label" data-i18n="tab_research">Research</span></a></li>
+      <li id="players_tab"><a href="#tabs-nat" title="Nations"><i class="fa fa-flag"></i> <span class="tab-label" data-i18n="tab_nations">Nations</span></a></li>
+      <li id="cities_tab"><a href="#tabs-cities" title="Cities"><i class="fa fa-fort-awesome"></i> <span class="tab-label" data-i18n="tab_cities">Cities</span></a></li>
+      <li id="opt_tab"><a href="#tabs-opt" title="Options"><i class="fa fa-cogs"></i> <span class="tab-label" data-i18n="tab_options">Options</span></a></li>
+      <li id="hel_tab"><a href="#tabs-hel" title="Manual"><i class="fa fa-question-circle-o"></i> <span class="tab-label" data-i18n="tab_manual">Manual</span></a></li>
+      <li id="lang_toggle" class="lang-toggle-li"><a href="javascript:void(0)" id="lang_toggle_btn" title="中文/EN"><i class="fa fa-language"></i></a></li>
+      <div id="game_status_panel_top"></div>
+      <div id="turn_done_button_div">
+        <button id="turn_done_button" type="button" class="xb-btn xb-btn-primary" title="Ends your turn. (Shift+Enter)" data-i18n="btn_turn_done">Turn Done</button>
+      </div>
+    </ul>
 
-        <div id="tabs-map" tabindex="-1">
-            <!-- canvas -->
-            <image id="map_tiletype_grid" style="display:none;">
-            <image id="borders_image" style="display:none;">
-            <image id="roads_image" style="display:none;">
-            <canvas id="roads_canvas" style="display:none;"></canvas>
-            <div id="mapview_canvas_div">
-                <div id="canvas_div"></div>
-                <div id="game_chatbox_panel">
-                    <div id="xbworld_custom_scrollbar_div">
-                        <ol id="game_message_area"></ol>
-                    </div>
-                    <div id="game_chat_box">
-                        <canvas id="chat_direction" width="29" height="20" role="button"></canvas>
-                        <input id="game_text_input" type="text" name="text_input" />
-                    </div>
-                </div>
-                <div id="game_status_panel_bottom"></div>
+    <div id="tabs-map" tabindex="-1">
+      <div id="mapview_canvas_div">
+        <div id="canvas_div"></div>
+        <div id="game_chatbox_panel">
+          <div id="xbworld_custom_scrollbar_div">
+            <ol id="game_message_area"></ol>
+          </div>
+          <div id="game_chat_box">
+            <input id="game_text_input" type="text" name="text_input" placeholder="Chat..." />
+          </div>
+        </div>
+        <div id="game_status_panel_bottom"></div>
 
-                <!-- orders -->
-                <div id="game_unit_orders_default">
-                    <div id="order_goto" class="order_button" title="Go to tile (G)"><a href="#" onclick="activate_goto();"><img src="/images/orders/goto_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_explore" class="order_button" title="Auto explore map (X)"><a href="#" onclick="key_unit_auto_explore();"><img src="/images/orders/auto_explore_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_fortify" class="order_button" title="Fortify unit (F)"><a href="#" onclick="key_unit_fortify();"><img src="/images/orders/fortify_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_pillage" class="order_button" title="Pillage (Shift-P)"><a href="#" onclick="key_unit_pillage();"><img src="/images/orders/pillage.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_build_city" class="order_button" title="Build new city (B)"><a href="#" onclick="request_unit_build_city();"><img src="/images/orders/build_city_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_auto_workers" class="order_button" title="Auto build worker improvements (A)"><a href="#" onclick="key_unit_auto_work();"><img src="/images/orders/auto_workers_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_irrigate" class="order_button" title="Create irrigation (i)"><a href="#" onclick="key_unit_irrigate();"><img src="/images/orders/irrigate_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_forest_remove" class="order_button" title="Cultivate (I)"><a href="#" onclick="key_unit_cultivate();"><img src="/images/orders/forest_remove_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_build_farmland" class="order_button" title="Build farmland (i)"><a href="#" onclick="key_unit_irrigate();"><img src="/images/orders/irrigate_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_road" class="order_button" title="Build road (R)"><a href="#" onclick="key_unit_road();"><img src="/images/orders/road_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_railroad" class="order_button" title="Build railroad (R)"><a href="#" onclick="key_unit_road();"><img src="/images/orders/railroad_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_maglev" class="order_button" title="Build maglev (R)"><a href="#" onclick="key_unit_road();"><img src="/images/orders/railroad_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_forest_add" class="order_button" title="Plant (M)"><a href="#" onclick="key_unit_plant();"><img src="/images/orders/forest_add_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_mine" class="order_button" title="Build mine (m)"><a href="#" onclick="key_unit_mine();"><img src="/images/orders/mine_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_transform" class="order_button" title="Transform terrain (O)"><a href="#" onclick="key_unit_transform();"><img src="/images/orders/transform_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_clean" class="order_button" title="Remove pollution (P)"><a href="#" onclick="key_unit_clean();"><img src="/images/orders/clean.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_sentry" class="order_button" title="Sentry unit (S)"><a href="#" onclick="key_unit_sentry();"><img src="/images/orders/sentry_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_paradrop" class="order_button" title="Paradrop"><a href="#" onclick="key_unit_paradrop();"><img src="/images/orders/paradrop.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_nuke" class="order_button" title="Detonate Nuke At (Shift-N)"><a href="#" onclick="key_unit_nuke();"><img src="/images/orders/nuke.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_change_homecity" class="order_button" title="Change homecity of unit (h)"><a href="#" onclick="key_unit_homecity();"><img src="/images/orders/rehome_default.png" alt="" width="30" height="30"></a></div>
-                    <div id="order_disband" class="order_button" title="Disband unit"><a href="#" onclick="key_unit_disband();"><img src="/images/orders/disband_default.png" alt="" width="30" height="30"></a></div>
-                </div>
-                <div id="game_unit_orders_settlers" style="display: none;"></div>
-
-                <div id="game_overview_panel">
-                    <div id="overview_map">
-                        <img id="overview_img"/>
-                        <canvas id="overview_viewrect"></canvas>
-                    </div>
-                </div>
-                <div id="game_unit_panel">
-                    <div id="game_unit_info">&nbsp;</div>
-                </div>
-            </div>
+        <div id="game_unit_orders_default">
+          <button id="order_goto" class="order_button" title="Go to tile (G)"><img src="/images/orders/goto_default.png" alt="Goto" width="30" height="30"></button>
+          <button id="order_explore" class="order_button" title="Auto explore (X)"><img src="/images/orders/auto_explore_default.png" alt="Explore" width="30" height="30"></button>
+          <button id="order_fortify" class="order_button" title="Fortify (F)"><img src="/images/orders/fortify_default.png" alt="Fortify" width="30" height="30"></button>
+          <button id="order_build_city" class="order_button" title="Build city (B)"><img src="/images/orders/build_city_default.png" alt="Build" width="30" height="30"></button>
+          <button id="order_road" class="order_button" title="Build road (R)"><img src="/images/orders/road_default.png" alt="Road" width="30" height="30"></button>
+          <button id="order_irrigate" class="order_button" title="Irrigate (I)"><img src="/images/orders/irrigate_default.png" alt="Irrigate" width="30" height="30"></button>
+          <button id="order_mine" class="order_button" title="Mine (M)"><img src="/images/orders/mine_default.png" alt="Mine" width="30" height="30"></button>
+          <button id="order_sentry" class="order_button" title="Sentry (S)"><img src="/images/orders/sentry_default.png" alt="Sentry" width="30" height="30"></button>
+          <button id="order_auto_workers" class="order_button" title="Auto workers (A)"><img src="/images/orders/auto_workers_default.png" alt="Auto" width="30" height="30"></button>
+          <button id="order_pillage" class="order_button" title="Pillage (Shift-P)"><img src="/images/orders/pillage.png" alt="Pillage" width="30" height="30"></button>
+          <button id="order_disband" class="order_button" title="Disband"><img src="/images/orders/disband_default.png" alt="Disband" width="30" height="30"></button>
         </div>
 
-        <div id="tabs-civ">
-            <div id="civ_dialog">
-                <h2 id="nation_title">Your Nation</h2>
-                <div id="civ_dialog_text"></div>
-                <button id="revolution_button" class="button govbutton" type="button" onclick="show_revolution_dialog();">Revolution</button><br>
-                <button id="taxrates_button" class="button govbutton" type="button" onclick="show_tax_rates_dialog();">Tax Rates</button><br>
-                <button id="wonders_report" class="button govbutton" type="button" onclick="request_report(REPORT_WONDERS_OF_THE_WORLD_LONG);">Wonders of the World</button><br>
-                <button id="top_cities_report" class="button govbutton" type="button" onclick="request_report(REPORT_TOP_CITIES);">Top Cities</button><br>
-                <button id="demography_report" class="button govbutton" type="button" onclick="request_report(REPORT_DEMOGRAPHIC);">Demographics</button><br>
-                <button id="spaceship_report" class="button govbutton" type="button" onclick="show_spaceship_dialog();">Spaceship</button><br>
-            </div>
+        <div id="game_overview_panel">
+          <div id="overview_map">
+            <canvas id="overview_canvas" width="200" height="100"></canvas>
+          </div>
         </div>
-
-        <div id="tabs-tec">
-            <div id="technology_dialog">
-                <div id="tech_info_box">
-                    <div id="tech_goal_box"></div>
-                    <div id="tech_progress_box">
-                        <div id="progress_bg"><div id="progress_fg">&nbsp;</div><span id="tech_progress_text"></span></div>
-                        <div><span id="bulbs_output"></span></div>
-                    </div>
-                    <div id="tech_results">
-                        <span id="tech_result_text"></span>
-                        <div id="tech_unit_info"></div>
-                        <div id="tech_color_help" style="float: left; padding: 4px; font-size: 75%;">
-                            <div style="background-color: white; float: left; color: black; padding: 2px; margin: 1px;">Known tech</div>
-                            <div style="background-color: rgb(91, 130, 61); color: white; float: left; padding: 2px; margin: 1px;">Possible research</div>
-                            <div style="background-color: rgb(161, 200, 131); color: black; float: left; padding: 2px; margin: 1px;"><b>Current research</b></div>
-                            <div style="background-color: rgb(61, 95, 130); color: white; float: left; padding: 2px; margin: 1px;">Unknown tech</div>
-                            <div style="background-color: rgb(111, 141, 180); color: black; float: left; padding: 2px; margin: 1px;"><b>Research goal</b></div>
-                        </div>
-                    </div>
-                </div>
-                <div id="technologies"><canvas id="tech_canvas"></canvas></div>
-            </div>
+        <div id="game_unit_panel">
+          <div id="game_unit_info">&nbsp;</div>
         </div>
-
-        <div id="tabs-nat">
-            <div>
-                <div><div id="nations_title"></div><div id="nations_label"></div></div>
-                <div id="nations_button_div">
-                    <button id="view_player_button" type="button" class="button">View on Map</button>
-                    <button id="meet_player_button" type="button" class="button">Meet Player</button>
-                    <button id="cancel_treaty_button" type="button" class="button">Cancel Treaty</button>
-                    <button id="withdraw_vision_button" type="button" class="button">Withdraw Vision</button>
-                    <button id="take_player_button" type="button" class="button">Play as this nation</button>
-                    <button id="toggle_ai_button" type="button" class="button">Toggle AI mode</button>
-                    <button id="game_scores_button" type="button" class="button">Game Scores</button>
-                    <button id="intelligence_report_button" type="button" class="button">Intelligence report</button>
-                    <button id="send_message_button" type="button" class="button">Send message</button>
-                </div>
-                <div id="nations"><div id="nations_list"></div></div>
-            </div>
-        </div>
-
-        <div id="tabs-cities">
-            <div>
-                <h2>Your Cities</h2>
-                <div id="cities_scroll"><div id="cities"><div id="cities_list"></div></div></div>
-            </div>
-        </div>
-
-        <div id="tabs-hel" class="manual_doc"></div>
-        <div id="tabs-chat"></div>
-
-        <div id="tabs-opt">
-            <div>
-                <div style="text-align: center;">
-                    <center>
-                        <h2>Game Options</h2>
-                        <div class="main_menu_buttons"><b>Music:</b><br><audio preload="none"></audio></div>
-                        <div class="main_menu_buttons">
-                            <table>
-                                <tr><td><button id="switch_renderer_button" type="button" class="button setting_button" onClick="switch_renderer();"></button></td><td><div id="renderer_help" style="font-size: 85%; max-width: 450px;"></div></td></tr>
-                                <tr><td><button id="replay_button" type="button" class="button setting_button" onClick="show_replay();">Show game replay</button></td><td>Show game replay</td></tr>
-                            </table>
-                        </div>
-                        <div class="main_menu_buttons" id="timeout_setting_div"><b>Timeout (seconds per turn):</b> <input type='number' name='timeout_setting' id='timeout_setting' size='6' max='3600' step='1'><span id="timeout_info"></span></div>
-                        <table>
-                            <tr><td><div class="main_menu_buttons"><b>Play sounds:</b> <input type='checkbox' name='play_sounds_setting' id='play_sounds_setting' checked></div></td><td><div class="main_menu_buttons"><b>Speech messages:</b> <input type='checkbox' name='speech_enabled_setting' id='speech_enabled_setting'></div></td></tr>
-                            <tr><td><div class="main_menu_buttons"><button id="save_button" type="button" class="button setting_button" onClick="save_game();" title="Save game (Ctrl+S)">Save Game (Ctrl+S)</button></div></td><td><div class="main_menu_buttons"><button id="fullscreen_button" type="button" class="button setting_button" onClick="show_fullscreen_window();">Fullscreen</button></div></td></tr>
-                            <tr><td><div class="main_menu_buttons"><button id="surrender_button" type="button" class="button setting_button" onClick="surrender_game();">Surrender Game</button></div></td><td><div class="main_menu_buttons"><button id="end_button" type="button" class="button setting_button" onClick="window.location='/';">End Game</button></div></td></tr>
-                        </table>
-                        <div class="main_menu_buttons" id="title_setting_div"><b>Game title:</b> <input type='text' name='metamessage_setting' id='metamessage_setting' size='28' maxlength='42'></div>
-                    </center>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
-</div>
 
-<div id="dialog"></div>
-<div id="city_name_dialog"></div>
+    <div id="tabs-civ">
+      <div id="civ_dialog">
+        <h2 id="nation_title">Your Nation</h2>
+        <div id="civ_dialog_text"></div>
+        <button id="revolution_button" class="xb-btn" type="button">Revolution</button>
+        <button id="taxrates_button" class="xb-btn" type="button">Tax Rates</button>
+        <button id="wonders_report" class="xb-btn" type="button">Wonders of the World</button>
+        <button id="demography_report" class="xb-btn" type="button">Demographics</button>
+      </div>
+    </div>
+
+    <div id="tabs-tec">
+      <div id="technology_dialog">
+        <div id="tech_info_box">
+          <div id="tech_goal_box"></div>
+          <div id="tech_progress_box">
+            <div id="progress_bg"><div id="progress_fg">&nbsp;</div><span id="tech_progress_text"></span></div>
+            <div><span id="bulbs_output"></span></div>
+          </div>
+          <div id="tech_results"><span id="tech_result_text"></span></div>
+        </div>
+        <div id="technologies"><canvas id="tech_canvas"></canvas></div>
+      </div>
+    </div>
+
+    <div id="tabs-nat">
+      <div id="nations_title"></div>
+      <div id="nations_button_div">
+        <button id="view_player_button" type="button" class="xb-btn">View on Map</button>
+        <button id="meet_player_button" type="button" class="xb-btn">Meet Player</button>
+        <button id="game_scores_button" type="button" class="xb-btn">Game Scores</button>
+      </div>
+      <div id="nations"><div id="nations_list"></div></div>
+    </div>
+
+    <div id="tabs-cities">
+      <h2>Your Cities</h2>
+      <div id="cities_scroll"><div id="cities"><div id="cities_list"></div></div></div>
+    </div>
+
+    <div id="tabs-hel" class="manual_doc"></div>
+
+    <div id="tabs-opt">
+      <div style="text-align: center;">
+        <h2>Game Options</h2>
+        <div class="main_menu_buttons"><b>Music:</b><br><audio preload="none"></audio></div>
+        <table>
+          <tr><td><button id="save_button" type="button" class="xb-btn" title="Save game (Ctrl+S)">Save Game</button></td>
+              <td><button id="fullscreen_button" type="button" class="xb-btn">Fullscreen</button></td></tr>
+          <tr><td><button id="surrender_button" type="button" class="xb-btn">Surrender</button></td>
+              <td><button id="end_button" type="button" class="xb-btn">End Game</button></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 var FC_I18N = {
@@ -228,9 +166,13 @@ var FC_I18N = {
     document.querySelectorAll('[data-i18n]').forEach(function(el) { el.textContent = FC_I18N.tr(el.getAttribute('data-i18n')); });
   }
 };
-function toggleLanguage() { FC_I18N.setLang(FC_I18N._lang === 'zh' ? 'en' : 'zh'); }
-if (FC_I18N._lang === 'zh') { document.addEventListener('DOMContentLoaded', function() { FC_I18N.setLang('zh'); }); }
+document.getElementById('lang_toggle_btn')?.addEventListener('click', function() {
+  FC_I18N.setLang(FC_I18N._lang === 'zh' ? 'en' : 'zh');
+});
+if (FC_I18N._lang === 'zh') document.addEventListener('DOMContentLoaded', function() { FC_I18N.setLang('zh'); });
 </script>
+
+<script type="module" src="/src/ts/main.ts"></script>
 
 </body>
 </html>

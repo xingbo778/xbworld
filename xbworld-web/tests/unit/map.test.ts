@@ -1,0 +1,100 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { store } from '@/data/store';
+import {
+  mapAllocate, mapPosToTile, indexToTile, isValidDir, isCardinalDir,
+  mapstep, getDirectionForStep, nativeToMapPos, mapToNativePos,
+  mapDistanceVector, mapVectorToSqDistance, dirGetName, Direction,
+} from '@/data/map';
+
+describe('Map', () => {
+  beforeEach(() => {
+    store.mapInfo = {
+      xsize: 10,
+      ysize: 10,
+      topology_id: 0,
+      wrap_id: 0,
+    };
+    mapAllocate();
+  });
+
+  it('should allocate tiles for the map', () => {
+    expect(Object.keys(store.tiles)).toHaveLength(100);
+    expect(store.tiles[0]?.x).toBe(0);
+    expect(store.tiles[0]?.y).toBe(0);
+    expect(store.tiles[99]?.x).toBe(9);
+    expect(store.tiles[99]?.y).toBe(9);
+  });
+
+  it('should convert map position to tile', () => {
+    const tile = mapPosToTile(3, 4);
+    expect(tile).toBeDefined();
+    expect(tile?.x).toBe(3);
+    expect(tile?.y).toBe(4);
+  });
+
+  it('should convert index to tile', () => {
+    const tile = indexToTile(25);
+    expect(tile).toBeDefined();
+    expect(tile?.index).toBe(25);
+  });
+
+  it('should validate directions', () => {
+    expect(isValidDir(Direction.NORTH)).toBe(true);
+    expect(isValidDir(Direction.EAST)).toBe(true);
+    expect(isValidDir(Direction.SOUTH)).toBe(true);
+    expect(isValidDir(Direction.WEST)).toBe(true);
+    expect(isValidDir(Direction.NORTHEAST)).toBe(true);
+    expect(isValidDir(99)).toBe(false);
+  });
+
+  it('should identify cardinal directions', () => {
+    expect(isCardinalDir(Direction.NORTH)).toBe(true);
+    expect(isCardinalDir(Direction.EAST)).toBe(true);
+    expect(isCardinalDir(Direction.NORTHEAST)).toBe(false);
+  });
+
+  it('should step to adjacent tiles', () => {
+    const center = store.tiles[55]; // (5, 5)
+    expect(center).toBeDefined();
+    const north = mapstep(center!, Direction.NORTH);
+    expect(north?.y).toBe(4);
+    expect(north?.x).toBe(5);
+  });
+
+  it('should find direction between adjacent tiles', () => {
+    const t1 = store.tiles[55]!; // (5, 5)
+    const t2 = store.tiles[56]!; // (6, 5)
+    const dir = getDirectionForStep(t1, t2);
+    expect(dir).toBe(Direction.EAST);
+  });
+
+  it('should convert native to map positions', () => {
+    const result = nativeToMapPos(3, 4);
+    expect(result.mapX).toBeTypeOf('number');
+    expect(result.mapY).toBeTypeOf('number');
+  });
+
+  it('should convert map to native positions', () => {
+    const result = mapToNativePos(5, 5);
+    expect(result.natX).toBeTypeOf('number');
+    expect(result.natY).toBeTypeOf('number');
+  });
+
+  it('should compute distance vectors', () => {
+    const t1 = { x: 2, y: 3 };
+    const t2 = { x: 5, y: 7 };
+    const [dx, dy] = mapDistanceVector(t1, t2);
+    expect(dx).toBe(3);
+    expect(dy).toBe(4);
+  });
+
+  it('should compute squared distance', () => {
+    expect(mapVectorToSqDistance(3, 4)).toBe(25); // dx*dx + dy*dy for non-hex
+  });
+
+  it('should return direction names', () => {
+    expect(dirGetName(Direction.NORTH)).toBe('N');
+    expect(dirGetName(Direction.SOUTHEAST)).toBe('SE');
+    expect(dirGetName(99)).toBe('[Undef]');
+  });
+});
