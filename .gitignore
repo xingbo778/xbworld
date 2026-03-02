@@ -6,9 +6,13 @@ freeciv/build/
 *.pyc
 __pycache__/
 
-# Java build output
+# Java (removed — no longer used)
 **/target/
 *.class
+*.war
+*.jar
+xbworld-web/src/main/java/
+xbworld-web/src/main/resources/db/
 
 # Logs
 logs/
