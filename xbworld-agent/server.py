@@ -94,8 +94,8 @@ class ServerManager:
         """
         port = self._find_free_port()
 
-        freeciv_bin = os.path.expanduser("~/freeciv/bin/freeciv-web")
-        freeciv_data = os.path.expanduser("~/freeciv/share/freeciv/")
+        freeciv_bin = os.getenv("FREECIV_BIN", os.path.expanduser("~/freeciv/bin/freeciv-web"))
+        freeciv_data = os.getenv("FREECIV_DATA_PATH", os.path.expanduser("~/freeciv/share/freeciv/"))
 
         env = {**os.environ, "FREECIV_DATA_PATH": freeciv_data}
 
@@ -420,8 +420,9 @@ async def root():
 def main():
     parser = argparse.ArgumentParser(description="XBWorld Unified Server")
     parser.add_argument("--host", type=str, default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=8080,
-                        help="HTTP server port (default 8080)")
+    parser.add_argument("--port", type=int,
+                        default=int(os.getenv("PORT", "8080")),
+                        help="HTTP server port (default $PORT or 8080)")
     parser.add_argument("--agents", type=int, default=0,
                         help="Auto-start a game with N agents")
     parser.add_argument("-v", "--verbose", action="store_true")

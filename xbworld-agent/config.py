@@ -4,7 +4,7 @@ import os
 
 # XBWorld unified server
 SERVER_HOST = os.getenv("XBWORLD_HOST", "localhost")
-SERVER_PORT = int(os.getenv("XBWORLD_PORT", "8080"))
+SERVER_PORT = int(os.getenv("PORT", os.getenv("XBWORLD_PORT", "8080")))
 
 LAUNCHER_URL = f"http://{SERVER_HOST}:{SERVER_PORT}/civclientlauncher"
 WS_BASE_URL = f"ws://{SERVER_HOST}:{SERVER_PORT}/civsocket"
@@ -31,4 +31,4 @@ GAME_TURN_TIMEOUT = int(os.getenv("GAME_TURN_TIMEOUT", "30"))
 
 # Multi-agent HTTP API
 API_HOST = os.getenv("XBWORLD_API_HOST", "0.0.0.0")
-API_PORT = int(os.getenv("XBWORLD_API_PORT", "8080"))
+API_PORT = int(os.getenv("PORT", os.getenv("XBWORLD_API_PORT", "8080")))
