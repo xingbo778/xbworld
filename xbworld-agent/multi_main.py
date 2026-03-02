@@ -36,15 +36,18 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 import uvicorn
 
 from config import (
     LAUNCHER_URL, API_HOST, API_PORT, NGINX_HOST, NGINX_PORT,
-    LLM_MODEL, LLM_API_KEY, LLM_BASE_URL,
+    LLM_MODEL, LLM_API_KEY, LLM_BASE_URL, GAME_TURN_TIMEOUT,
 )
 from game_client import GameClient
 from agent import XBWorldAgent, DEFAULT_SYSTEM_PROMPT
+from agent_tools import TOOL_REGISTRY, execute_tool
+from state_api import game_state_to_json, StateTracker
+from decision_engine import ToolCall, ExternalEngine
 
 logger = logging.getLogger("xbworld-multi")
 
@@ -80,21 +83,53 @@ def _find_free_port(start: int = 6000, end: int = 6100) -> int:
     raise RuntimeError(f"No free port in {start}-{end}")
 
 
+class EventBus:
+    """Simple pub/sub for SSE game events."""
+
+    def __init__(self):
+        self._subscribers: list[asyncio.Queue] = []
+
+    def subscribe(self) -> asyncio.Queue:
+        q: asyncio.Queue = asyncio.Queue(maxsize=200)
+        self._subscribers.append(q)
+        return q
+
+    def unsubscribe(self, q: asyncio.Queue):
+        try:
+            self._subscribers.remove(q)
+        except ValueError:
+            pass
+
+    def publish(self, event: dict):
+        for q in self._subscribers:
+            try:
+                q.put_nowait(event)
+            except asyncio.QueueFull:
+                try:
+                    q.get_nowait()
+                    q.put_nowait(event)
+                except (asyncio.QueueEmpty, asyncio.QueueFull):
+                    pass
+
+
 class GameOrchestrator:
     def __init__(self):
         self.agents: dict[str, XBWorldAgent] = {}
         self.clients: dict[str, GameClient] = {}
+        self.external_clients: dict[str, GameClient] = {}
         self.server_port: int = -1
         self._tasks: list[asyncio.Task] = []
         self._server_proc: subprocess.Popen | None = None
         self._proxy_proc: subprocess.Popen | None = None
+        self.events = EventBus()
+        self.state_tracker = StateTracker()
 
     def _spawn_server(self, port: int) -> None:
         """Start a freeciv-server + freeciv-proxy without Tomcat/publite2."""
         freeciv_bin = os.path.expanduser("~/freeciv/bin/freeciv-web")
         freeciv_data = os.path.expanduser("~/freeciv/share/freeciv/")
         project_root = Path(__file__).resolve().parent.parent
-        proxy_script = project_root / "freeciv-proxy" / "freeciv-proxy.py"
+        proxy_script = project_root / "xbworld-proxy" / "freeciv-proxy.py"
         log_dir = project_root / "logs"
         log_dir.mkdir(exist_ok=True)
 
@@ -102,7 +137,7 @@ class GameOrchestrator:
 
         proxy_port = 1000 + port
         self._proxy_proc = subprocess.Popen(
-            [sys.executable, str(proxy_script), str(proxy_port)],
+            [sys.executable, str(proxy_script), str(proxy_port), "--no-auth"],
             stdout=open(log_dir / f"proxy-{proxy_port}.log", "w"),
             stderr=subprocess.STDOUT,
             env=env,
@@ -138,7 +173,8 @@ class GameOrchestrator:
     async def create_game(self, agent_configs: list[dict],
                           server_port: int = None,
                           aifill: int = 0,
-                          standalone: bool = False):
+                          standalone: bool = False,
+                          turn_timeout: int | None = None):
         """Create a multiplayer game and connect all agents.
 
         If *standalone* is True, spawn freeciv-server + proxy directly
@@ -181,7 +217,8 @@ class GameOrchestrator:
             llm_model = cfg.get("llm_model")
             prompt = STRATEGY_PROMPT_TEMPLATE.format(name=cfg["name"], strategy=strategy)
             agent = XBWorldAgent(client, name=cfg["name"],
-                                 system_prompt=prompt, llm_model=llm_model)
+                                 system_prompt=prompt, llm_model=llm_model,
+                                 event_bus=self.events)
             self.agents[cfg["name"]] = agent
 
         first_name = agent_configs[0]["name"]
@@ -190,7 +227,8 @@ class GameOrchestrator:
         if aifill > 0:
             await first_client.send_chat(f"/set aifill {total_players}")
             await asyncio.sleep(0.5)
-        await first_client.send_chat("/set timeout 0")
+        effective_timeout = turn_timeout if turn_timeout is not None else GAME_TURN_TIMEOUT
+        await first_client.send_chat(f"/set timeout {effective_timeout}")
         await asyncio.sleep(0.5)
 
         logger.info("All %d agents connected to port %d. Starting game...",
@@ -220,7 +258,10 @@ class GameOrchestrator:
             await agent.close()
         for client in self.clients.values():
             await client.close()
+        for client in self.external_clients.values():
+            await client.close()
         self.clients.clear()
+        self.external_clients.clear()
         self.agents.clear()
         self._kill_spawned()
         self.server_port = -1
@@ -230,6 +271,14 @@ class GameOrchestrator:
         if not agent:
             raise KeyError(f"Agent '{name}' not found. Available: {list(self.agents.keys())}")
         return agent
+
+    def get_client(self, name: str) -> GameClient:
+        """Get a GameClient by name — works for both managed agents and external agents."""
+        if name in self.clients:
+            return self.clients[name]
+        if name in self.external_clients:
+            return self.external_clients[name]
+        raise KeyError(f"Client '{name}' not found. Available: {list(self.clients.keys()) + list(self.external_clients.keys())}")
 
 
 orchestrator = GameOrchestrator()
@@ -246,6 +295,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="XBWorld Multi-Agent API", lifespan=lifespan)
 
+# P1-7: Serve static observer UI (no Tomcat needed)
+from fastapi.staticfiles import StaticFiles
+_static_dir = Path(__file__).parent / "static"
+if _static_dir.exists():
+    app.mount("/observe", StaticFiles(directory=str(_static_dir), html=True), name="observer")
+
 
 @app.post("/game/create")
 async def api_create_game(body: dict):
@@ -255,6 +310,7 @@ async def api_create_game(body: dict):
         agents: list of {name, strategy?, llm_model?}
         aifill: int (optional, number of AI players to add)
         server_port: int (optional, join existing server)
+        turn_timeout: int (optional, server-side turn timeout in seconds)
     """
     agent_configs = body.get("agents", [])
     if not agent_configs:
@@ -275,6 +331,7 @@ async def api_create_game(body: dict):
             agent_configs,
             server_port=body.get("server_port"),
             aifill=body.get("aifill", 0),
+            turn_timeout=body.get("turn_timeout"),
         )
     except Exception as e:
         raise HTTPException(500, str(e))
@@ -346,6 +403,177 @@ async def api_agent_log(name: str, limit: int = 50):
     except KeyError as e:
         raise HTTPException(404, str(e))
     return {"name": name, "log": agent.action_log[-limit:]}
+
+
+# ---------------------------------------------------------------------------
+# P0-1: Agent Connect API — let external agents join a running game
+# ---------------------------------------------------------------------------
+
+@app.post("/game/join")
+async def api_join_game(body: dict):
+    """External agent joins the running game.
+
+    Body: {username: str}
+    Returns: {ws_url, server_port, tools, proxy_port}
+    """
+    if orchestrator.server_port < 0:
+        raise HTTPException(400, "No game running. Create one first with POST /game/create")
+
+    username = body.get("username", "").strip()
+    if not username:
+        raise HTTPException(400, "Must provide 'username'")
+    if username in orchestrator.clients or username in orchestrator.external_clients:
+        raise HTTPException(409, f"Username '{username}' already in use")
+
+    client = GameClient(username=username)
+    try:
+        await client.join_game(orchestrator.server_port)
+    except Exception as e:
+        raise HTTPException(500, f"Failed to connect: {e}")
+
+    orchestrator.external_clients[username] = client
+    proxy_port = 1000 + orchestrator.server_port
+    return {
+        "status": "ok",
+        "username": username,
+        "server_port": orchestrator.server_port,
+        "proxy_port": proxy_port,
+        "ws_url": f"ws://{NGINX_HOST}:{NGINX_PORT}/civsocket/{proxy_port}",
+        "tools": TOOL_REGISTRY.openai_definitions(),
+    }
+
+
+@app.get("/game/tools")
+async def api_game_tools():
+    """List all available tools with their JSON schemas."""
+    return {"tools": TOOL_REGISTRY.openai_definitions()}
+
+
+# ---------------------------------------------------------------------------
+# P0-2: Direct Tool Execution API — bypass LLM for programmatic agents
+# ---------------------------------------------------------------------------
+
+@app.post("/agents/{name}/actions")
+async def api_agent_actions(name: str, body: dict):
+    """Execute tool calls directly, bypassing the LLM.
+
+    Body: {actions: [{name: "move_unit", args: {unit_id: 1, direction: "N"}}, ...]}
+    Returns: {results: [{name, args, result, success}, ...]}
+    """
+    try:
+        client = orchestrator.get_client(name)
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+
+    actions = body.get("actions", [])
+    if not actions:
+        raise HTTPException(400, "Must provide at least one action")
+
+    results = []
+    for action in actions:
+        action_name = action.get("name", "")
+        action_args = action.get("args", {})
+        result = await execute_tool(client, action_name, action_args)
+        success = not result.lower().startswith("error") and "not found" not in result.lower()
+        results.append({
+            "name": action_name,
+            "args": action_args,
+            "result": result,
+            "success": success,
+        })
+        orchestrator.events.publish({
+            "type": "agent_action",
+            "agent": name,
+            "tool": action_name,
+            "args": action_args,
+            "result": result[:200],
+            "success": success,
+        })
+
+    return {"results": results}
+
+
+@app.post("/agents/{name}/end_turn")
+async def api_agent_end_turn(name: str):
+    """End the current turn for an agent."""
+    try:
+        client = orchestrator.get_client(name)
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    await client.end_turn()
+    return {"status": "ok", "turn": client.state.turn}
+
+
+# ---------------------------------------------------------------------------
+# P1-5: Structured Game State API
+# ---------------------------------------------------------------------------
+
+@app.get("/agents/{name}/state/json")
+async def api_agent_state_json(name: str):
+    """Get full structured game state for an agent."""
+    try:
+        client = orchestrator.get_client(name)
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    return game_state_to_json(client)
+
+
+@app.get("/agents/{name}/state/delta")
+async def api_agent_state_delta(name: str):
+    """Get state changes since last query for an agent."""
+    try:
+        client = orchestrator.get_client(name)
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    current, delta = orchestrator.state_tracker.snapshot(name, client)
+    return {"current": current, "delta": delta}
+
+
+@app.get("/game/state")
+async def api_game_state():
+    """Get global game state overview."""
+    if orchestrator.server_port < 0:
+        return {"status": "no_game"}
+    states = {}
+    for name, client in {**orchestrator.clients, **orchestrator.external_clients}.items():
+        states[name] = game_state_to_json(client)
+    return {
+        "status": "running",
+        "server_port": orchestrator.server_port,
+        "agents": states,
+    }
+
+
+# ---------------------------------------------------------------------------
+# P1-6: Observer Event Stream (SSE)
+# ---------------------------------------------------------------------------
+
+@app.get("/game/events")
+async def api_game_events():
+    """Server-Sent Events stream of game events.
+
+    Events: turn_start, agent_action, city_founded, unit_moved, agent_report, game_state
+    """
+    queue = orchestrator.events.subscribe()
+
+    async def event_generator():
+        try:
+            while True:
+                try:
+                    event = await asyncio.wait_for(queue.get(), timeout=30.0)
+                    yield f"data: {json.dumps(event, ensure_ascii=False, default=str)}\n\n"
+                except asyncio.TimeoutError:
+                    yield f": keepalive\n\n"
+        except asyncio.CancelledError:
+            pass
+        finally:
+            orchestrator.events.unsubscribe(queue)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -27,6 +27,10 @@ LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://compass.llm.shopee.io/compass-
 MAX_MESSAGES_KEPT = 200
 TURN_TIMEOUT_SECONDS = int(os.getenv("TURN_TIMEOUT", "30"))
 
+# Server-side turn timeout (seconds). 0 = infinite (old behavior).
+# For AI-only games, a finite timeout prevents one slow agent from blocking all others.
+GAME_TURN_TIMEOUT = int(os.getenv("GAME_TURN_TIMEOUT", "30"))
+
 # Multi-agent HTTP API
 API_HOST = os.getenv("FREECIV_API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("FREECIV_API_PORT", "8642"))
