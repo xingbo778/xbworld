@@ -45,7 +45,7 @@ export FREECIV_SCENARIO_PATH=${savesdir}
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../.venv/bin/activate" 2>/dev/null
-python3 ../freeciv-proxy/freeciv-proxy.py "${3}" > "../logs/freeciv-proxy-${3}.log" 2>&1 &
+python3 ../xbworld-proxy/freeciv-proxy.py "${3}" > "../logs/freeciv-proxy-${3}.log" 2>&1 &
 proxy_pid=$! &&
 ${HOME}/freeciv/bin/freeciv-web "${args[@]}" > /dev/null 2> "../logs/freeciv-web-stderr-${2}.log"
 

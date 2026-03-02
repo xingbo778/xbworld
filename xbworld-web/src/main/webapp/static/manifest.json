@@ -1,0 +1,22 @@
+{
+  "name": "XBWorld",
+  "short_name": "XBWorld",
+  "start_url": ".",
+  "display": "fullscreen",
+  "background_color": "#1a1a2e",
+  "theme_color": "#d4a017",
+  "description": "XBWorld is an AI-powered civilization strategy game inspired by the history of human civilization.",
+  "icons": [{
+    "src": "/static/images/apple-touch-icon.png",
+    "sizes": "150x157",
+    "type": "image/png"
+  },{
+    "src": "/static/images/favicon.png",
+    "sizes": "32x32",
+    "type": "image/png"
+  },{
+    "src": "/images/xbworld-logo.png",
+    "sizes": "128x128",
+    "type": "image/png"
+  }]
+}

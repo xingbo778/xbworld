@@ -1,93 +1,39 @@
-# =============================================================================
-# XBWorld .gitignore
-# =============================================================================
-
-# --- Compiled Freeciv C server (large binary tree, ~477MB) ---
+# Compiled C server (huge binary)
 freeciv/
 
-# --- Python virtual environment (~260MB) ---
+# Python virtual environment
 .venv/
-venv/
-env/
+*.pyc
+__pycache__/
 
-# --- Java/Maven build output (~199MB) ---
+# Java build output
 **/target/
+*.class
 
-# --- Logs ---
+# Logs
 logs/
 *.log
 
-# --- Python bytecode ---
-*.pyc
-__pycache__/
-*.pyo
+# Node modules
+node_modules/
 
-# --- Docker / Vagrant ---
-Dockerfile
-docker-compose.yml
-docker-entrypoint.sh
-Vagrantfile
-.vagrant/
-
-# --- IDE / Editor ---
+# IDE
 .idea/
-*.iml
 .vscode/
 *.swp
 *.swo
 *~
-.#*
-#*#
 
-# --- OS files ---
+# Docker/Vagrant
+.vagrant/
+docker-compose.override.yml
+
+# OS files
 .DS_Store
 Thumbs.db
 
-# --- Build artifacts ---
-*.class
-*.o
-*.a
-*.lo
-*.so
-*.dylib
-
-# --- Freeciv build system artifacts ---
-*.bak
-*.diff
-*.gmo
-*.orig
-*.pot
-*.pox
-*.rej
-*.sav.gz
-*_gen.c
-*_gen.h
-.deps
-.libs
-autom4te.cache
-config.cache
-config.guess
-config.status
-config.sub
-configure
-depcomp
-install-sh
-missing
-mkinstalldirs
-stamp-h
-stamp-h1
-stamp-h.in
-libtool
-freeciv-*.tar.gz
-
-# --- Music (large binary assets, tracked via LFS or excluded) ---
+# Music assets (large)
 music/
 
-# --- Test screenshots ---
-tests/screenshot*.png
-
-# --- Misc ---
-.freeciv_index
-freeciv-web.project
-models.zip
-out/
+# Generated docs
+doc/

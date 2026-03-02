@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-# Start script for Freeciv-web on macOS
+# Start script for XBWorld on macOS
 
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$BASEDIR"
 
 export PATH="/usr/local/opt/openjdk@17/bin:/usr/local/opt/tomcat@10/bin:$PATH"
 export JAVA_HOME="/usr/local/opt/openjdk@17"
-export FREECIV_WEB_DIR="$BASEDIR"
+export XBWORLD_DIR="$BASEDIR"
 export FREECIV_DATA_PATH="$HOME/freeciv/share/freeciv/"
 export LC_ALL=en_US.UTF-8
 
-echo "Starting Freeciv-web services..."
+echo "Starting XBWorld services..."
 mkdir -p "$BASEDIR/logs"
 
 # 1. MariaDB
@@ -27,7 +27,7 @@ sleep 3
 echo "[3/4] Starting nginx..."
 sudo nginx 2>/dev/null || sudo nginx -s reload 2>/dev/null || true
 
-# 4. publite2 (manages freeciv-web servers and freeciv-proxy instances)
+# 4. publite2 (manages game servers and proxy instances)
 echo "[4/4] Starting publite2..."
 source "$BASEDIR/.venv/bin/activate" 2>/dev/null
 cd "$BASEDIR/publite2"
@@ -37,11 +37,11 @@ echo "  publite2 PID: $!"
 sleep 3
 echo ""
 echo "========================================="
-echo "Freeciv-web is starting up!"
+echo "XBWorld is starting up!"
 echo "========================================="
 echo ""
 echo "Open http://localhost:8000 in your browser"
-echo "Or http://localhost:8080/freeciv-web/ (direct Tomcat)"
+echo "Or http://localhost:8080/xbworld-web/ (direct Tomcat)"
 echo ""
 echo "Logs: $BASEDIR/logs/"
 echo ""
