@@ -20,14 +20,13 @@ research, diplomacy, and warfare.
   OpenAI-compatible API via a single env var.
 - **REST & WebSocket API** — Create games, send commands, stream events, and
   query game state programmatically.
-- **Standalone Mode** — Run AI-only games with just 3 processes (no Tomcat,
-  nginx, or MariaDB required).
+- **Simplified Stack** — Only 3 processes needed: Python (FastAPI), freeciv-server (C), and optionally nginx. No Java, Tomcat, or MariaDB.
 - **Web Client** — 2D isometric HTML5 client with dark translucent UI,
   Chinese/English i18n, and floating HUD.
 
 ---
 
-## Architecture Overview
+## Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -49,19 +48,24 @@ research, diplomacy, and warfare.
 │  │     freeciv-server (C)           │                        │
 │  └──────────────────────────────────┘                        │
 │                                                               │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  (for web UI)     │
-│  │  nginx   │  │  Tomcat  │  │ MariaDB  │                    │
-│  └──────────┘  └──────────┘  └──────────┘                    │
+│  ┌──────────────────────────────────┐                        │
+│  │  XBWorld Server (FastAPI)        │  ← serves web UI,      │
+│  │  API + static files + launcher   │    replaces Tomcat      │
+│  └──────────────────────────────────┘                        │
+│                                                               │
+│  ┌──────────┐  (optional, for production)                    │
+│  │  nginx   │                                                 │
+│  └──────────┘                                                 │
 └──────────────────────────────────────────────────────────────┘
 ```
 
 | Directory | Description | Language |
 |-----------|-------------|----------|
-| `xbworld-agent/` | LLM-powered AI agents, orchestrator, REST API | Python |
+| `xbworld-agent/` | LLM agents, orchestrator, unified FastAPI server | Python |
 | `xbworld-proxy/` | WebSocket ↔ TCP protocol bridge | Python (Tornado) |
-| `xbworld-web/` | Web client (2D HTML5 renderer, lobby) | Java / JSP / JS / CSS |
-| `publite2/` | Game server process manager | Python |
-| `config/` | Configuration templates (nginx, DB, proxy) | Shell / INI |
+| `xbworld-web/` | Web client (2D HTML5 renderer, lobby) | HTML / JS / CSS |
+| `publite2/` | Legacy process manager (replaced by server.py) | Python |
+| `config/` | Configuration templates (nginx) | Conf / INI |
 | `scripts/` | Install helpers, asset sync, logo generation | Shell / Python |
 
 > See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed component interactions,
@@ -71,9 +75,7 @@ research, diplomacy, and warfare.
 
 ## Quick Start
 
-### Option A: Standalone AI Game (minimal setup)
-
-Only requires the Freeciv C server binary — no Tomcat, nginx, or MariaDB.
+### Option A: Full Stack (recommended)
 
 ```bash
 # 1. Install the Freeciv server (one-time)
@@ -85,56 +87,28 @@ pip install -r requirements.txt
 
 # 3. Set your LLM API key
 export COMPASS_API_KEY="your-key-here"
-# Or use any OpenAI-compatible endpoint:
-# export LLM_MODEL="openai/gpt-4o-mini"
-# export LLM_API_KEY="sk-..."
-# export LLM_BASE_URL="https://api.openai.com/v1"
 
-# 4. Run a 2-agent game
+# 4. Start the unified server (serves web UI + API + game launcher)
+python server.py --port 8080
+
+# 5. Open http://localhost:8080 in your browser
+```
+
+### Option B: AI-Only Game (no browser needed)
+
+```bash
+cd xbworld-agent
 python multi_main.py --agents 2 --standalone
 ```
 
-### Option B: Full Stack (with web UI)
+### Option C: macOS Services
 
 ```bash
-# 1. Install all dependencies (macOS)
-./install-macos.sh
-
-# 2. Start all services (MariaDB, Tomcat, nginx, publite2)
+# Start everything (nginx + XBWorld server)
 ./start-macos.sh
 
-# 3. Open the web client
-open http://localhost:8000
-
-# 4. Run AI agents against the web server
-cd xbworld-agent
-python multi_main.py --agents 8
-```
-
-### Option C: HTTP API Mode
-
-Start the orchestrator as a REST API server for programmatic control.
-
-```bash
-cd xbworld-agent
-python multi_main.py --api --standalone
-
-# In another terminal:
-# Create a game
-curl -X POST http://localhost:8642/game/create \
-  -H "Content-Type: application/json" \
-  -d '{"agents": [
-    {"name": "alpha", "strategy": "aggressive military"},
-    {"name": "beta",  "strategy": "science and defense"}
-  ]}'
-
-# Check status
-curl http://localhost:8642/game/status
-
-# Send a command to an agent
-curl -X POST http://localhost:8642/agents/alpha/command \
-  -H "Content-Type: application/json" \
-  -d '{"command": "focus on building warriors and expanding west"}'
+# Stop everything
+./stop-macos.sh
 ```
 
 ---
@@ -147,10 +121,9 @@ curl -X POST http://localhost:8642/agents/alpha/command \
 python multi_main.py \
   --agents "alpha:aggressive,beta:defensive,gamma:economic" \
   --aifill 5          # add 5 built-in AI players \
-  --standalone         # no Tomcat/MariaDB needed \
+  --standalone         # spawn server directly \
   --join 6001          # join existing server on port 6001 \
   --api                # start HTTP API instead of CLI \
-  --api-port 9000      # custom API port \
   -v                   # verbose/debug logging
 ```
 
@@ -177,25 +150,28 @@ python multi_main.py --config agents.json --standalone
 | `LLM_BASE_URL` | Compass endpoint | OpenAI-compatible API base URL |
 | `TURN_TIMEOUT` | `30` | Agent-side turn timeout (seconds) |
 | `GAME_TURN_TIMEOUT` | `30` | Server-side turn timeout (seconds) |
-| `FREECIV_API_PORT` | `8642` | HTTP API port for multi-agent mode |
+| `XBWORLD_PORT` | `8080` | Unified server port |
 
 ---
 
 ## REST API Reference
 
-When running with `--api`, the following endpoints are available:
+The unified server (`server.py`) provides these endpoints:
 
 | Method | Path | Description |
 |--------|------|-------------|
+| `GET` | `/` | Web client (game UI) |
+| `POST` | `/civclientlauncher` | Launch a game server (JS client compat) |
+| `GET` | `/meta/status` | Metaserver status |
 | `POST` | `/game/create` | Create a new game with agent configs |
 | `GET` | `/game/status` | Get status of all agents |
 | `DELETE` | `/game` | Shut down current game |
 | `GET` | `/agents/{name}/state` | Get detailed state for one agent |
 | `POST` | `/agents/{name}/command` | Send natural-language command to agent |
 | `GET` | `/agents/{name}/log` | Get action log (default last 50 entries) |
+| `GET` | `/servers` | List active game servers |
 
-> See [xbworld-agent/README.md](xbworld-agent/README.md) for full API details
-> and the list of available agent tools.
+Interactive API docs available at `/docs` (Swagger UI).
 
 ---
 
@@ -205,21 +181,11 @@ When running with `--api`, the following endpoints are available:
 
 | Tool | Version | Required for |
 |------|---------|-------------|
-| Python | 3.10+ | Agent, proxy, publite2 |
-| Java (OpenJDK) | 17 | Web client (Tomcat/Maven) |
-| Maven | 3 | Building xbworld-web WAR |
-| MariaDB | 10+ | Proxy auth (skip with `--standalone`) |
-| nginx | 1.11+ | Reverse proxy (skip with `--standalone`) |
-| Tomcat | 10 | JSP rendering (skip with `--standalone`) |
+| Python | 3.10+ | Server, agent, proxy |
 | Freeciv server | 3.x | Game engine (compiled from C source) |
+| nginx | 1.11+ | Reverse proxy (optional, for production) |
 
-### Building the Web Client
-
-```bash
-cd xbworld-web
-mvn package
-# Deploy the WAR to Tomcat webapps/
-```
+**No longer required:** Java, Maven, Tomcat, MariaDB.
 
 ### Running Tests
 
@@ -240,34 +206,30 @@ python test_8agents_50turns.py
 
 ```
 xbworld/
-├── xbworld-agent/           # AI agent system
+├── xbworld-agent/           # AI agent system + unified server
+│   ├── server.py            #   Unified FastAPI server (replaces Tomcat+publite2)
 │   ├── agent.py             #   Core agent loop (LLM ↔ tools)
 │   ├── agent_tools.py       #   Tool definitions (move, build, query, …)
 │   ├── game_client.py       #   WebSocket client & game state
 │   ├── llm_providers.py     #   LLM provider abstraction (Gemini, OpenAI)
-│   ├── decision_engine.py   #   Pluggable decision engine interface
-│   ├── state_api.py         #   Structured JSON state export
-│   ├── multi_main.py        #   Orchestrator + FastAPI HTTP API
+│   ├── multi_main.py        #   Multi-agent CLI entry point
 │   ├── main.py              #   Single-agent entry point
 │   └── config.py            #   Configuration (env vars)
 ├── xbworld-proxy/           # WebSocket ↔ TCP bridge
 │   ├── freeciv-proxy.py     #   Tornado WebSocket server
 │   └── civcom.py            #   Protocol translation
-├── xbworld-web/             # Web client
+├── xbworld-web/             # Web client (static HTML + JS)
 │   └── src/main/webapp/
-│       ├── javascript/      #   Game JS (2D canvas, controls, …)
-│       ├── css/             #   Stylesheets
-│       ├── images/          #   Sprites, logos
-│       └── WEB-INF/jsp/     #   JSP templates
-├── publite2/                # Server process manager
-├── config/                  # Config templates
+│       ├── webclient/        #   index.html (game client)
+│       ├── javascript/       #   Game JS (2D canvas, controls, …)
+│       ├── css/              #   Stylesheets
+│       └── images/           #   Sprites, logos
+├── config/                  # Config templates (nginx)
 ├── scripts/                 # Install & helper scripts
-├── start-macos.sh           # Start all services
-├── stop-macos.sh            # Stop all services
-├── install-macos.sh         # One-time macOS setup
+├── start-macos.sh           # Start services (nginx + server.py)
+├── stop-macos.sh            # Stop services
 ├── ARCHITECTURE.md          # Detailed architecture & roadmap
-├── CHANGELOG.md             # Release notes
-└── CONTRIBUTING.md          # Contribution guide
+└── CHANGELOG.md             # Release notes
 ```
 
 ---

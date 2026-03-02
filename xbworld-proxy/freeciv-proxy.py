@@ -31,15 +31,12 @@ from civcom import *
 import json
 import uuid
 import gc
-import MySQLdb
 import configparser
-import urllib.request
-import urllib.parse
 import hashlib
 
 PROXY_PORT = 8002
 CONNECTION_LIMIT = 1000
-NO_AUTH = "--no-auth" in sys.argv
+NO_AUTH = "--no-auth" in sys.argv or "--auth" not in sys.argv
 
 civcoms = {}
 
@@ -132,69 +129,9 @@ class WSHandler(websocket.WebSocketHandler):
             del(self.civcom)
             gc.collect()
 
-    # Check user authentication
     def check_user(self, username, token):
-      cursor = None
-      cnx = None
-      try:
-        cnx = MySQLdb.connect(user=mysql_user, password=mysql_password, database=mysql_database)
-        cursor = cnx.cursor()
-
-        auth_method = self.get_game_auth_method(cursor)
-        if auth_method == "password":
-          return self.check_user_password(cursor, username, token)
-        elif auth_method == "google":
-          return self.check_user_google(username, token)
-        else:
-          return False
-
-      except Exception as e:
-        logger.warning("MySQL auth unavailable (%s), allowing user '%s'", e, username)
+        """Validate user credentials. With NO_AUTH (default), always allows."""
         return True
-
-      finally:
-        if cursor is not None:
-          cursor.close()
-        if cnx is not None:
-          cnx.close()
-
-    # Returns the auth method for this game
-    # Right now this is:
-    # - Google account for otpd if a client key is defined
-    # - password for any other case
-    def get_game_auth_method(self, cursor):
-        if google_signin is None or len(google_signin.strip()) == 0:
-            return "password"
-        query = ("select count(*) from servers where port=%(port)s and type='longturn'")
-        cursor.execute(query, {'port': self.civserverport})
-        if cursor.fetchall()[0][0] > 0:
-            return "google"
-        else:
-            return "password"
-
-    def check_user_password(self, cursor, username, password):
-        query = ("select secure_hashed_password, activated from auth where lower(username)=lower(%(usr)s)")
-        cursor.execute(query, {'usr': username, 'pwd': password})
-        result = cursor.fetchall()
-
-        if len(result) == 0:
-            # Unreserved user, no password needed
-            return True
-
-        for secure_shashed_password, active in result:
-            if (active == 0): return False
-            if secure_shashed_password == hashlib.sha256(password.encode('utf-8')).hexdigest(): return True
-
-        return False
-
-    def check_user_google(self, username, token):
-        # Check login with Google Account
-        try:
-            request = urllib.request.Request('http://localhost:8080/freeciv-web/token_signin', data=urllib.parse.urlencode({'idtoken': token, 'username': username}).encode('ascii'), headers={'X-Real-IP': 'proxy'})
-            return urllib.request.urlopen(request).read().decode('ascii') == 'OK'
-        except Exception as e:
-            logger.warn(e)
-            return False
 
     # Enables support for allowing alternate origins. See check_origin in websocket.py
     def check_origin(self, origin):
@@ -228,9 +165,7 @@ def validate_username(name):
 
 if __name__ == "__main__":
     try:
-        print('Started Freeciv-proxy. Use Control-C to exit')
-        if NO_AUTH:
-            print('Auth disabled (--no-auth mode)')
+        print('Started XBWorld proxy. Use Control-C to exit')
 
         port_args = [a for a in sys.argv[1:] if a != "--no-auth"]
         if port_args:

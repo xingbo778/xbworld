@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
 # Start script for XBWorld on macOS
+# No Java/Tomcat/MariaDB required — uses Python FastAPI for everything.
 
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$BASEDIR"
 
-export PATH="/usr/local/opt/openjdk@17/bin:/usr/local/opt/tomcat@10/bin:$PATH"
-export JAVA_HOME="/usr/local/opt/openjdk@17"
 export XBWORLD_DIR="$BASEDIR"
 export FREECIV_DATA_PATH="$HOME/freeciv/share/freeciv/"
 export LC_ALL=en_US.UTF-8
@@ -14,35 +13,28 @@ export LC_ALL=en_US.UTF-8
 echo "Starting XBWorld services..."
 mkdir -p "$BASEDIR/logs"
 
-# 1. MariaDB
-echo "[1/4] Starting MariaDB..."
-brew services start mariadb 2>/dev/null || true
+# Activate virtualenv
+source "$BASEDIR/.venv/bin/activate" 2>/dev/null
 
-# 2. Tomcat
-echo "[2/4] Starting Tomcat..."
-catalina start 2>/dev/null || true
-sleep 3
-
-# 3. nginx
-echo "[3/4] Starting nginx..."
+# 1. nginx (optional — for production; dev can skip this)
+echo "[1/2] Starting nginx..."
 sudo nginx 2>/dev/null || sudo nginx -s reload 2>/dev/null || true
 
-# 4. publite2 (manages game servers and proxy instances)
-echo "[4/4] Starting publite2..."
-source "$BASEDIR/.venv/bin/activate" 2>/dev/null
-cd "$BASEDIR/publite2"
-nohup python3 -u publite2.py > "$BASEDIR/logs/publite2.log" 2>&1 &
-echo "  publite2 PID: $!"
+# 2. XBWorld unified server (FastAPI — replaces Tomcat + publite2 + MariaDB)
+echo "[2/2] Starting XBWorld server..."
+cd "$BASEDIR/xbworld-agent"
+nohup python3 -u server.py --port 8080 > "$BASEDIR/logs/xbworld-server.log" 2>&1 &
+echo "  XBWorld server PID: $!"
 
-sleep 3
+sleep 2
 echo ""
 echo "========================================="
 echo "XBWorld is starting up!"
 echo "========================================="
 echo ""
-echo "Open http://localhost:8000 in your browser"
-echo "Or http://localhost:8080/xbworld-web/ (direct Tomcat)"
+echo "Open http://localhost:8080 in your browser"
 echo ""
+echo "API docs: http://localhost:8080/docs"
 echo "Logs: $BASEDIR/logs/"
 echo ""
 echo "To stop: $BASEDIR/stop-macos.sh"

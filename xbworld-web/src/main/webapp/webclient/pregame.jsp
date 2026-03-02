@@ -2,7 +2,7 @@
 <div id="pregame_page">
   <div id="pregame_options">
 	<div id="pregame_buttons">
-		<div id="freeciv_logo" style="cursor:pointer;cursor:hand" onclick="window.open('/', '_new');">
+		<div id="xbworld_logo" style="cursor:pointer" onclick="window.open('/', '_new');">
 		</div>
 		<button id="start_game_button" type="button" class="button"><i class="fa fa-check-circle-o" aria-hidden="true"></i> <b>Start Game</b></button>
 		<button id="load_game_button" type="button" class="button"><i class="fa fa-file-o" aria-hidden="true"></i> Load Game</button>
