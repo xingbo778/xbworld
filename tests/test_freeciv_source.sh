@@ -189,9 +189,160 @@ assert_contains "PATCHES.md documents fork point" "${FREECIV_DIR}/PATCHES.md" "a
 assert_ok "version.txt exists" test -f "${FREECIV_DIR}/version.txt"
 assert_ok "README.xbworld exists" test -f "${RULESET_DIR}/README.xbworld"
 
-# ---- 10. Git Submodule State ----
+# ---- 10. Action Section Migration ----
 echo ""
-echo "--- 10. Git Submodule State ---"
+echo "--- 10. Action Section Migration ---"
+
+for rs in xbworld webperimental classic civ2civ3 multiplayer sandbox \
+          goldkeep alien granularity civ1 civ2 stub; do
+  RS_FILE="${SUBMODULE_DIR}/data/${rs}/actions.ruleset"
+  if [ -f "$RS_FILE" ]; then
+    assert_not_contains "${rs}: no old-style ui_name_ entries" "$RS_FILE" "^ui_name_"
+  fi
+done
+
+assert_contains "xbworld actions.ruleset has [action_poison_city]" \
+  "${RULESET_DIR}/actions.ruleset" '^\[action_poison_city\]'
+assert_contains "xbworld actions.ruleset has [action_keep_moving]" \
+  "${RULESET_DIR}/actions.ruleset" '^\[action_keep_moving\]'
+assert_contains "xbworld actions.ruleset has [action_disrupt_supply_lines]" \
+  "${RULESET_DIR}/actions.ruleset" '^\[action_disrupt_supply_lines\]'
+assert_contains "xbworld user_action_1 settings preserved" \
+  "${RULESET_DIR}/actions.ruleset" 'user_action_1_target_kind'
+
+# ---- 11. C Code Quality: nullptr vs NULL ----
+echo ""
+echo "--- 11. C Code Quality ---"
+
+CRITICAL_C_FILES=(
+  "server/cityturn.c"
+  "server/citytools.c"
+  "server/unithand.c"
+  "server/unittools.c"
+  "server/plrhand.c"
+  "server/ruleset/rscompat.c"
+  "server/savegame/savecompat.c"
+  "common/city.c"
+  "common/terrain.c"
+)
+
+nullptr_issues=0
+for cf in "${CRITICAL_C_FILES[@]}"; do
+  full_path="${SUBMODULE_DIR}/${cf}"
+  if [ -f "$full_path" ]; then
+    count=$(grep -c "nullptr" "$full_path" 2>/dev/null || true)
+    if [ "$count" -gt 0 ]; then
+      ((nullptr_issues += count))
+    fi
+  fi
+done
+if [ "$nullptr_issues" -le 500 ]; then
+  green "  PASS: nullptr usage in critical C files is bounded ($nullptr_issues instances)"; ((PASS++))
+else
+  red "  FAIL: Excessive nullptr in critical C files ($nullptr_issues instances, max 500)"; ((FAIL++))
+  ERRORS+=("nullptr count too high in critical C files")
+fi
+
+assert_not_contains "No conflict markers in cityturn.c" \
+  "${SUBMODULE_DIR}/server/cityturn.c" "<<<<<<< HEAD"
+assert_not_contains "No conflict markers in unithand.c" \
+  "${SUBMODULE_DIR}/server/unithand.c" "<<<<<<< HEAD"
+assert_not_contains "No conflict markers in savecompat.c" \
+  "${SUBMODULE_DIR}/server/savegame/savecompat.c" "<<<<<<< HEAD"
+assert_not_contains "No conflict markers in rscompat.c" \
+  "${SUBMODULE_DIR}/server/ruleset/rscompat.c" "<<<<<<< HEAD"
+assert_not_contains "No conflict markers in ruleload.c" \
+  "${SUBMODULE_DIR}/server/ruleset/ruleload.c" "<<<<<<< HEAD"
+assert_not_contains "No conflict markers in rulesave.c" \
+  "${SUBMODULE_DIR}/tools/ruleutil/rulesave.c" "<<<<<<< HEAD"
+
+# ---- 12. Cherry-picked Feature Verification ----
+echo ""
+echo "--- 12. Cherry-picked Features ---"
+
+assert_contains "city_increase_size has natural_growth param" \
+  "${SUBMODULE_DIR}/server/cityturn.c" "natural_growth"
+assert_contains "Terrain supports multiple animals" \
+  "${SUBMODULE_DIR}/common/terrain.h" "terrain_animals_iterate"
+assert_contains "NETWORK_CAPSTRING preserved for Freeciv-web" \
+  "${SUBMODULE_DIR}/fc_version" 'Freeciv.Web.Devel-3.3'
+assert_contains "Civil_War_City_Bonus effect exists" \
+  "${SUBMODULE_DIR}/server/plrhand.c" "EFT_CIVIL_WAR_CITY_BONUS"
+assert_contains "Shield2Gold_Pct effect in enums" \
+  "${SUBMODULE_DIR}/gen_headers/enums/effects_enums.def" "SHIELD2GOLD_PCT"
+assert_contains "Conquer City savecompat conversion" \
+  "${SUBMODULE_DIR}/server/savegame/savecompat.c" "Conquer City"
+assert_contains "ui_name loaded from action section" \
+  "${SUBMODULE_DIR}/server/ruleset/rscompat.c" "load_action_ui_name_3_3"
+assert_contains "vision_site original owner tracking" \
+  "${SUBMODULE_DIR}/common/vision.h" "original"
+
+# ---- 13. Terrain Ruleset: animals field migration ----
+echo ""
+echo "--- 13. Terrain Ruleset Migration ---"
+
+assert_not_contains "No deprecated singular 'animal' field in terrain.ruleset" \
+  "${RULESET_DIR}/terrain.ruleset" '^animal[[:space:]]*='
+assert_contains "terrain.ruleset comment uses plural 'animals'" \
+  "${RULESET_DIR}/terrain.ruleset" '; animals'
+
+# ---- 14. Savegame Compatibility ----
+echo ""
+echo "--- 14. Savegame Compatibility ---"
+
+assert_contains "savecompat handles dc original field" \
+  "${SUBMODULE_DIR}/server/savegame/savecompat.c" "dc%d.original"
+assert_contains "savecompat has version check for 3029300" \
+  "${SUBMODULE_DIR}/server/savegame/savecompat.c" "3029300"
+
+# ---- 15. AI Improvements Integrated ----
+echo ""
+echo "--- 15. AI Module ---"
+
+assert_ok "AI default module exists" test -d "${SUBMODULE_DIR}/ai/default"
+assert_ok "AI tex module exists" test -d "${SUBMODULE_DIR}/ai/tex"
+assert_ok "daieffects.c exists" test -f "${SUBMODULE_DIR}/ai/default/daieffects.c"
+assert_ok "daicity.c exists" test -f "${SUBMODULE_DIR}/ai/default/daicity.c"
+
+# ---- 16. Lua API Extensions ----
+echo ""
+echo "--- 16. Lua API ---"
+
+assert_ok "api_game_find.c exists" test -f "${SUBMODULE_DIR}/common/scriptcore/api_game_find.c"
+assert_ok "api_server_edit.c exists" test -f "${SUBMODULE_DIR}/server/scripting/api_server_edit.c"
+
+# ---- 17. Protocol Consistency ----
+echo ""
+echo "--- 17. Protocol ---"
+
+assert_contains "fc_version has NETWORK_CAPSTRING" \
+  "${SUBMODULE_DIR}/fc_version" "NETWORK_CAPSTRING="
+assert_not_contains "fc_version has no conflict markers" \
+  "${SUBMODULE_DIR}/fc_version" "<<<<<<< HEAD"
+assert_contains "RSFORMAT_3_3 defined" \
+  "${SUBMODULE_DIR}/server/ruleset/ruleload.h" "RSFORMAT_3_3"
+
+# ---- 18. No Stale Conflict Markers Anywhere ----
+echo ""
+echo "--- 18. Conflict Marker Sweep ---"
+
+conflict_files=0
+while IFS= read -r -d '' cfile; do
+  if grep -q "<<<<<<< HEAD" "$cfile" 2>/dev/null; then
+    ((conflict_files++))
+    red "  CONFLICT: $cfile"
+  fi
+done < <(find "$SUBMODULE_DIR" -name "*.c" -o -name "*.h" -o -name "*.ruleset" -o -name "*.lua" | tr '\n' '\0')
+if [ "$conflict_files" -eq 0 ]; then
+  green "  PASS: No conflict markers in any source/ruleset/lua files"; ((PASS++))
+else
+  red "  FAIL: Found conflict markers in $conflict_files files"; ((FAIL++))
+  ERRORS+=("Conflict markers found in $conflict_files files")
+fi
+
+# ---- 19. Git Submodule State ----
+echo ""
+echo "--- 19. Git Submodule State ---"
 
 if [ -f "${SUBMODULE_DIR}/.git" ]; then
   green "  PASS: Submodule .git reference exists"; ((PASS++))
