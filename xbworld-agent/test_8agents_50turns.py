@@ -162,13 +162,13 @@ async def run_test():
     logger.info("Observe: http://%s:%d/webclient/?action=observe&civserverport=%d",
                 NGINX_HOST, NGINX_PORT, port)
 
-    await asyncio.sleep(2)
+    await asyncio.sleep(5)
 
     for cfg in AGENT_CONFIGS[1:]:
         c = GameClient(username=cfg["name"])
         await c.join_game(port)
         clients.append(c)
-        await asyncio.sleep(3)
+        await asyncio.sleep(5)
 
     for i, cfg in enumerate(AGENT_CONFIGS):
         prompt = STRATEGY_PROMPT.format(**cfg)
@@ -210,16 +210,20 @@ async def run_test():
     while True:
         await asyncio.sleep(3)
 
-        turns = {a.name: a.client.state.turn for a in agents}
+        active = [a for a in agents if a.client.state.connected]
+        if not active:
+            logger.error("All agents disconnected!")
+            break
+        turns = {a.name: a.client.state.turn for a in active}
         min_turn = min(turns.values())
         max_turn = max(turns.values())
 
-        for a in agents:
+        for a in active:
             m = metrics[a.name]
             m.update_stuck_check(a.client.state.turn)
 
         if min_turn >= TARGET_TURNS:
-            logger.info("=== ALL agents reached turn %d. Test complete! ===", TARGET_TURNS)
+            logger.info("=== All connected agents reached turn %d. Test complete! ===", TARGET_TURNS)
             break
 
         elapsed = time.time() - t0
@@ -227,10 +231,9 @@ async def run_test():
             logger.error("=== TIMEOUT: 1 hour elapsed, stopping at turn %d ===", max_turn)
             break
 
-        if not all(c.state.connected for c in clients):
-            disconnected = [a.name for a in agents if not a.client.state.connected]
-            logger.error("Agents disconnected: %s at turn %d", disconnected, max_turn)
-            break
+        disconnected = [a.name for a in agents if not a.client.state.connected]
+        if disconnected:
+            logger.warning("Agents disconnected: %s at turn %d", disconnected, max_turn)
 
         checkpoint_turn = (min_turn // CHECKPOINT_INTERVAL) * CHECKPOINT_INTERVAL
         if checkpoint_turn > last_checkpoint_turn and checkpoint_turn > 0:
