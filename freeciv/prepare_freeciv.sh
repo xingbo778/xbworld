@@ -47,7 +47,7 @@ if [ ! -f build/build.ninja ]; then
           -Daudio=none -Dtools=manual \
           -Dproject-definition=../freeciv-web.fcproj \
           -Ddefault_library=static -Dprefix="${HOME}/freeciv" \
-          -Doptimization=3 "${EXTRA_MESON_PARAMS[@]}"
+          -Doptimization=3 ${EXTRA_MESON_PARAMS[@]+"${EXTRA_MESON_PARAMS[@]}"}
   )
 else
   echo "Build already configured, skipping meson setup (use 'clean' to reconfigure)."
