@@ -53,6 +53,11 @@ import './data/requirements'; // Phase 1: requirement system
 import './data/government';   // Phase 1: government data queries
 
 // ---------------------------------------------------------------------------
+// Phase 2: Import utility modules.
+// ---------------------------------------------------------------------------
+import './utils/helpers';      // Phase 2: utility functions (clone, DIVIDE, FC_WRAP, etc.)
+
+// ---------------------------------------------------------------------------
 // Phase 2: Import client modules — client state queries and core functions.
 // ---------------------------------------------------------------------------
 import './client/clientState';

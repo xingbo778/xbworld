@@ -1,6 +1,15 @@
 /**
- * General-purpose utility functions.
+ * XBWorld — General-purpose utility functions (migrated from utility.js)
+ *
+ * All functions here are pure (no side effects, no module-local state),
+ * safe to exposeToLegacy.
+ *
+ * NOTE: get_random_int depends on window.fc_seedrandom (set by civclient.js).
+ * NOTE: is_right_mouse_selection_supported depends on window.platform (external lib).
+ * NOTE: is_touch_device is defined in control.js, not utility.js.
  */
+
+import { exposeToLegacy } from '../bridge/legacy';
 
 /** Deep clone a plain object (no circular refs). */
 export function clone<T>(obj: T): T {
@@ -74,3 +83,48 @@ export function supportsMp3(): boolean {
 export function getTilesetFileExtension(): string {
   return '.png';
 }
+
+/**
+ * Get a random integer in [min, max) using the seeded RNG.
+ * Falls back to Math.random if fc_seedrandom is not available.
+ */
+export function getRandomInt(min: number, max: number): number {
+  const rng = (window as any).fc_seedrandom;
+  const rand = typeof rng === 'function' ? rng() : Math.random();
+  return Math.floor(rand * (max - min)) + min;
+}
+
+/**
+ * Check if right-click-and-drag selection is supported.
+ * Mac OS X and Chrome OS do not support it.
+ */
+export function isRightMouseSelectionSupported(): boolean {
+  if (isTouchDevice()) return false;
+  const platform = (window as any).platform;
+  if (platform && platform.description) {
+    const desc = platform.description as string;
+    if (desc.indexOf('Mac OS X') > 0 || desc.indexOf('Chrome OS') > 0 || desc.indexOf('CrOS') > 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// Expose to legacy — function names must match Legacy snake_case names
+// ---------------------------------------------------------------------------
+
+exposeToLegacy('clone', clone);
+exposeToLegacy('DIVIDE', DIVIDE);
+exposeToLegacy('FC_WRAP', FC_WRAP);
+exposeToLegacy('XOR', XOR);
+exposeToLegacy('numberWithCommas', numberWithCommas);
+exposeToLegacy('to_title_case', toTitleCase);
+exposeToLegacy('string_unqualify', stringUnqualify);
+exposeToLegacy('seconds_to_human_time', secondsToHumanTime);
+exposeToLegacy('get_random_int', getRandomInt);
+exposeToLegacy('supports_mp3', supportsMp3);
+exposeToLegacy('is_right_mouse_selection_supported', isRightMouseSelectionSupported);
+exposeToLegacy('get_tileset_file_extention', getTilesetFileExtension);
+// NOTE: $.getUrlVar is a jQuery plugin, not a standalone function — not migrated
+// NOTE: civclient_benchmark uses setTimeout with string eval — not migrated
