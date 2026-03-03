@@ -3,12 +3,13 @@
  * Replaces the legacy 2D Canvas renderer with GPU-accelerated sprite batching.
  */
 
-import { Application, Container, Sprite, Texture, Assets, Graphics } from 'pixi.js';
+import { Application, Container, Sprite, Texture, Assets, Graphics, Text, TextStyle } from 'pixi.js';
 import { store } from '../data/store';
 import { globalEvents } from '../core/events';
 import { TILE_KNOWN_SEEN, TILE_KNOWN_UNSEEN, tileGetKnown } from '../data/tile';
 import { mapPosToTile, Direction, DIR_DX, DIR_DY } from '../data/map';
 import { logNormal, logError } from '../core/log';
+import { TilesetManager } from './TilesetManager';
 import type { Tile } from '../data/types';
 
 export interface RendererConfig {
@@ -75,9 +76,8 @@ export class PixiRenderer {
   private viewStartX = 0;
   private viewStartY = 0;
 
-  private tilesetTextures = new Map<string, Texture>();
+  private tilesetMgr = new TilesetManager();
   private terrainColorTextures = new Map<number, Texture>();
-  private loaded = false;
 
   constructor(private config: RendererConfig) {
     this.tileW = config.tileWidth || DEFAULT_TILE_W;
@@ -116,38 +116,9 @@ export class PixiRenderer {
     logNormal('PixiJS renderer initialized');
   }
 
-  async loadTileset(basePath: string, spriteData: Record<string, number[]>): Promise<void> {
-    try {
-      const sheetNames = [
-        'freeciv-web-tileset-amplio2-0.png',
-        'freeciv-web-tileset-amplio2-1.png',
-        'freeciv-web-tileset-amplio2-2.png',
-      ];
-
-      const baseTextures: Texture[] = [];
-      for (const name of sheetNames) {
-        const tex = await Assets.load(`${basePath}/${name}`);
-        baseTextures.push(tex);
-      }
-
-      for (const [key, coords] of Object.entries(spriteData)) {
-        if (!coords || coords.length < 4) continue;
-        const [x, y, w, h, sheet = 0] = coords;
-        const baseTex = baseTextures[sheet] ?? baseTextures[0];
-        if (!baseTex) continue;
-
-        const frame = new Texture({
-          source: baseTex.source,
-          frame: { x, y, width: w, height: h } as unknown as import('pixi.js').Rectangle,
-        });
-        this.tilesetTextures.set(key, frame);
-      }
-
-      this.loaded = true;
-      logNormal(`Loaded ${this.tilesetTextures.size} tile sprites`);
-    } catch (e) {
-      logError('Failed to load tileset:', e);
-    }
+  async loadTileset(basePath: string = '/tileset'): Promise<void> {
+    await this.tilesetMgr.load(basePath);
+    logNormal(`PixiRenderer: tileset ${this.tilesetMgr.isLoaded() ? 'loaded' : 'failed'}, ${this.tilesetMgr.getSpriteCount()} sprites`);
   }
 
   /** Convert map (iso) coordinates to screen pixel coordinates. */
@@ -229,10 +200,11 @@ export class PixiRenderer {
     let sprite = this.tileSprites.get(tile.index);
 
     let texture: Texture | undefined;
-    if (this.loaded) {
+    if (this.tilesetMgr.isLoaded()) {
       const terrainData = store.terrains[tile.terrain];
-      const texKey = terrainData ? `t.l0.${terrainData.graphic_str}1` : 't.l0.grassland1';
-      texture = this.tilesetTextures.get(texKey);
+      if (terrainData) {
+        texture = this.tilesetMgr.getTerrainTexture(terrainData.graphic_str) ?? undefined;
+      }
     }
     if (!texture) {
       texture = this.getTerrainColorTexture(tile.terrain);
@@ -281,10 +253,11 @@ export class PixiRenderer {
       let sprite = this.unitSprites.get(uid);
 
       let texture: Texture | undefined;
-      if (this.loaded) {
+      if (this.tilesetMgr.isLoaded()) {
         const ut = store.unitTypes[unit.type];
-        const texKey = ut ? `u.${ut.graphic_str}` : 'u.warriors';
-        texture = this.tilesetTextures.get(texKey);
+        if (ut) {
+          texture = this.tilesetMgr.getUnitTexture(ut.graphic_str) ?? undefined;
+        }
       }
       if (!texture) {
         texture = this.getUnitTexture(unit.owner ?? 0);
@@ -339,8 +312,15 @@ export class PixiRenderer {
       let sprite = this.citySprites.get(cid);
 
       let texture: Texture | undefined;
-      if (this.loaded) {
-        texture = this.tilesetTextures.get('city.european_city_0');
+      if (this.tilesetMgr.isLoaded()) {
+        const sizeLevel = Math.min(Math.floor((city.size ?? 1) / 4), 4);
+        const player = store.players[city.owner];
+        const nation = player ? store.nations[player.nation] : null;
+        const style = (nation as any)?.city_style_name ?? 'european';
+        texture = this.tilesetMgr.getCityTexture(style, sizeLevel) ?? undefined;
+        if (!texture) {
+          texture = this.tilesetMgr.getCityTexture('european', sizeLevel) ?? undefined;
+        }
       }
       if (!texture) {
         texture = this.getCityTexture(city.owner ?? 0);

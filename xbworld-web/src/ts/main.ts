@@ -52,6 +52,7 @@ async function init(): Promise<void> {
       container: canvasDiv,
     });
     await renderer.init();
+    await renderer.loadTileset('/tileset');
     logNormal('PixiJS renderer ready');
   }
 
