@@ -1,6 +1,6 @@
 # XBWorld JS → TS 迁移计划
 
-> 最后更新：2026-03-04（Phase 1-3 完成后更新）
+> 最后更新：2026-03-04（Phase 5 网络层修复 + Phase 6 civclient.js 迁移完成后更新）
 
 ---
 
@@ -10,17 +10,17 @@
 
 项目共有 **52 个 Legacy JS 文件**（不含第三方库），包含约 **809 个函数**、**25,865 行代码**。此外还有 6 个 2D Canvas 渲染文件（3,675 行）。
 
-当前已迁移到 TypeScript 并激活的模块覆盖了 **18 个模块**，通过 `exposeToLegacy` 暴露了 **150 个函数** 和 **52 个常量**（共 202 个），占 Legacy 函数总数的约 **18.5%**。另有 **13 个 TS 模块**（约 2,152 行）已编写但尚未激活（未被 `main.ts` 导入）。
+当前已迁移到 TypeScript 并激活的模块覆盖了 **21 个模块**，通过 `exposeToLegacy` 暴露了 **163 个函数** 和 **52 个常量**（共 215 个），占 Legacy 函数总数的约 **20.1%**。另有 **13 个 TS 模块**（约 2,152 行）已编写但尚未激活（未被 `main.ts` 导入）。
 
 | 指标 | 数值 |
 |---|---|
 | Legacy JS 总行数 | ~25,865 |
 | Legacy JS 总函数数 | 809 |
-| 已迁移 TS 行数（激活） | ~3,618 |
+| 已迁移 TS 行数（激活） | ~4,224 |
 | 已迁移 TS 行数（未激活） | ~2,152 |
-| 已覆盖 Legacy 函数数 | 150 (18.5%) |
+| 已覆盖 Legacy 函数数 | 163 (20.1%) |
 | 已覆盖 Legacy 常量数 | 52 |
-| 已完成 Phase | 1, 2, 3 |
+| 已完成 Phase | 1, 2, 3, 4 (webclient.min.js 拆分), 5 (网络层+修复), 6 (civclient.js) |
 
 ### 1.1 已迁移并激活的模块
 
@@ -35,16 +35,21 @@
 | `data/map.ts` | `map.js` | 399 | 22 | 6 |
 | `data/tile.ts` | `tile.js` | 104 | 10 | 3 |
 | `data/terrain.ts` | `terrain.js` | 53 | 3 | 2 |
-| `client/clientState.ts` | `client_main.js` (部分) | 73 | 4 | 3 |
-| `client/clientCore.ts` | `civclient.js` (部分) | 143 | 9 | 0 |
 | `data/fcTypes.ts` | `fc_types.js` | 80 | 0 | 4 |
 | `data/actions.ts` | `actions.js` | 45 | 3 | 0 |
 | `data/extra.ts` | `extra.js` | 70 | 5 | 4 |
 | `data/improvement.ts` | `improvement.js` | 65 | 5 | 1 |
 | `data/requirements.ts` | `requirements.js` | 120 | 3 | 2 |
 | `data/government.ts` | `government.js` (部分) | 40 | 3 | 0 |
+| `data/eventConstants.ts` | `webclient.min.js` (事件常量) | 60 | 0 | 0 |
 | `utils/helpers.ts` | `utility.js` | 180 | 13 | 1 |
+| `net/packetConstants.ts` | `webclient.min.js` (packet 常量) | 40 | 0 | 0 |
 | `net/packhandlers.ts` | `packhand.js` (部分) | 350 | 31 | 0 |
+| `net/connection.ts` | `clinet.js` (完整替换) | 206 | 10 | 0 |
+| `client/clientState.ts` | `client_main.js` (部分) | 73 | 5 | 3 |
+| `client/clientCore.ts` | `civclient.js` (纯逻辑部分) | 246 | 13 | 0 |
+| `client/clientTimers.ts` | `civclient.js` (定时器) | 115 | 2 | 0 |
+| `client/clientDebug.ts` | `civclient.js` (调试) | 90 | 1 | 0 |
 
 ### 1.2 已编写但未激活的模块
 
@@ -52,7 +57,6 @@
 
 | TS 模块 | 对应 Legacy | TS 行数 | 状态 |
 |---|---|---|---|
-| `net/connection.ts` | `clinet.js` | 206 | 需要完善 WebSocket 逻辑 |
 | `net/packets.ts` + 子模块 | `packhand.js` | 776 | 需要完善 packet handler |
 | `ui/chat.ts` | `messages.js` | 87 | 需要完善 DOM 操作 |
 | `ui/controls.ts` | `control.js` (部分) | 147 | 需要完善键盘/鼠标处理 |
@@ -150,7 +154,61 @@
 
 ---
 
-### Phase 4：核心引擎 — 城市和科技（当前 → 近期）
+### Phase 4：webclient.min.js 拆分 ✅ 已完成
+
+**目标**：将 `webclient.min.js` 拆分为独立的模块文件，使 Legacy JS 可以逐个被 TS 替换。
+
+**实际完成内容**：
+- 从 `webclient.min.js` 中拆分出 `packhand_glue.js`、`client_main.js`、`clinet.js` 等独立文件
+- 在 `index.html` 中按正确顺序加载拆分后的文件和 TS bundle
+
+---
+
+### Phase 5：网络层完整替换 + 关键修复 ✅ 已完成
+
+**目标**：完全替换 `clinet.js`（网络层），修复 Phase 4 拆分后遗留的运行时问题。
+
+**实际完成内容**：
+- `net/connection.ts` 完全替换 `clinet.js`（WebSocket 管理、packet 收发）
+- 修复 packet 常量缺失：创建 `net/packetConstants.ts`（从 `webclient.min.js` 提取 `packet_*` 常量）
+- 修复事件常量缺失：创建 `data/eventConstants.ts`（从 `webclient.min.js` 提取 `E_*` 常量）
+- 修复 WebGL stub 函数缺失：在 `main.ts` 中添加 `webgl_canvas_pos_to_tile` 等 stub
+- 修复 `update_client_state` 未暴露到 window：将 TS 中的 `w.update_client_state()` 改为 `w.set_client_state()`
+- 修复 `utype_actions` BitVector 转换缺失：在 `packhandlers.ts` 中添加 `handle_web_ruleset_unit_addition` 的 BitVector 转换
+
+**踩坑记录**：
+1. `webclient.min.js` 拆分后，部分全局变量（packet 常量、事件常量）只在 `webclient.min.js` 内部定义，拆分后丢失
+2. `update_client_state` 是 `packhand.js` 中的局部函数，不在 `window` 上，TS 通过 `w.update_client_state()` 调用会静默失败（被 try-catch 吞掉）
+3. WebGL 相关函数在 2D Canvas 模式下不存在，但 `overview.js` 等文件会引用它们
+
+---
+
+### Phase 6：civclient.js 纯逻辑函数迁移 ✅ 已完成
+
+**目标**：将 `civclient.js` 中的纯逻辑函数迁移到 TypeScript，减少 Legacy JS 代码量。
+
+**实际完成内容**：
+- `civclient.js` 从 648 行减少到 480 行（-26%）
+- 迁移了 13 个函数到 3 个 TS 模块：
+
+| TS 模块 | 迁移的函数 | 行数 |
+|---|---|---|
+| `client/clientCore.ts` | `validate_username`, `is_username_valid_show`, `surrender_game`, `show_fullscreen_window`, `motd_init` (新增到已有的 `is_longturn`, `is_pbem`, `is_hotseat`, `is_server`, `set_phase_start`, `request_observe_game`, `send_surrender_game`, `get_invalid_username_reason`) | 246 |
+| `client/clientTimers.ts` (新) | `update_timeout`, `update_turn_change_timer` | 115 |
+| `client/clientDebug.ts` (新) | `show_debug_info` | 90 |
+
+**保留在 Legacy JS 中的函数**（重度 jQuery UI 依赖）：
+- `civclient_init` — 初始化函数，大量 jQuery UI 设置
+- `init_common_intro_dialog` — 根据游戏类型显示不同的欢迎对话框
+- `close_dialog_message` / `closing_dialog_message` / `show_dialog_message` — 通用消息对话框
+- `show_auth_dialog` — 密码认证对话框
+- `switch_renderer` — 2D/3D 渲染器切换
+
+**验收标准**：完整游戏流程测试通过（登录 → pregame → 自动进入 RUNNING → 地图渲染正确）。
+
+---
+
+### Phase 7：核心引擎 — 城市和科技（下一步）
 
 **目标**：迁移城市管理和科技树的数据逻辑。
 
@@ -158,15 +216,15 @@
 
 | 任务 | Legacy 源 | 行数 | 函数数 | 难度 | 说明 |
 |---|---|---|---|---|---|
-| 4.1 `data/city.ts` (数据部分) | `city.js` | ~800 | ~30 | 高 | `city_tile`, `city_owner`, `is_city_center`, `city_has_building`, `can_city_build_*` 等纯查询函数。UI 函数（`show_city_dialog` 等）留在 Legacy。 |
-| 4.2 `data/tech.ts` (数据部分) | `tech.js` | ~300 | ~10 | 中 | `player_invention_state`, `is_tech_req_for_*`, `tech_id_by_name` 等纯查询函数。UI 函数留在 Legacy。 |
-| 4.3 `data/nation.ts` | `nation.js` (数据部分) | ~100 | ~5 | 低 | 国家数据查询函数。 |
+| 7.1 `data/city.ts` (数据部分) | `city.js` | ~800 | ~30 | 高 | `city_tile`, `city_owner`, `is_city_center`, `city_has_building`, `can_city_build_*` 等纯查询函数。UI 函数（`show_city_dialog` 等）留在 Legacy。 |
+| 7.2 `data/tech.ts` (数据部分) | `tech.js` | ~300 | ~10 | 中 | `player_invention_state`, `is_tech_req_for_*`, `tech_id_by_name` 等纯查询函数。UI 函数留在 Legacy。 |
+| 7.3 `data/nation.ts` | `nation.js` (数据部分) | ~100 | ~5 | 低 | 国家数据查询函数。 |
 
 **验收标准**：城市对话框、科技树界面功能完整，无 NaN/undefined 显示。
 
 ---
 
-### Phase 5：控制层（长期）
+### Phase 8：控制层（长期）
 
 **目标**：迁移 `control.js` 中的核心控制逻辑。这是最大最复杂的模块（3,503 行，96 个函数），需要非常谨慎。
 
@@ -176,18 +234,18 @@
 
 | 任务 | 函数组 | 函数数 | 难度 | 说明 |
 |---|---|---|---|---|
-| 5.1 单位焦点管理 | `update_unit_focus`, `advance_unit_focus`, `set_unit_focus` 等 | ~10 | 高 | 核心游戏逻辑，有复杂的状态管理。 |
-| 5.2 单位命令 | `key_unit_*` 系列 | ~25 | 中 | 单位操作命令。每个函数相对独立。 |
-| 5.3 Goto 路径 | `activate_goto`, `request_goto_path`, `update_goto_path` | ~5 | 高 | 路径规划逻辑。 |
-| 5.4 地图点击处理 | `do_map_click`, `ask_server_for_actions` | ~5 | 高 | 核心交互逻辑。 |
-| 5.5 Action 决策 | `action_decision_*`, `action_selection_*` | ~10 | 高 | 动作选择逻辑。 |
-| 5.6 其余控制函数 | 剩余 ~40 个 | ~40 | 中-高 | 逐批迁移。 |
+| 8.1 单位焦点管理 | `update_unit_focus`, `advance_unit_focus`, `set_unit_focus` 等 | ~10 | 高 | 核心游戏逻辑，有复杂的状态管理。 |
+| 8.2 单位命令 | `key_unit_*` 系列 | ~25 | 中 | 单位操作命令。每个函数相对独立。 |
+| 8.3 Goto 路径 | `activate_goto`, `request_goto_path`, `update_goto_path` | ~5 | 高 | 路径规划逻辑。 |
+| 8.4 地图点击处理 | `do_map_click`, `ask_server_for_actions` | ~5 | 高 | 核心交互逻辑。 |
+| 8.5 Action 决策 | `action_decision_*`, `action_selection_*` | ~10 | 高 | 动作选择逻辑。 |
+| 8.6 其余控制函数 | 剩余 ~40 个 | ~40 | 中-高 | 逐批迁移。 |
 
 **验收标准**：完整游戏操作测试（移动单位、建城、攻击、外交等）。
 
 ---
 
-### Phase 6：渲染层（长期）
+### Phase 9：渲染层（长期）
 
 **目标**：迁移 2D Canvas 渲染管线。
 
@@ -195,17 +253,17 @@
 
 | 任务 | Legacy 源 | 行数 | 函数数 | 难度 | 说明 |
 |---|---|---|---|---|---|
-| 6.1 `renderer/tilespec.ts` | `tilespec.js` | 1,694 | 58 | 高 | Tileset 配置和 sprite 查找。核心渲染数据。 |
-| 6.2 `renderer/mapview.ts` | `mapview.js` | 518 | 17 | 高 | 地图视图渲染。 |
-| 6.3 `renderer/mapviewCommon.ts` | `mapview_common.js` | 642 | 22 | 高 | 地图视图通用逻辑。 |
-| 6.4 `renderer/mapctrl.ts` | `mapctrl.js` | 374 | 12 | 中 | 地图控制（拖拽、缩放）。 |
-| 6.5 `renderer/overview.ts` | `overview.js` | 401 | 10 | 中 | 小地图渲染。 |
+| 9.1 `renderer/tilespec.ts` | `tilespec.js` | 1,694 | 58 | 高 | Tileset 配置和 sprite 查找。核心渲染数据。 |
+| 9.2 `renderer/mapview.ts` | `mapview.js` | 518 | 17 | 高 | 地图视图渲染。 |
+| 9.3 `renderer/mapviewCommon.ts` | `mapview_common.js` | 642 | 22 | 高 | 地图视图通用逻辑。 |
+| 9.4 `renderer/mapctrl.ts` | `mapctrl.js` | 374 | 12 | 中 | 地图控制（拖拽、缩放）。 |
+| 9.5 `renderer/overview.ts` | `overview.js` | 401 | 10 | 中 | 小地图渲染。 |
 
 **验收标准**：地图渲染性能不低于 Legacy 版本，所有地形/单位/城市正确显示。
 
 ---
 
-### Phase 7：UI 层（长期 → 最终）
+### Phase 10：UI 层（长期 → 最终）
 
 **目标**：迁移所有 UI 对话框和界面组件。这是最后一步，因为 UI 代码与 jQuery/DOM 深度耦合，迁移时可能需要引入现代 UI 框架。
 
@@ -213,14 +271,14 @@
 
 | 任务 | Legacy 源 | 行数 | 难度 | 说明 |
 |---|---|---|---|---|
-| 7.1 城市对话框 | `city.js` (UI 部分) | ~1,200 | 高 | jQuery UI dialog |
-| 7.2 科技树 UI | `tech.js` (UI 部分) | ~600 | 高 | Canvas 绘制 + jQuery |
-| 7.3 预游戏 UI | `pregame.js` | 1,683 | 高 | 大量 DOM 操作 |
-| 7.4 外交对话框 | `diplomacy.js` | 564 | 中 | jQuery dialog |
-| 7.5 Action 对话框 | `action_dialog.js` | 1,128 | 高 | 复杂的动作选择 UI |
-| 7.6 国家界面 | `nation.js` | 532 | 中 | 表格 + jQuery |
-| 7.7 其余 UI | `rates.js`, `helpdata.js`, `savegame.js` 等 | ~2,000 | 中 | 各种辅助 UI |
-| 7.8 消息系统 | `messages.js` | 249 | 低 | 聊天框 UI |
+| 10.1 城市对话框 | `city.js` (UI 部分) | ~1,200 | 高 | jQuery UI dialog |
+| 10.2 科技树 UI | `tech.js` (UI 部分) | ~600 | 高 | Canvas 绘制 + jQuery |
+| 10.3 预游戏 UI | `pregame.js` | 1,683 | 高 | 大量 DOM 操作 |
+| 10.4 外交对话框 | `diplomacy.js` | 564 | 中 | jQuery dialog |
+| 10.5 Action 对话框 | `action_dialog.js` | 1,128 | 高 | 复杂的动作选择 UI |
+| 10.6 国家界面 | `nation.js` | 532 | 中 | 表格 + jQuery |
+| 10.7 其余 UI | `rates.js`, `helpdata.js`, `savegame.js` 等 | ~2,000 | 中 | 各种辅助 UI |
+| 10.8 消息系统 | `messages.js` | 249 | 低 | 聊天框 UI |
 
 **验收标准**：所有 UI 功能与 Legacy 版本一致，无视觉回归。
 
@@ -230,13 +288,16 @@
 
 | 里程碑 | Phase | 预计 TS 行数 | 累计覆盖率 | 关键交付物 |
 |---|---|---|---|---|
-| **M1: 数据层完成** | Phase 1 | ~1,200 | ~20% | 所有纯数据查询函数迁移完成 |
-| **M2: 工具+网络层完成** | Phase 2 | ~1,500 | ~28% | 网络发送函数可用，工具函数类型安全 |
-| **M3: Packet Handler 完成** | Phase 3 | ~2,500 | ~45% | 所有 packet 处理器迁移完成 |
-| **M4: 城市+科技数据完成** | Phase 4 | ~2,000 | ~55% | 城市和科技的数据逻辑迁移完成 |
-| **M5: 控制层完成** | Phase 5 | ~3,000 | ~70% | 核心游戏控制逻辑迁移完成 |
-| **M6: 渲染层完成** | Phase 6 | ~3,500 | ~85% | 2D Canvas 渲染管线迁移完成 |
-| **M7: UI 层完成** | Phase 7 | ~5,000 | ~100% | 全部迁移完成，可移除 Legacy JS |
+| **M1: 数据层完成** ✅ | Phase 1 | ~1,200 | ~20% | 所有纯数据查询函数迁移完成 |
+| **M2: 工具+网络层完成** ✅ | Phase 2 | ~1,500 | ~28% | 网络发送函数可用，工具函数类型安全 |
+| **M3: Packet Handler 完成** ✅ | Phase 3 | ~2,500 | ~45% | 所有 packet 处理器迁移完成 |
+| **M3.5: webclient.min.js 拆分** ✅ | Phase 4 | — | ~45% | Legacy JS 可逐个替换 |
+| **M4: 网络层完整替换** ✅ | Phase 5 | ~500 | ~47% | clinet.js 完全由 TS 替换 |
+| **M5: civclient.js 迁移** ✅ | Phase 6 | ~450 | ~49% | civclient.js 纯逻辑函数迁移完成 |
+| **M6: 城市+科技数据完成** | Phase 7 | ~2,000 | ~55% | 城市和科技的数据逻辑迁移完成 |
+| **M7: 控制层完成** | Phase 8 | ~3,000 | ~70% | 核心游戏控制逻辑迁移完成 |
+| **M8: 渲染层完成** | Phase 9 | ~3,500 | ~85% | 2D Canvas 渲染管线迁移完成 |
+| **M9: UI 层完成** | Phase 10 | ~5,000 | ~100% | 全部迁移完成，可移除 Legacy JS |
 
 ---
 
@@ -282,11 +343,20 @@
 - **方案 B**：逐步替换为原生 DOM API + 轻量级 UI 库。
 - **方案 C**：引入 React/Preact 等现代框架（大规模重构）。
 
-建议 Phase 1-5 采用方案 A（最低风险），Phase 7 时根据实际情况决定。
+建议 Phase 1-8 采用方案 A（最低风险），Phase 10 时根据实际情况决定。
 
 ### 6.3 webclient.min.js
 
-`webclient.min.js` 是所有 Legacy JS 文件的合并压缩版本。每次修改 Legacy JS 源文件后，需要重新生成 `webclient.min.js`。当前构建流程需要确认是否有自动化脚本。
+`webclient.min.js` 是所有 Legacy JS 文件的合并压缩版本。Phase 4 已将其拆分为独立文件。后续迁移中，每个拆分出的文件可以逐个被 TS 替换。
+
+### 6.4 Phase 5 踩坑总结
+
+Phase 5 修复过程中发现了几个重要的架构问题：
+
+1. **全局变量丢失**：`webclient.min.js` 拆分后，部分全局变量（packet 常量 `packet_*`、事件常量 `E_*`）只在合并文件内部定义，拆分后丢失。解决方案：创建独立的 TS 常量模块。
+2. **局部函数不可访问**：`update_client_state` 是 `packhand.js` 中的局部函数，不在 `window` 上。TS 通过 `w.update_client_state()` 调用会静默失败（被 try-catch 吞掉）。解决方案：改为调用 `w.set_client_state()`。
+3. **WebGL 函数缺失**：2D Canvas 模式下 WebGL 相关函数不存在，但 `overview.js` 等文件会引用它们。解决方案：在 `main.ts` 中添加 stub 函数。
+4. **BitVector 转换缺失**：`handle_web_ruleset_unit_addition` 中的 `utype_actions` 需要从数组转换为 BitVector 对象。
 
 ---
 
