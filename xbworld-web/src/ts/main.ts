@@ -81,6 +81,8 @@ import './net/connection';
 // ---------------------------------------------------------------------------
 import './client/clientState';
 import './client/clientCore';
+import './client/clientTimers';
+import './client/clientDebug';
 
 // ---------------------------------------------------------------------------
 // Phase 4: Import UI components.

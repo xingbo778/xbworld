@@ -17,6 +17,33 @@
 
 ***********************************************************************/
 
+/* ======================================================================
+ * Phase 6 migration note:
+ *
+ * The following functions have been migrated to TypeScript and are now
+ * provided by the TS bundle (ts-bundle/main.js):
+ *
+ *   clientCore.ts:
+ *     is_longturn, is_pbem, is_hotseat, is_server, set_phase_start,
+ *     request_observe_game, send_surrender_game, surrender_game,
+ *     get_invalid_username_reason, validate_username,
+ *     is_username_valid_show, show_fullscreen_window, motd_init
+ *
+ *   clientTimers.ts:
+ *     update_timeout, update_turn_change_timer
+ *
+ *   clientDebug.ts:
+ *     show_debug_info
+ *
+ * Remaining in this file (heavy jQuery UI / init dependencies):
+ *     civclient_init, init_common_intro_dialog,
+ *     close_dialog_message, closing_dialog_message, show_dialog_message,
+ *     show_auth_dialog, switch_renderer
+ *
+ * Global variable declarations remain here because they must be
+ * available before any script runs.
+ * ====================================================================== */
+
 
 var client = {};
 client.conn = {};
@@ -332,190 +359,6 @@ function show_dialog_message(title, message) {
 
 
 /**************************************************************************
- ...
-**************************************************************************/
-function validate_username() {
-  username = $("#username_req").val();
-
-  if (!is_username_valid_show(username)) {
-    return false;
-  }
-
-  simpleStorage.set("username", username);
-
-  return true;
-}
-
-/**************************************************************************
- Checks if the username is valid and shows the reason if it is not.
- Returns whether the username is valid.
-**************************************************************************/
-function is_username_valid_show(username) {
-  var reason = get_invalid_username_reason(username);
-  if (reason != null) {
-    $("#username_validation_result").html("The username '"
-                + username.replace(/&/g, "&amp;").replace(/</g, "&lt;")
-                + "' is " + reason + ".");
-    $("#username_validation_result").show();
-    return false;
-  }
-  return true;
-}
-
-
-
-
-/* Webclient is always client. */
-function is_server()
-{
-  return false;
-}
-
-/**************************************************************************
- ...
-**************************************************************************/
-function update_timeout()
-{
-  var now = new Date().getTime();
-  if (game_info != null
-      && current_turn_timeout() != null && current_turn_timeout() > 0) {
-    var remaining = Math.floor(seconds_to_phasedone - ((now - seconds_to_phasedone_sync) / 1000));
-
-    if (remaining >= 0 && turn_change_elapsed == 0) {
-      if (is_small_screen() && !is_longturn()) {
-        $("#turn_done_button").button("option", "label", "Turn " + remaining);
-        $("#turn_done_button .ui-button-text").css("padding", "3px");
-      } else {
-        $("#turn_done_button").button("option", "label", "Turn Done (" + seconds_to_human_time(remaining) + ")");
-      }
-      if (!is_touch_device()) $("#turn_done_button").tooltip({ disabled: false });
-    }
-  }
-}
-
-
-/**************************************************************************
- shows the remaining time of the turn change on the turn done button.
-**************************************************************************/
-function update_turn_change_timer()
-{
-  turn_change_elapsed += 1;
-  if (turn_change_elapsed < last_turn_change_time) {
-    setTimeout(update_turn_change_timer, 1000);
-    $("#turn_done_button").button("option", "label", "Please wait (" 
-        + (last_turn_change_time - turn_change_elapsed) + ")");
-  } else {
-    turn_change_elapsed = 0;
-    $("#turn_done_button").button("option", "label", "Turn Done"); 
-  }
-}
-
-/**************************************************************************
- ...
-**************************************************************************/
-function set_phase_start()
-{
-  phase_start_time = new Date().getTime();
-}
-
-/**************************************************************************
-...
-**************************************************************************/
-function request_observe_game()
-{
-  send_message("/observe ");
-}
-
-/**************************************************************************
-...
-**************************************************************************/
-function surrender_game()
-{
-  send_surrender_game();
-
-  $("#tabs-map").removeClass("ui-tabs-hide");
-  $("#tabs-opt").addClass("ui-tabs-hide");
-  $("#map_tab").addClass("ui-state-active");
-  $("#map_tab").addClass("ui-tabs-selected");
-  $("#map_tab").removeClass("ui-state-default");
-
-}
-
-/**************************************************************************
-...
-**************************************************************************/
-function send_surrender_game()
-{
-  if (!client_is_observer() && ws != null && ws.readyState === 1) {
-    send_message("/surrender ");
-  }
-}
-
-/**************************************************************************
-...
-**************************************************************************/
-function show_fullscreen_window()
-{
-  if (BigScreen.enabled) {
-    BigScreen.toggle();
-  } else {
-   show_dialog_message('Fullscreen', 'Press F11 for fullscreen mode.');
-  }
-
-}
-
-/**************************************************************************
-...
-**************************************************************************/
-function show_debug_info()
-{
-  console.log("XBWorld version: " + freeciv_version);
-  console.log("Browser useragent: " + navigator.userAgent);
-  console.log("jQuery version: " + $().jquery);
-  console.log("jQuery UI version: " + $.ui.version);
-  console.log("simpleStorage version: " + simpleStorage.version);
-  console.log("Touch device: " + is_touch_device());
-  console.log("HTTP protocol: " + document.location.protocol);
-  if (ws != null && ws.url != null) console.log("WebSocket URL: " + ws.url);
-
-  debug_active = true;
-  /* Show average network latency PING (server to client, and back). */
-  var sum = 0;
-  var max = 0;
-  for (var i = 0; i < debug_ping_list.length; i++) {
-    sum += debug_ping_list[i];
-    if (debug_ping_list[i] > max) max = debug_ping_list[i];
-  }
-  console.log("Network PING average (server): " + (sum / debug_ping_list.length) + " ms. (Max: " + max +"ms.)");
-
-  /* Show average network latency PING (client to server, and back). */
-  sum = 0;
-  max = 0;
-  for (var j = 0; j < debug_client_speed_list.length; j++) {
-    sum += debug_client_speed_list[j];
-    if (debug_client_speed_list[j] > max) max = debug_client_speed_list[j];
-  }
-  console.log("Network PING average (client): " + (sum / debug_client_speed_list.length) + " ms.  (Max: " + max +"ms.)");
-
-  if (renderer == RENDERER_WEBGL) {
-    console.log(maprenderer.info);
-  }
-
-}
-
-/**************************************************************************
-  This function can be used to display a message of the day to users.
-  It is run on startup of the game, and every 30 minutes after that.
-  The /motd.js Javascript file is fetched using AJAX, and executed
-  so it can run any Javascript code. See motd.js also.
-**************************************************************************/
-function motd_init()
-{
-  $.getScript("/motd.js");
-  setTimeout(motd_init, 1000*60*30);
-}
-
-/**************************************************************************
  Shows the authentication and password dialog.
 **************************************************************************/
 function show_auth_dialog(packet) {
@@ -629,19 +472,9 @@ function switch_renderer()
                  callback: function(key, options) {
                    handle_context_menu_callback(key);
                   } ,
-                 items: unit_actions
+                 items : unit_actions
             };
         }
   });
 
-}
-
-
-
-/**************************************************************************
- Is this a LongTurn game?
-**************************************************************************/
-function is_longturn()
-{
-  return game_type == "longturn";
 }
