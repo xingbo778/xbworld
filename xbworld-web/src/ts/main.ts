@@ -3,8 +3,9 @@
  *
  * This module runs ALONGSIDE the legacy webclient.min.js, not as a
  * replacement. It:
- *   1. Syncs the GameStore with legacy global variables (bidirectional).
- *   2. Exposes migrated TS functions to legacy JS via window.
+ *   1. Patches missing legacy functions to prevent runtime errors.
+ *   2. Syncs the GameStore with legacy global variables (bidirectional).
+ *   3. Exposes migrated TS functions to legacy JS via window.
  *
  * IMPORTANT: The legacy JS still drives the main game loop, network,
  * and rendering. This module only adds/overrides specific functions
@@ -14,16 +15,42 @@
 import { syncStoreWithLegacy } from './bridge/sync';
 import { logNormal } from './core/log';
 
-// Data modules — their top-level exposeToLegacy() calls register
-// migrated functions on window, overriding the legacy versions.
+// ---------------------------------------------------------------------------
+// Phase 0: Patch missing legacy functions BEFORE any module overrides.
+//
+// `update_unit_position` is referenced in auto_center_on_focus_unit()
+// (webclient.min.js) but is only defined in the WebGL renderer which
+// is not included in the 2D build. We provide a safe no-op so the
+// call chain advance_unit_focus → set_unit_focus_and_redraw →
+// auto_center_on_focus_unit does not throw a ReferenceError.
+// ---------------------------------------------------------------------------
+const win = window as unknown as Record<string, unknown>;
+
+if (typeof win['update_unit_position'] !== 'function') {
+  win['update_unit_position'] = function (_ptile: unknown): void {
+    /* no-op in 2D renderer — only needed for WebGL */
+  };
+  logNormal('[TS] Patched missing update_unit_position (2D mode)');
+}
+
+// ---------------------------------------------------------------------------
+// Phase 1: Import data modules.
+// Their top-level exposeToLegacy() calls register migrated functions
+// on window, overriding the old implementations in webclient.min.js.
+// ---------------------------------------------------------------------------
 import './data/game';
 import './data/unit';
 import './data/player';
 
-// Client modules — client state queries and core game functions.
+// ---------------------------------------------------------------------------
+// Phase 2: Import client modules — client state queries and core functions.
+// ---------------------------------------------------------------------------
 import './client/clientState';
 import './client/clientCore';
 
+// ---------------------------------------------------------------------------
+// Phase 3: Initialise bridge and sync.
+// ---------------------------------------------------------------------------
 function init(): void {
   logNormal('[TS] XBWorld TypeScript modules loading...');
 
