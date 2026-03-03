@@ -6,7 +6,10 @@ test.describe('Tab Navigation', () => {
     // Wait for the modal intro dialog to appear, then dismiss it
     await page.waitForSelector('dialog[open]', { timeout: 5000 }).catch(() => {});
     await page.evaluate(() => {
-      document.querySelectorAll('dialog').forEach((d) => { d.close(); d.remove(); });
+      document.querySelectorAll('dialog').forEach((d) => {
+        d.close();
+        d.remove();
+      });
       const pregame = document.getElementById('pregame_page');
       const gamePage = document.getElementById('game_page');
       if (pregame) pregame.style.display = 'none';

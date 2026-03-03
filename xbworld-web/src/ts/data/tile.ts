@@ -3,7 +3,6 @@
  * Migrated from tile.js.
  */
 
-import { store } from './store';
 import type { Tile, City } from './types';
 import { exposeToLegacy } from '../bridge/legacy';
 
@@ -75,7 +74,11 @@ export function tileSetWorked(tile: Tile, work: number): void {
 export function tileCity(ptile: Tile | null): City | null {
   if (!ptile) return null;
   const cityId = ptile.worked;
-  const pcity = store.cities[cityId];
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const cities = (window as any).cities;
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+  if (!cities) return null;
+  const pcity = cities[cityId];
   if (pcity && pcity.tile === ptile.index) {
     return pcity;
   }

@@ -5,7 +5,10 @@ test.describe('Internationalization', () => {
     await page.goto('/src/main/webapp/webclient/index.html');
     await page.waitForSelector('dialog[open]', { timeout: 5000 }).catch(() => {});
     await page.evaluate(() => {
-      document.querySelectorAll('dialog').forEach((d) => { d.close(); d.remove(); });
+      document.querySelectorAll('dialog').forEach((d) => {
+        d.close();
+        d.remove();
+      });
       const pregame = document.getElementById('pregame_page');
       const gamePage = document.getElementById('game_page');
       if (pregame) pregame.style.display = 'none';
@@ -16,7 +19,8 @@ test.describe('Internationalization', () => {
   test('should display English labels by default (non-zh browser)', async ({ page }) => {
     await page.evaluate(() => {
       (window as unknown as Record<string, unknown>).FC_I18N = {
-        ...(window as unknown as Record<string, { _lang: string; setLang: (l: string) => void }>).FC_I18N,
+        ...(window as unknown as Record<string, { _lang: string; setLang: (l: string) => void }>)
+          .FC_I18N,
         _lang: 'en',
       };
     });

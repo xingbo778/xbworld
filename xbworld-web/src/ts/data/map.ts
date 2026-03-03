@@ -1,9 +1,13 @@
 /**
  * Map coordinate system, tile allocation, and direction utilities.
  * Migrated from map.js.
+ *
+ * IMPORTANT: All data access goes through window globals directly,
+ * NOT through the TS store. This is because legacy globals are declared
+ * with `var` (configurable: false) and cannot be intercepted by
+ * Object.defineProperty. See docs/MIGRATION_PITFALLS.md §4.
  */
 
-import { store } from './store';
 import { FC_WRAP } from '../utils/helpers';
 import { exposeToLegacy } from '../bridge/legacy';
 
@@ -32,29 +36,29 @@ export const DIR_DX = [-1, 0, 1, -1, 1, -1, 0, 1] as const;
 export const DIR_DY = [-1, -1, -1, 0, 0, 1, 1, 1] as const;
 
 // ---------------------------------------------------------------------------
-// Helper: get map info from store OR fallback to legacy global `map`.
-// During early bootstrap, store.mapInfo may still be null because
-// syncStoreWithLegacy() hasn't run yet, but the legacy `map` global
-// is already populated by webclient.min.js.
+// Helper: access legacy globals directly via window.
+//
+// We CANNOT use the TS store for map/tiles because:
+// 1. Legacy globals are `var`-declared → configurable:false
+// 2. Object.defineProperty cannot intercept them
+// 3. store.mapInfo / store.tiles remain empty forever
 // ---------------------------------------------------------------------------
 /* eslint-disable @typescript-eslint/no-explicit-any */
+const win = window as any;
+
 function getMapInfo(): {
   xsize: number;
   ysize: number;
   topology_id: number;
   wrap_id: number;
 } | null {
-  if (store.mapInfo) return store.mapInfo as any;
-  const win = window as any;
-  if (win.map && typeof win.map.xsize === 'number') return win.map;
+  const m = win.map;
+  if (m && typeof m.xsize === 'number') return m;
   return null;
 }
 
 function getTiles(): Record<number, any> {
-  if (Object.keys(store.tiles).length > 0) return store.tiles;
-  const win = window as any;
-  if (win.tiles) return win.tiles;
-  return store.tiles;
+  return win.tiles || {};
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
@@ -85,15 +89,19 @@ export function tileInit(tile: Record<string, unknown>): Record<string, unknown>
   return tile;
 }
 
+/**
+ * Allocate the tile array. Writes directly to window.tiles so that
+ * legacy code sees the new tiles immediately.
+ */
 export function mapAllocate(): void {
   const mi = getMapInfo();
   if (!mi) return;
 
-  store.tiles = {};
+  const newTiles: Record<number, unknown> = {};
   for (let x = 0; x < mi.xsize; x++) {
     for (let y = 0; y < mi.ysize; y++) {
       const index = x + y * mi.xsize;
-      store.tiles[index] = {
+      newTiles[index] = {
         index,
         x,
         y,
@@ -115,6 +123,16 @@ export function mapAllocate(): void {
       };
     }
   }
+  // Write to the global tiles object so legacy code sees it.
+  // We cannot reassign `window.tiles` (configurable:false), so we
+  // clear the existing object and copy new entries in.
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const t = win.tiles as Record<string, unknown>;
+  if (t) {
+    for (const k of Object.keys(t)) delete t[k];
+    Object.assign(t, newTiles);
+  }
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 }
 
 /**
@@ -122,8 +140,7 @@ export function mapAllocate(): void {
  * Migrated from map.js map_init_topology().
  */
 export function mapInitTopology(_setSizes: boolean): void {
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  const m = (window as any).map;
+  const m = win.map;
   if (!m) return;
 
   m.valid_dirs = {};
@@ -141,7 +158,6 @@ export function mapInitTopology(_setSizes: boolean): void {
       m.num_cardinal_dirs++;
     }
   }
-  /* eslint-enable @typescript-eslint/no-explicit-any */
 }
 
 export function isValidDir(dir: number): boolean {

@@ -1,5 +1,20 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { $, $$, $id, show, hide, setHtml, setText, addClass, removeClass, on, off, create, remove, delegate } from '@/utils/dom';
+import {
+  $,
+  $$,
+  $id,
+  show,
+  hide,
+  setHtml,
+  setText,
+  addClass,
+  removeClass,
+  on,
+  off,
+  create,
+  remove,
+  delegate,
+} from '@/utils/dom';
 
 describe('DOM utilities', () => {
   beforeEach(() => {
@@ -57,7 +72,9 @@ describe('DOM utilities', () => {
   it('on/off should add/remove event listeners', () => {
     const btn = $id('btn')!;
     let clicked = false;
-    const handler = () => { clicked = true; };
+    const handler = () => {
+      clicked = true;
+    };
     on(btn, 'click', handler);
     btn.click();
     expect(clicked).toBe(true);

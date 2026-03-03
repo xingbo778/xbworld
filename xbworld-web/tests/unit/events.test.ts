@@ -56,7 +56,9 @@ describe('EventBus', () => {
 
   it('should catch handler errors', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    bus.on('test', () => { throw new Error('oops'); });
+    bus.on('test', () => {
+      throw new Error('oops');
+    });
     expect(() => bus.emit('test')).not.toThrow();
     spy.mockRestore();
   });

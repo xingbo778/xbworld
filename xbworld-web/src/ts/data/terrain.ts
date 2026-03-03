@@ -3,7 +3,6 @@
  * Migrated from terrain.js.
  */
 
-import { store } from './store';
 import type { Tile, Terrain } from './types';
 import { tileGetKnown, TILE_UNKNOWN } from './tile';
 import { mapstep, Direction } from './map';
@@ -15,7 +14,11 @@ export function tileSetTerrain(ptile: Tile, terrain: number): void {
 }
 
 export function tileTerrain(ptile: Tile): Terrain | undefined {
-  return store.terrains[ptile.terrain];
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const terrains = (window as any).terrains;
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+  if (!terrains) return undefined;
+  return terrains[ptile.terrain];
 }
 
 export function tileTerrainNear(ptile: Tile): (Terrain | undefined)[] {

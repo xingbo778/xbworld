@@ -213,3 +213,30 @@ JSON.stringify({
 3. **构建配置三件套同步**：修改 Dockerfile 时，同步检查 `.dockerignore` 和 `.gitignore`。
 4. **端到端测试不可省略**：每次部署后必须实际进入游戏，不能只验证预游戏页面。
 5. **渐进式覆盖**：`exposeToLegacy` 一次只覆盖少量函数，每批覆盖后都要完整测试。
+
+## 4. `var` 声明的全局变量无法被 `Object.defineProperty` 拦截
+
+**发现时间**：Phase 6 迁移 map/tile/terrain 模块后
+
+**现象**：`map_pos_to_tile()` 对所有输入返回 `undefined`，地图渲染为全黑。
+
+**根因**：旧版 JS 中的全局变量（如 `var tiles = {}`, `var map = {}`）的 `configurable` 属性为 `false`。`syncStoreWithLegacy()` 尝试用 `Object.defineProperty(window, 'tiles', ...)` 将其重定义为 getter/setter，但因为 `configurable: false` 而**静默失败**（被 try/catch 吞掉）。
+
+结果是：
+- `store.tiles` 和 `store.mapInfo` 永远为空
+- TS 函数内部的 `getMapInfo()` 和 `getTiles()` 先检查 `store.*`（空的），然后 fallback 到 `window.*`
+- 但 fallback 逻辑在 bundle 的闭包中引用的是编译时的 `c`（store），而不是运行时的 `window`
+
+**修复方案**：所有通过 `exposeToLegacy` 暴露给旧版代码的函数，**必须直接读取 `window` 全局变量**，不能通过 `store` 中转。`store` 只用于纯 TS 内部的新代码。
+
+**测试方法**：
+```javascript
+// 在控制台检查全局变量是否有 getter/setter
+Object.getOwnPropertyDescriptor(window, 'tiles')
+// 如果 configurable: false 且没有 get/set，说明 syncProp 失败了
+
+// 检查 TS 函数是否能正确读取数据
+map_pos_to_tile(10, 10)  // 应该返回 tile 对象，不是 undefined
+```
+
+**规则**：在 `exposeToLegacy` 暴露的函数中，始终使用 `(window as any).xxx` 访问旧版全局变量。

@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import {
-  clone, DIVIDE, FC_WRAP, XOR, numberWithCommas,
-  toTitleCase, stringUnqualify, secondsToHumanTime,
+  clone,
+  DIVIDE,
+  FC_WRAP,
+  XOR,
+  numberWithCommas,
+  toTitleCase,
+  stringUnqualify,
+  secondsToHumanTime,
 } from '@/utils/helpers';
 
 describe('clone', () => {

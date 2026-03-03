@@ -1,22 +1,38 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { store } from '@/data/store';
 import {
-  tileGetKnown, tileOwner, tileSetOwner, tileWorked, tileSetWorked,
-  tileCity, TILE_UNKNOWN, TILE_KNOWN_UNSEEN, TILE_KNOWN_SEEN,
+  tileGetKnown,
+  tileOwner,
+  tileSetOwner,
+  tileWorked,
+  tileSetWorked,
+  tileCity,
+  TILE_UNKNOWN,
+  TILE_KNOWN_UNSEEN,
+  TILE_KNOWN_SEEN,
 } from '@/data/tile';
 import type { Tile } from '@/data/types';
 
 function makeTile(overrides: Partial<Tile> = {}): Tile {
   return {
-    index: 0, x: 0, y: 0, terrain: 0, known: 0,
-    extras: [], owner: -1, worked: -1, resource: -1, continent: 0,
+    index: 0,
+    x: 0,
+    y: 0,
+    terrain: 0,
+    known: 0,
+    extras: [],
+    owner: -1,
+    worked: -1,
+    resource: -1,
+    continent: 0,
     ...overrides,
   };
 }
 
 describe('Tile', () => {
   beforeEach(() => {
-    store.reset();
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    (window as any).cities = {};
+    /* eslint-enable @typescript-eslint/no-explicit-any */
   });
 
   it('should return TILE_UNKNOWN for unknown tiles', () => {
@@ -47,11 +63,26 @@ describe('Tile', () => {
   });
 
   it('should find city on tile', () => {
-    store.cities[10] = {
-      id: 10, owner: 0, tile: 55, name: 'Athens', size: 3,
-      food_stock: 0, shield_stock: 0, production_kind: 0, production_value: 0,
-      surplus: [], waste: [], unhappy_penalty: [], prod: [], citizen_extra: [],
-      ppl_happy: [], ppl_content: [], ppl_unhappy: [], ppl_angry: [],
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    (window as any).cities[10] = {
+      id: 10,
+      owner: 0,
+      tile: 55,
+      name: 'Athens',
+      size: 3,
+      food_stock: 0,
+      shield_stock: 0,
+      production_kind: 0,
+      production_value: 0,
+      surplus: [],
+      waste: [],
+      unhappy_penalty: [],
+      prod: [],
+      citizen_extra: [],
+      ppl_happy: [],
+      ppl_content: [],
+      ppl_unhappy: [],
+      ppl_angry: [],
       improvements: [],
     };
     const tile = makeTile({ index: 55, worked: 10 });
