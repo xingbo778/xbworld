@@ -35,7 +35,7 @@ RUN if [ ! -f freeciv/meson.build ]; then \
 RUN meson setup build freeciv -Dserver='freeciv-web' \
         -Dclients=[] -Dfcmp=cli -Djson-protocol=true -Dnls=false \
         -Daudio=none -Dtools=manual \
-        -Dproject-definition=freeciv-web.fcproj \
+        -Dproject-definition=../freeciv-web.fcproj \
         -Ddefault_library=static -Dprefix=/opt/freeciv \
         -Doptimization=3 && \
     ninja -C build && \
