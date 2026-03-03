@@ -101,7 +101,8 @@ class ServerManager:
 
         env = {**os.environ, "FREECIV_DATA_PATH": freeciv_data}
 
-        serv_script = str(PROJECT_ROOT / "data" / f"pubscript_{game_type}.serv")
+        data_dir = PROJECT_ROOT / "data"
+        serv_script = str(data_dir / f"pubscript_{game_type}.serv")
         log_file = self._log_dir / f"server-{port}.log"
         self._servers[port] = subprocess.Popen(
             [freeciv_bin, "--debug", "1", "--port", str(port),
@@ -110,6 +111,7 @@ class ServerManager:
             stdout=open(log_file, "w"),
             stderr=subprocess.STDOUT,
             env=env,
+            cwd=str(data_dir),
         )
 
         logger.info("Spawned freeciv-server on port %d (pid %d), log=%s",
