@@ -42,15 +42,28 @@ RUN meson setup build freeciv -Dserver='freeciv-web' \
     ninja -C build install
 
 ###############################################################################
-# Stage 2: Build the web client (Vite/TypeScript)
+# Stage 2: Generate tileset images from freeciv source data
 ###############################################################################
-FROM node:20-slim AS web-builder
+FROM python:3.11-slim-bookworm AS tileset-builder
 
-COPY xbworld-web/ /build/xbworld-web/
+RUN pip install --no-cache-dir Pillow
 
-WORKDIR /build/xbworld-web
+COPY scripts/freeciv-img-extract/ /build/scripts/
+COPY freeciv/ /build/freeciv/
 
-RUN npm ci && npx vite build
+# If submodule source is missing, clone it
+RUN if [ ! -f /build/freeciv/freeciv/data/amplio2.tilespec ]; then \
+        rm -rf /build/freeciv/freeciv && \
+        apt-get update -qq && apt-get install -y -qq --no-install-recommends git ca-certificates && \
+        git clone --depth 1 --branch xbworld \
+            https://github.com/xingbo778/freeciv.git /build/freeciv/freeciv && \
+        rm -rf /var/lib/apt/lists/*; \
+    fi
+
+RUN mkdir -p /build/out && \
+    python3 /build/scripts/img-extract.py \
+        -f /build/freeciv/freeciv \
+        -o /build/out
 
 ###############################################################################
 # Stage 3: Slim runtime image
@@ -73,7 +86,12 @@ COPY --from=builder /opt/freeciv /opt/freeciv
 COPY xbworld-agent/ /app/xbworld-agent/
 COPY data/ /app/data/
 COPY xbworld-web/src/main/webapp/ /app/xbworld-web/src/main/webapp/
-COPY --from=web-builder /build/xbworld-web/dist/webclient/ /app/xbworld-web/dist/webclient/
+
+# Copy generated tileset PNGs and spec JS into the webapp
+COPY --from=tileset-builder /build/out/xbworld-tileset-amplio2-*.png \
+     /app/xbworld-web/src/main/webapp/tileset/
+COPY --from=tileset-builder /build/out/tileset_spec_amplio2.js \
+     /app/xbworld-web/src/main/webapp/javascript/2dcanvas/
 
 WORKDIR /app/xbworld-agent
 

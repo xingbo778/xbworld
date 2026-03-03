@@ -8,12 +8,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <link rel="shortcut icon" href="/src/main/webapp/images/xbworld-favicon.svg">
-  <link rel="apple-touch-icon" href="/src/main/webapp/images/xbworld-logo.svg">
-  <link rel="manifest" href="/static/manifest.json">
+  <link rel="shortcut icon" href="/images/xbworld-favicon.svg">
+  <link rel="apple-touch-icon" href="/images/xbworld-logo.svg">
 
-  <link rel="stylesheet" href="/src/main/webapp/css/font-awesome.min.css">
-  <link rel="stylesheet" href="/src/main/webapp/css/xbworld.css">
+  <!-- Legacy CSS bundle -->
+  <link rel="stylesheet" href="/css/webclient.min.css">
+  <link rel="stylesheet" href="/css/font-awesome.min.css">
 </head>
 
 <body>
@@ -23,10 +23,10 @@
   <div id="pregame_options">
     <div id="pregame_buttons">
       <div id="xbworld_logo" style="cursor:pointer"></div>
-      <button id="start_game_button" type="button" class="xb-btn xb-btn-primary"><i class="fa fa-check-circle-o"></i> <b>Start Game</b></button>
-      <button id="load_game_button" type="button" class="xb-btn"><i class="fa fa-file-o"></i> Load Game</button>
-      <button id="pick_nation_button" type="button" class="xb-btn"><i class="fa fa-flag"></i> Pick Nation</button>
-      <button id="pregame_settings_button" type="button" class="xb-btn"><i class="fa fa-cogs"></i> Game Settings</button>
+      <button id="start_game_button" type="button"><i class="fa fa-check-circle-o"></i> <b>Start Game</b></button>
+      <button id="load_game_button" type="button"><i class="fa fa-file-o"></i> Load Game</button>
+      <button id="pick_nation_button" type="button"><i class="fa fa-flag"></i> Pick Nation</button>
+      <button id="pregame_settings_button" type="button"><i class="fa fa-cogs"></i> Game Settings</button>
     </div>
   </div>
   <div id="pregame_player_list"></div>
@@ -44,17 +44,16 @@
   <div id="tabs">
     <ul id="tabs_menu">
       <div id="xbworld_logo_tabs"></div>
-      <li id="map_tab" class="ui-state-active"><a href="#tabs-map" title="Map"><i class="fa fa-globe"></i> <span class="tab-label" data-i18n="tab_map">Map</span></a></li>
-      <li id="civ_tab"><a href="#tabs-civ" title="Government"><i class="fa fa-university"></i> <span class="tab-label" data-i18n="tab_gov">Government</span></a></li>
-      <li id="tech_tab"><a id="tech_tab_item" href="#tabs-tec" title="Research"><i class="fa fa-flask"></i> <span class="tab-label" data-i18n="tab_research">Research</span></a></li>
-      <li id="players_tab"><a href="#tabs-nat" title="Nations"><i class="fa fa-flag"></i> <span class="tab-label" data-i18n="tab_nations">Nations</span></a></li>
-      <li id="cities_tab"><a href="#tabs-cities" title="Cities"><i class="fa fa-fort-awesome"></i> <span class="tab-label" data-i18n="tab_cities">Cities</span></a></li>
-      <li id="opt_tab"><a href="#tabs-opt" title="Options"><i class="fa fa-cogs"></i> <span class="tab-label" data-i18n="tab_options">Options</span></a></li>
-      <li id="hel_tab"><a href="#tabs-hel" title="Manual"><i class="fa fa-question-circle-o"></i> <span class="tab-label" data-i18n="tab_manual">Manual</span></a></li>
-      <li id="lang_toggle" class="lang-toggle-li"><a href="javascript:void(0)" id="lang_toggle_btn" title="中文/EN"><i class="fa fa-language"></i></a></li>
+      <li id="map_tab"><a href="#tabs-map" title="Map"><i class="fa fa-globe"></i> Map</a></li>
+      <li id="civ_tab"><a href="#tabs-civ" title="Government"><i class="fa fa-university"></i> Government</a></li>
+      <li id="tech_tab"><a id="tech_tab_item" href="#tabs-tec" title="Research"><i class="fa fa-flask"></i> Research</a></li>
+      <li id="players_tab"><a href="#tabs-nat" title="Nations"><i class="fa fa-flag"></i> Nations</a></li>
+      <li id="cities_tab"><a href="#tabs-cities" title="Cities"><i class="fa fa-fort-awesome"></i> Cities</a></li>
+      <li id="opt_tab"><a href="#tabs-opt" title="Options"><i class="fa fa-cogs"></i> Options</a></li>
+      <li id="hel_tab"><a href="#tabs-hel" title="Manual"><i class="fa fa-question-circle-o"></i> Manual</a></li>
       <div id="game_status_panel_top"></div>
       <div id="turn_done_button_div">
-        <button id="turn_done_button" type="button" class="xb-btn xb-btn-primary" title="Ends your turn. (Shift+Enter)" data-i18n="btn_turn_done">Turn Done</button>
+        <button id="turn_done_button" type="button" title="Ends your turn. (Shift+Enter)">Turn Done</button>
       </div>
     </ul>
 
@@ -63,7 +62,9 @@
         <div id="canvas_div"></div>
         <div id="game_chatbox_panel">
           <div id="xbworld_custom_scrollbar_div">
-            <ol id="game_message_area"></ol>
+            <div id="freeciv_custom_scrollbar_div">
+              <ol id="game_message_area"></ol>
+            </div>
           </div>
           <div id="game_chat_box">
             <input id="game_text_input" type="text" name="text_input" placeholder="Chat..." />
@@ -100,10 +101,10 @@
       <div id="civ_dialog">
         <h2 id="nation_title">Your Nation</h2>
         <div id="civ_dialog_text"></div>
-        <button id="revolution_button" class="xb-btn" type="button">Revolution</button>
-        <button id="taxrates_button" class="xb-btn" type="button">Tax Rates</button>
-        <button id="wonders_report" class="xb-btn" type="button">Wonders of the World</button>
-        <button id="demography_report" class="xb-btn" type="button">Demographics</button>
+        <button id="revolution_button" type="button">Revolution</button>
+        <button id="taxrates_button" type="button">Tax Rates</button>
+        <button id="wonders_report" type="button">Wonders of the World</button>
+        <button id="demography_report" type="button">Demographics</button>
       </div>
     </div>
 
@@ -124,9 +125,9 @@
     <div id="tabs-nat">
       <div id="nations_title"></div>
       <div id="nations_button_div">
-        <button id="view_player_button" type="button" class="xb-btn">View on Map</button>
-        <button id="meet_player_button" type="button" class="xb-btn">Meet Player</button>
-        <button id="game_scores_button" type="button" class="xb-btn">Game Scores</button>
+        <button id="view_player_button" type="button">View on Map</button>
+        <button id="meet_player_button" type="button">Meet Player</button>
+        <button id="game_scores_button" type="button">Game Scores</button>
       </div>
       <div id="nations"><div id="nations_list"></div></div>
     </div>
@@ -143,36 +144,159 @@
         <h2>Game Options</h2>
         <div class="main_menu_buttons"><b>Music:</b><br><audio preload="none"></audio></div>
         <table>
-          <tr><td><button id="save_button" type="button" class="xb-btn" title="Save game (Ctrl+S)">Save Game</button></td>
-              <td><button id="fullscreen_button" type="button" class="xb-btn">Fullscreen</button></td></tr>
-          <tr><td><button id="surrender_button" type="button" class="xb-btn">Surrender</button></td>
-              <td><button id="end_button" type="button" class="xb-btn">End Game</button></td></tr>
+          <tr><td><button id="save_button" type="button">Save Game</button></td>
+              <td><button id="fullscreen_button" type="button">Fullscreen</button></td></tr>
+          <tr><td><button id="surrender_button" type="button">Surrender</button></td>
+              <td><button id="end_button" type="button">End Game</button></td></tr>
         </table>
       </div>
     </div>
   </div>
 </div>
 
+<!-- jQuery and core libs (must load before webclient.min.js) -->
+<script src="/javascript/libs/jquery.min.js"></script>
+<script src="/javascript/libs/jquery-ui.min.js"></script>
+<script src="/javascript/libs/jquery.blockUI.js"></script>
+<script src="/javascript/libs/jquery.contextMenu.js"></script>
+<script src="/javascript/libs/jquery.dialogextend.js"></script>
+<script src="/javascript/libs/jquery.mCustomScrollbar.js"></script>
+<script src="/javascript/libs/jquery.tablesorter.min.js"></script>
+<script src="/javascript/libs/sweetalert.min.js"></script>
+<script src="/javascript/libs/simpleStorage.min.js"></script>
+<script src="/javascript/libs/seedrandom.min.js"></script>
+<script src="/javascript/libs/sha512.js"></script>
+<script src="/javascript/libs/bigscreen.min.js"></script>
+<script src="/javascript/libs/platform.js"></script>
+<script src="/javascript/libs/hammer.min.js"></script>
+<script src="/javascript/libs/EventAggregator.js"></script>
+<script src="/javascript/libs/bmp_lib.js"></script>
+<script src="/javascript/libs/gif.js"></script>
+
+<!-- Stubs for optional dependencies not deployed (audio, etc.) -->
 <script>
-var FC_I18N = {
-  _lang: (navigator.language || '').startsWith('zh') ? 'zh' : 'en',
-  _dict: {
-    zh: { tab_map: '地图', tab_gov: '政府', tab_research: '科研', tab_nations: '国家', tab_cities: '城市', tab_options: '选项', tab_manual: '手册', btn_turn_done: '结束回合' },
-    en: { tab_map: 'Map', tab_gov: 'Government', tab_research: 'Research', tab_nations: 'Nations', tab_cities: 'Cities', tab_options: 'Options', tab_manual: 'Manual', btn_turn_done: 'Turn Done' }
-  },
-  tr: function(key) { return (this._dict[this._lang] || this._dict['en'])[key] || key; },
-  setLang: function(lang) {
-    this._lang = lang;
-    document.querySelectorAll('[data-i18n]').forEach(function(el) { el.textContent = FC_I18N.tr(el.getAttribute('data-i18n')); });
-  }
-};
-document.getElementById('lang_toggle_btn')?.addEventListener('click', function() {
-  FC_I18N.setLang(FC_I18N._lang === 'zh' ? 'en' : 'zh');
-});
-if (FC_I18N._lang === 'zh') document.addEventListener('DOMContentLoaded', function() { FC_I18N.setLang('zh'); });
+if (typeof audiojs === "undefined") {
+  window.audiojs = {
+    events: { ready: function(fn) { /* no-op: music not deployed */ } },
+    createAll: function() { return [null]; }
+  };
+}
 </script>
 
-<script type="module" src="/src/ts/main.ts"></script>
+<!-- Legacy game client bundle (all game logic + 2D Canvas renderer) -->
+<script src="/javascript/webclient.min.js"></script>
+
+<!--
+  Patch: Override network_init to read port from JSON body (not just headers),
+  and handle the WebSocket proxy's array-wrapped packets.
+  Must load AFTER webclient.min.js but BEFORE $(document).ready fires.
+-->
+<script>
+(function() {
+  // Patch network_init to read port from JSON response body
+  var _original_network_init = window.network_init;
+  window.network_init = function() {
+    if (!("WebSocket" in window)) {
+      swal("WebSockets not supported", "", "error");
+      return;
+    }
+
+    var url = "/civclientlauncher";
+    if ($.getUrlVar("action") != null) url += "?action=" + $.getUrlVar("action");
+    if ($.getUrlVar("action") == null && $.getUrlVar("civserverport") != null) url += "?";
+    if ($.getUrlVar("civserverport") != null) url += "&civserverport=" + $.getUrlVar("civserverport");
+
+    $.ajax({
+      type: "POST",
+      url: url,
+      dataType: "json",
+      success: function(data, textStatus, request) {
+        var port = null;
+        var result = null;
+
+        // Try JSON body first (works with Railway CDN which strips custom headers)
+        if (data && data.port != null) {
+          port = String(data.port);
+          result = data.result || "success";
+        }
+
+        // Fallback to response headers
+        if (!port) {
+          port = request.getResponseHeader("port");
+          result = request.getResponseHeader("result");
+        }
+
+        if (port != null && result == "success") {
+          civserverport = port;
+          websocket_init();
+          if (typeof load_game_check === "function") load_game_check();
+        } else {
+          show_dialog_message("Network error", "Invalid server port. Error: " + result);
+        }
+      },
+      error: function(request, textStatus, errorThrown) {
+        show_dialog_message("Network error",
+          "Unable to communicate with game launcher. Error: " +
+          textStatus + " " + errorThrown + " " +
+          (request.getResponseHeader ? request.getResponseHeader("result") : ""));
+      }
+    });
+  };
+
+  // Patch websocket_init to handle array-wrapped packets from the proxy
+  var _original_websocket_init = window.websocket_init;
+  window.websocket_init = function() {
+    $.blockUI({ message: "<h2>Please wait while connecting to the server.</h2>" });
+    var proxyport = 1000 + parseFloat(civserverport);
+    var ws_protocol = ("https:" == window.location.protocol) ? "wss://" : "ws://";
+    var port = window.location.port ? (":" + window.location.port) : "";
+    ws = new WebSocket(ws_protocol + window.location.hostname + port + "/civsocket/" + proxyport);
+
+    ws.onopen = check_websocket_ready;
+
+    ws.onmessage = function(event) {
+      if (typeof client_handle_packet !== "undefined") {
+        try {
+          var parsed = JSON.parse(event.data);
+          // The proxy may send a single packet object or an array of packets.
+          // client_handle_packet expects an array.
+          if (!Array.isArray(parsed)) {
+            parsed = [parsed];
+          }
+          client_handle_packet(parsed);
+        } catch (e) {
+          console.error("Failed to parse packet:", e);
+        }
+      }
+    };
+
+    ws.onclose = function(event) {
+      swal("Network Error", "Connection to server is closed. Please reload the page to restart. Sorry!", "error");
+      if (typeof message_log !== "undefined") {
+        message_log.update({
+          event: E_LOG_ERROR,
+          message: "Error: connection to server is closed. Please reload the page to restart. Sorry!"
+        });
+      }
+      console.info("WebSocket connection closed, code+reason: " + event.code + ", " + event.reason);
+      try {
+        $("#turn_done_button").button("option", "disabled", true);
+        $("#save_button").button("option", "disabled", true);
+      } catch(e) {}
+      if (typeof pbem_phase_ended !== "undefined") pbem_phase_ended = true;
+      $(window).unbind("beforeunload");
+      clearInterval(ping_timer);
+    };
+
+    ws.onerror = function(evt) {
+      show_dialog_message("Network error",
+        "A problem occured with the " + document.location.protocol +
+        " WebSocket connection to the server: " + ws.url);
+      console.error("WebSocket error:", evt);
+    };
+  };
+})();
+</script>
 
 </body>
 </html>

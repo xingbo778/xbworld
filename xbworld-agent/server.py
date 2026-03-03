@@ -45,8 +45,6 @@ logger = logging.getLogger("xbworld-server")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 WEBAPP_DIR = PROJECT_ROOT / "xbworld-web" / "src" / "main" / "webapp"
-DIST_DIR = PROJECT_ROOT / "xbworld-web" / "dist" / "webclient"
-DIST_WEBCLIENT_DIR = DIST_DIR / "src" / "main" / "webapp" / "webclient"
 
 STRATEGY_PROMPT_TEMPLATE = """You are an expert XBWorld player AI agent named "{name}". You control a civilization and make strategic decisions each turn.
 
@@ -508,23 +506,12 @@ async def ws_civsocket(ws: WebSocket, proxy_port: int):
 
 
 # --- Static file serving ---
-# Prefer Vite-built assets (dist/webclient/) over raw source files
+# Serve the legacy web client directly from the webapp directory.
+# The legacy client uses webclient.min.js (pre-built JS bundle) with jQuery
+# and the 2D Canvas renderer — no Vite build needed.
 
-if DIST_DIR.exists():
-    logger.info("Serving built web client from %s", DIST_DIR)
-    assets_dir = DIST_DIR / "assets"
-    if assets_dir.exists():
-        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
-    if DIST_WEBCLIENT_DIR.exists():
-        app.mount("/webclient", StaticFiles(directory=str(DIST_WEBCLIENT_DIR), html=True), name="webclient")
-    for subdir in ["css", "javascript", "images", "static", "fonts",
-                    "textures", "tileset", "music", "docs"]:
-        path = WEBAPP_DIR / subdir
-        if path.exists():
-            app.mount(f"/{subdir}", StaticFiles(directory=str(path)), name=subdir)
-            app.mount(f"/src/main/webapp/{subdir}", StaticFiles(directory=str(path)), name=f"compat_{subdir}")
-elif WEBAPP_DIR.exists():
-    logger.info("Serving raw web client from %s (no build found)", WEBAPP_DIR)
+if WEBAPP_DIR.exists():
+    logger.info("Serving legacy web client from %s", WEBAPP_DIR)
     for subdir in ["css", "javascript", "images", "static", "fonts",
                     "textures", "tileset", "music", "docs"]:
         path = WEBAPP_DIR / subdir
@@ -547,9 +534,6 @@ async def motd_js():
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """Serve the game client index page."""
-    dist_index = DIST_WEBCLIENT_DIR / "index.html"
-    if dist_index.exists():
-        return dist_index.read_text()
     raw_index = WEBAPP_DIR / "webclient" / "index.html"
     if raw_index.exists():
         return raw_index.read_text()

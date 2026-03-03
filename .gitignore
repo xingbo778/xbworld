@@ -40,9 +40,8 @@ doc/
 .github/
 music/
 
-# Large binary assets (music, tilesets, test results)
+# Large binary assets (music, test results)
 xbworld-web/src/main/webapp/music/
-xbworld-web/src/main/webapp/tileset/
 xbworld-web/test-results/
 xbworld-web/playwright-report/
 
