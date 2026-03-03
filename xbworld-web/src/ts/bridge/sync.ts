@@ -71,6 +71,7 @@ export function syncStoreWithLegacy(): void {
   syncProp('connections', 'connections');
 
   // Aliased names (legacy name differs from store property)
+  syncProp('map', 'mapInfo');
   syncProp('unit_types', 'unitTypes');
   syncProp('game_info', 'gameInfo');
   syncProp('calendar_info', 'calendarInfo');

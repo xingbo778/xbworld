@@ -31,12 +31,39 @@ export const T_UNKNOWN = 0;
 export const DIR_DX = [-1, 0, 1, -1, 1, -1, 0, 1] as const;
 export const DIR_DY = [-1, -1, -1, 0, 0, 1, 1, 1] as const;
 
+// ---------------------------------------------------------------------------
+// Helper: get map info from store OR fallback to legacy global `map`.
+// During early bootstrap, store.mapInfo may still be null because
+// syncStoreWithLegacy() hasn't run yet, but the legacy `map` global
+// is already populated by webclient.min.js.
+// ---------------------------------------------------------------------------
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function getMapInfo(): {
+  xsize: number;
+  ysize: number;
+  topology_id: number;
+  wrap_id: number;
+} | null {
+  if (store.mapInfo) return store.mapInfo as any;
+  const win = window as any;
+  if (win.map && typeof win.map.xsize === 'number') return win.map;
+  return null;
+}
+
+function getTiles(): Record<number, any> {
+  if (Object.keys(store.tiles).length > 0) return store.tiles;
+  const win = window as any;
+  if (win.tiles) return win.tiles;
+  return store.tiles;
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
 export function topoHasFlag(flag: number): boolean {
-  return ((store.mapInfo?.topology_id ?? 0) & flag) !== 0;
+  return ((getMapInfo()?.topology_id ?? 0) & flag) !== 0;
 }
 
 export function wrapHasFlag(flag: number): boolean {
-  return ((store.mapInfo?.wrap_id ?? 0) & flag) !== 0;
+  return ((getMapInfo()?.wrap_id ?? 0) & flag) !== 0;
 }
 
 /**
@@ -59,7 +86,7 @@ export function tileInit(tile: Record<string, unknown>): Record<string, unknown>
 }
 
 export function mapAllocate(): void {
-  const mi = store.mapInfo;
+  const mi = getMapInfo();
   if (!mi) return;
 
   store.tiles = {};
@@ -154,15 +181,16 @@ export function isCardinalDir(dir: number): boolean {
 }
 
 export function mapPosToTile(x: number, y: number) {
-  const mi = store.mapInfo;
+  const mi = getMapInfo();
   if (!mi) return undefined;
+  const t = getTiles();
   if (x >= mi.xsize) y -= 1;
   else if (x < 0) y += 1;
-  return store.tiles[x + y * mi.xsize];
+  return t[x + y * mi.xsize];
 }
 
 export function indexToTile(index: number) {
-  return store.tiles[index];
+  return getTiles()[index];
 }
 
 export function mapstep(ptile: { x: number; y: number }, dir: number) {
@@ -182,7 +210,8 @@ export function getDirectionForStep(
 }
 
 export function nativeToMapPos(natX: number, natY: number) {
-  const mi = store.mapInfo!;
+  const mi = getMapInfo();
+  if (!mi) return { mapX: 0, mapY: 0 };
   const mapX = Math.floor((natY + (natY & 1)) / 2 + natX);
   const mapY = Math.floor(natY - mapX + mi.xsize);
   return { mapX, mapY };
@@ -193,14 +222,16 @@ export function nativeToMapPos(natX: number, natY: number) {
  * Migrated from map.js.
  */
 export function naturalToMapPos(natX: number, natY: number) {
-  const mi = store.mapInfo!;
+  const mi = getMapInfo();
+  if (!mi) return { map_x: 0, map_y: 0 };
   const pmap_x = Math.floor((natY + natX) / 2);
   const pmap_y = Math.floor(natY - pmap_x + mi.xsize);
   return { map_x: pmap_x, map_y: pmap_y };
 }
 
 export function mapToNativePos(mapX: number, mapY: number) {
-  const mi = store.mapInfo!;
+  const mi = getMapInfo();
+  if (!mi) return { natX: 0, natY: 0 };
   const natY = Math.floor(mapX + mapY - mi.xsize);
   const natX = Math.floor((2 * mapX - natY - (natY & 1)) / 2);
   return { natX, natY };
@@ -211,7 +242,8 @@ export function mapToNativePos(mapX: number, mapY: number) {
  * Migrated from map.js.
  */
 export function mapToNaturalPos(mapX: number, mapY: number) {
-  const mi = store.mapInfo!;
+  const mi = getMapInfo();
+  if (!mi) return { nat_y: 0, nat_x: 0 };
   const pnat_y = Math.floor(mapX + mapY - mi.xsize);
   const pnat_x = Math.floor(2 * mapX - pnat_y);
   return { nat_y: pnat_y, nat_x: pnat_x };
@@ -221,7 +253,8 @@ export function mapDistanceVector(
   tile0: { x: number; y: number },
   tile1: { x: number; y: number },
 ): [number, number] {
-  const mi = store.mapInfo!;
+  const mi = getMapInfo();
+  if (!mi) return [0, 0];
   let dx = tile1.x - tile0.x;
   let dy = tile1.y - tile0.y;
   if (wrapHasFlag(WRAP_X)) {
@@ -283,12 +316,13 @@ export function dirCCW(dir: number): number {
 }
 
 export function clearGotoTiles(): void {
-  const mi = store.mapInfo;
+  const mi = getMapInfo();
   if (!mi) return;
+  const t = getTiles();
   for (let x = 0; x < mi.xsize; x++) {
     for (let y = 0; y < mi.ysize; y++) {
-      const t = store.tiles[x + y * mi.xsize];
-      if (t) t.goto_dir = null;
+      const tile = t[x + y * mi.xsize];
+      if (tile) tile.goto_dir = null;
     }
   }
 }
