@@ -344,6 +344,14 @@ async def debug_paths():
         result["dist_webclient_exists"] = wc.exists()
         if wc.exists():
             result["dist_webclient_contents"] = os.listdir(str(wc))
+        for sub in ["src", "assets"]:
+            p = DIST_DIR / sub
+            if p.exists():
+                result[f"{sub}_contents"] = os.listdir(str(p))[:20]
+        for root_dir, dirs, files in os.walk(str(DIST_DIR)):
+            for f in files:
+                if f == "index.html":
+                    result["index_html_path"] = os.path.join(root_dir, f)
     return result
 
 
