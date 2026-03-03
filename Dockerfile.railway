@@ -67,9 +67,14 @@ WORKDIR /app/xbworld-agent
 
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN useradd -m -s /bin/bash xbworld && \
+    chown -R xbworld:xbworld /app /opt/freeciv
+
 ENV FREECIV_BIN=/opt/freeciv/bin/freeciv-web \
     FREECIV_DATA_PATH=/opt/freeciv/share/freeciv/ \
     PYTHONUNBUFFERED=1
+
+USER xbworld
 
 EXPOSE 8080
 
