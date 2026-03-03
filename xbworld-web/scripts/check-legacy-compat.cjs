@@ -18,11 +18,15 @@ const BUNDLE_PATH = path.join(__dirname, '..', 'src', 'main', 'webapp', 'javascr
 const LEGACY_PATH = path.join(__dirname, '..', 'src', 'main', 'webapp', 'javascript', 'webclient.min.js');
 
 // Known initialization functions that MUST NOT be overridden
+// NOTE: Functions that have been FULLY migrated to TS (Legacy file removed)
+// should be removed from this list. They are no longer "overrides" but
+// the sole implementation.
 const FORBIDDEN_OVERRIDES = [
   'map_allocate', 'tile_init', 'map_init_topology',
   'game_init', 'improvements_init', 'init_overview',
-  'set_client_state', 'network_init', 'init_mapview',
+  'set_client_state', 'init_mapview',
   'setup_window_size', 'tileset_init',
+  // Phase 5: network_init REMOVED — clinet.js deleted, connection.ts is sole impl
 ];
 
 // Known module-local variables in Legacy (not on window)

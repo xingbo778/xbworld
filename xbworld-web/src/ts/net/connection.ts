@@ -1,206 +1,328 @@
 /**
- * WebSocket connection manager.
- * Replaces clinet.js with a clean, typed API.
+ * WebSocket connection manager — COMPLETE replacement for clinet.js.
+ *
+ * Phase 5: This module replaces clinet.js AND the inline patch script
+ * in index.html. It exposes all functions via exposeToLegacy using the
+ * exact same names as the Legacy code.
+ *
+ * Includes patches from the inline script:
+ *   - Read port from JSON response body (Railway CDN strips custom headers)
+ *   - Handle array-wrapped packets from the WebSocket proxy
  */
 
-import { store } from '../data/store';
-import { globalEvents } from '../core/events';
-import { logError, logNormal } from '../core/log';
-import { blockUI, unblockUI } from '../utils/dom';
-import { getUrlVar } from '../utils/helpers';
+import { exposeToLegacy } from '../bridge/legacy';
 
-const FREECIV_VERSION = '+Freeciv.Web.Devel-3.3';
-const PING_CHECK_INTERVAL = 240_000;
+const w = window as any;
 
+// Module-local state (was var in clinet.js)
+let error_shown = false;
+let syncTimerId = -1;
+let clinet_last_send = 0;
+let debug_client_speed_list: number[] = [];
+const freeciv_version = '+Freeciv.Web.Devel-3.3';
 let ws: WebSocket | null = null;
 let civserverport: string | null = null;
-let pingLast = Date.now();
-let pingTimer: ReturnType<typeof setInterval> | null = null;
-let clinetLastSend = 0;
+let ping_last = new Date().getTime();
+const pingtime_check = 240000;
+let ping_timer: ReturnType<typeof setInterval> | null = null;
 
-export const debugClientSpeedList: number[] = [];
+/**
+ * Initialize the network communication with the server manually.
+ */
+function network_init_manual_hack(
+  civserverport_manual: string,
+  username_manual: string,
+  savegame?: string
+): void {
+  civserverport = civserverport_manual;
+  w.username = username_manual;
+  websocket_init();
 
-export function getWebSocket(): WebSocket | null {
-  return ws;
-}
-
-export function getCivserverPort(): string | null {
-  return civserverport;
-}
-
-export function networkInitManualHack(port: string, username: string, savegame?: string): void {
-  civserverport = port;
-  store.username = username;
-  websocketInit();
-
-  if (savegame) {
-    globalEvents.once('text:received', () => {
-      globalEvents.emit('game:load', savegame);
+  if (savegame != null) {
+    w.wait_for_text('You are logged in as', function () {
+      w.load_game_real(savegame);
     });
   }
 }
 
-export async function networkInit(): Promise<void> {
+/**
+ * Initialize the Network communication, by requesting a valid server port.
+ * Includes the Railway CDN patch: reads port from JSON body first,
+ * falls back to response headers.
+ */
+function network_init(): void {
   if (!('WebSocket' in window)) {
-    globalEvents.emit('ui:alert', {
-      title: 'WebSockets not supported',
-      text: '',
-      type: 'error',
-    });
+    w.swal('WebSockets not supported', '', 'error');
     return;
   }
 
   let url = '/civclientlauncher';
-  const action = getUrlVar('action');
-  const portParam = getUrlVar('civserverport');
-  const params = new URLSearchParams();
-  if (action) params.set('action', action);
-  if (portParam) params.set('civserverport', portParam);
-  const qs = params.toString();
-  if (qs) url += '?' + qs;
+  if (w.$.getUrlVar('action') != null) {
+    url += '?action=' + w.$.getUrlVar('action');
+  }
+  if (w.$.getUrlVar('action') == null && w.$.getUrlVar('civserverport') != null) {
+    url += '?';
+  }
+  if (w.$.getUrlVar('civserverport') != null) {
+    url += '&civserverport=' + w.$.getUrlVar('civserverport');
+  }
 
-  try {
-    const response = await fetch(url, { method: 'POST' });
-    const data = await response.json();
-    const port = data.port?.toString() ?? response.headers.get('port');
-    const result = data.result ?? response.headers.get('result');
+  w.$.ajax({
+    type: 'POST',
+    url: url,
+    dataType: 'json',
+    success: function (data: any, _textStatus: string, request: any) {
+      let port: string | null = null;
+      let result: string | null = null;
 
-    if (port && result === 'success') {
-      civserverport = port;
-      websocketInit();
-      globalEvents.emit('game:checkload');
-    } else {
-      globalEvents.emit('ui:dialog', {
-        title: 'Network error',
-        message: 'Invalid server port. Error: ' + result,
+      // Try JSON body first (works with Railway CDN which strips custom headers)
+      if (data && data.port != null) {
+        port = String(data.port);
+        result = data.result || 'success';
+      }
+
+      // Fallback to response headers
+      if (!port) {
+        port = request.getResponseHeader('port');
+        result = request.getResponseHeader('result');
+      }
+
+      if (port != null && result === 'success') {
+        civserverport = port;
+        websocket_init();
+        if (typeof w.load_game_check === 'function') w.load_game_check();
+      } else {
+        w.show_dialog_message('Network error', 'Invalid server port. Error: ' + result);
+      }
+    },
+    error: function (request: any, textStatus: string, errorThrown: string) {
+      w.show_dialog_message(
+        'Network error',
+        'Unable to communicate with game launcher. Error: '
+          + textStatus + ' ' + errorThrown + ' '
+          + (request.getResponseHeader ? request.getResponseHeader('result') : '')
+      );
+    },
+  });
+}
+
+/**
+ * Initialize the WebSocket connection.
+ * Includes the proxy patch: handles both single-packet and array-wrapped packets.
+ */
+function websocket_init(): void {
+  w.$.blockUI({ message: '<h2>Please wait while connecting to the server.</h2>' });
+  const proxyport = 1000 + parseFloat(civserverport!);
+  const ws_protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+  const port = window.location.port ? ':' + window.location.port : '';
+  ws = new WebSocket(ws_protocol + window.location.hostname + port + '/civsocket/' + proxyport);
+
+  ws.onopen = check_websocket_ready;
+
+  ws.onmessage = function (event: MessageEvent) {
+    if (typeof w.client_handle_packet !== 'undefined') {
+      try {
+        let parsed = JSON.parse(event.data);
+        // The proxy may send a single packet object or an array of packets.
+        // client_handle_packet expects an array.
+        if (!Array.isArray(parsed)) {
+          parsed = [parsed];
+        }
+        w.client_handle_packet(parsed);
+      } catch (e) {
+        console.error('Failed to parse packet:', e);
+      }
+    }
+  };
+
+  ws.onclose = function (event: CloseEvent) {
+    w.swal(
+      'Network Error',
+      'Connection to server is closed. Please reload the page to restart. Sorry!',
+      'error'
+    );
+    if (typeof w.message_log !== 'undefined') {
+      w.message_log.update({
+        event: w.E_LOG_ERROR,
+        message: 'Error: connection to server is closed. Please reload the page to restart. Sorry!',
       });
     }
-  } catch (err) {
-    globalEvents.emit('ui:dialog', {
-      title: 'Network error',
-      message: 'Unable to communicate with game launcher. Error: ' + err,
-    });
-  }
-}
+    console.info('WebSocket connection closed, code+reason: ' + event.code + ', ' + event.reason);
 
-function websocketInit(): void {
-  blockUI('<h2>Please wait while connecting to the server.</h2>');
+    try { w.$('#turn_done_button').button('option', 'disabled', true); } catch (_e) { /* ok */ }
+    try { w.$('#save_button').button('option', 'disabled', true); } catch (_e) { /* ok */ }
 
-  const proxyport = 1000 + Number(civserverport);
-  const protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-  const port = location.port ? ':' + location.port : '';
-  ws = new WebSocket(`${protocol}${location.hostname}${port}/civsocket/${proxyport}`);
+    if (typeof w.pbem_phase_ended !== 'undefined') w.pbem_phase_ended = true;
 
-  ws.onopen = checkWebsocketReady;
+    w.$(window).unbind('beforeunload');
 
-  ws.onmessage = (event) => {
-    pingLast = Date.now();
-    try {
-      const parsed = JSON.parse(event.data as string);
-      const packets = Array.isArray(parsed) ? parsed : [parsed];
-      for (const packet of packets) {
-        globalEvents.emit('packet:received', packet);
-      }
-    } catch (e) {
-      logError('Failed to parse packet:', e);
-    }
+    if (ping_timer) clearInterval(ping_timer);
   };
 
-  ws.onclose = (event) => {
-    globalEvents.emit('ui:alert', {
-      title: 'Network Error',
-      text: 'Connection to server is closed. Please reload the page to restart.',
-      type: 'error',
-    });
-    logNormal(`WebSocket closed: code=${event.code}, reason=${event.reason}`);
+  ws.onerror = function (evt: Event) {
+    w.show_dialog_message(
+      'Network error',
+      'A problem occured with the ' + document.location.protocol
+        + ' WebSocket connection to the server: ' + (ws ? ws.url : '')
+    );
+    console.error('WebSocket error:', evt);
+  };
+}
 
-    if (pingTimer) {
-      clearInterval(pingTimer);
-      pingTimer = null;
+/**
+ * When the WebSocket connection is open and ready to communicate, then
+ * send the first login message to the server.
+ */
+function check_websocket_ready(): void {
+  if (ws != null && ws.readyState === 1) {
+    let sha_password: string | null = null;
+    const stored_password = w.simpleStorage.get('password', '');
+    if (stored_password != null && stored_password !== false) {
+      const shaObj = new w.jsSHA('SHA-512', 'TEXT');
+      shaObj.update(stored_password);
+      sha_password = encodeURIComponent(shaObj.getHash('HEX'));
     }
 
-    globalEvents.emit('net:disconnected');
-  };
+    if (w.is_longturn() && w.google_user_token == null) {
+      w.swal('Login failed.');
+      return;
+    }
 
-  ws.onerror = (evt) => {
-    globalEvents.emit('ui:dialog', {
-      title: 'Network error',
-      message: `WebSocket error connecting to ${ws?.url}: ${evt}`,
+    const login_message = {
+      pid: 4,
+      username: w.username,
+      capability: freeciv_version,
+      version_label: '-dev',
+      major_version: 3,
+      minor_version: 1,
+      patch_version: 90,
+      port: civserverport,
+      password: w.google_user_token == null ? sha_password : w.google_user_token,
+    };
+    ws.send(JSON.stringify(login_message));
+
+    // Leaving the page without saving can now be an issue.
+    w.$(window).bind('beforeunload', function () {
+      return 'Do you really want to leave your nation behind now?';
     });
-    logError('WebSocket error:', evt);
-  };
+
+    // The connection is now up. Verify that it remains alive.
+    ping_timer = setInterval(ping_check, pingtime_check);
+
+    w.$.unblockUI();
+  } else {
+    setTimeout(check_websocket_ready, 500);
+  }
 }
 
-function checkWebsocketReady(): void {
-  if (!ws || ws.readyState !== WebSocket.OPEN) {
-    setTimeout(checkWebsocketReady, 500);
-    return;
-  }
-
-  const storedPassword = localStorage.getItem('password');
-  let shaPassword: string | null = null;
-  if (storedPassword) {
-    // SHA-512 will be computed async if needed; for now pass raw
-    shaPassword = storedPassword;
-  }
-
-  const googleToken =
-    ((window as unknown as Record<string, unknown>).google_user_token as string | null) ?? null;
-
-  const loginMessage = {
-    pid: 4,
-    username: store.username,
-    capability: FREECIV_VERSION,
-    version_label: '-dev',
-    major_version: 3,
-    minor_version: 1,
-    patch_version: 90,
-    port: civserverport,
-    password: googleToken ?? shaPassword,
-  };
-  ws.send(JSON.stringify(loginMessage));
-
-  window.addEventListener('beforeunload', (e) => {
-    e.preventDefault();
-    return 'Do you really want to leave your nation behind now?';
-  });
-
-  pingTimer = setInterval(pingCheck, PING_CHECK_INTERVAL);
-  unblockUI();
-  globalEvents.emit('net:connected');
-}
-
-export function networkStop(): void {
-  ws?.close();
+/**
+ * Stops network sync.
+ */
+function network_stop(): void {
+  if (ws != null) ws.close();
   ws = null;
 }
 
-export function sendRequest(payload: string): void {
-  if (!ws) return;
-  ws.send(payload);
-  if (store.debugActive) {
-    clinetLastSend = Date.now();
+/**
+ * Sends a request to the server, with a JSON packet.
+ */
+function send_request(packet_payload: string): void {
+  if (ws != null) {
+    ws.send(packet_payload);
+  }
+  if (w.debug_active) {
+    clinet_last_send = new Date().getTime();
   }
 }
 
-export function sendMessage(message: string): void {
-  const packet = { pid: 26, message }; // packet_chat_msg_req = 26
-  sendRequest(JSON.stringify(packet));
+/**
+ * Debug timing collection.
+ */
+function clinet_debug_collect(): void {
+  const time_elapsed = new Date().getTime() - clinet_last_send;
+  debug_client_speed_list.push(time_elapsed);
+  clinet_last_send = new Date().getTime();
 }
 
-export function sendMessageDelayed(message: string, delay: number): void {
-  setTimeout(() => sendMessage(message), delay);
-}
-
-function pingCheck(): void {
-  const elapsed = Date.now() - pingLast;
-  if (elapsed > PING_CHECK_INTERVAL) {
-    logNormal('Warning: Missing PING from server, possible connection issue.');
+/**
+ * Detect server disconnections, by checking the time since the last
+ * ping packet from the server.
+ */
+function ping_check(): void {
+  const time_since_last_ping = new Date().getTime() - ping_last;
+  if (time_since_last_ping > pingtime_check) {
+    console.log(
+      'Error: Missing PING message from server, indicates server connection problem.'
+    );
   }
 }
 
-export function clinetDebugCollect(): void {
-  const elapsed = Date.now() - clinetLastSend;
-  debugClientSpeedList.push(elapsed);
-  clinetLastSend = Date.now();
+/**
+ * Send the chat message to the server after a delay.
+ */
+function send_message_delayed(message: string, delay: number): void {
+  setTimeout(function () { send_message(message); }, delay);
 }
+
+/**
+ * Sends a chat message to the server.
+ */
+function send_message(message: string): void {
+  if (w.is_longturn() && message != null) {
+    if (
+      message.indexOf(encodeURIComponent('/')) !== 0
+      && message.indexOf('/') !== 0
+      && message.charAt(0) !== '.'
+    ) {
+      const private_mark_i = message.indexOf(encodeURIComponent(':'));
+      if (private_mark_i <= 0) {
+        message = w.username + ' : ' + message;
+      } else {
+        const first_space = message.indexOf(encodeURIComponent(' '));
+        if (first_space >= 0 && first_space < private_mark_i) {
+          message = w.username + ' : ' + message;
+        }
+      }
+    }
+  }
+
+  const packet = { pid: w.packet_chat_msg_req, message: message };
+  send_request(JSON.stringify(packet));
+}
+
+// ============================================================================
+// Expose to Legacy — exact same names as clinet.js
+// ============================================================================
+
+exposeToLegacy('network_init', network_init);
+exposeToLegacy('network_init_manual_hack', network_init_manual_hack);
+exposeToLegacy('websocket_init', websocket_init);
+exposeToLegacy('check_websocket_ready', check_websocket_ready);
+exposeToLegacy('network_stop', network_stop);
+exposeToLegacy('send_request', send_request);
+exposeToLegacy('send_message', send_message);
+exposeToLegacy('send_message_delayed', send_message_delayed);
+exposeToLegacy('clinet_debug_collect', clinet_debug_collect);
+exposeToLegacy('ping_check', ping_check);
+
+// Expose module-local state that Legacy code reads
+exposeToLegacy('debug_client_speed_list', debug_client_speed_list);
+
+// Override ws/civserverport/ping_last with getters so legacy reads get current values
+Object.defineProperty(w, 'ws', {
+  get: () => ws,
+  set: (v: WebSocket | null) => { ws = v; },
+  configurable: true,
+});
+
+Object.defineProperty(w, 'civserverport', {
+  get: () => civserverport,
+  set: (v: string | null) => { civserverport = v; },
+  configurable: true,
+});
+
+Object.defineProperty(w, 'ping_last', {
+  get: () => ping_last,
+  set: (v: number) => { ping_last = v; },
+  configurable: true,
+});

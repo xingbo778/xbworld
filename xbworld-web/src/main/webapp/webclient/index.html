@@ -224,11 +224,11 @@ var ts = Date.now();
 <script src="/javascript/city.js"></script>
 <script src="/javascript/tech.js"></script>
 <script src="/javascript/government.js"></script>
-<!-- Tier 2: Utilities and network -->
+<!-- Tier 2: Utilities -->
 <script src="/javascript/utility.js"></script>
 <script src="/javascript/log.js"></script>
-<script src="/javascript/clinet.js"></script>
-<script src="/javascript/packhand.js"></script>
+<!-- clinet.js: REMOVED Phase 5 — migrated to src/ts/net/connection.ts -->
+<!-- packhand.js: REMOVED Phase 5 — migrated to src/ts/net/packhandlers.ts -->
 <!-- Tier 3: Core engine -->
 <script src="/javascript/control.js"></script>
 <script src="/javascript/civclient.js?v=2"></script>
@@ -268,123 +268,12 @@ var ts = Date.now();
 <script src="/javascript/2dcanvas/tilespec.js"></script>
 <script src="/javascript/overview.js"></script>
 
-<!-- Packet dispatch table (must load after ALL handle_* functions are defined) -->
-<script src="/javascript/packhand_glue.js"></script>
+<!-- packhand_glue.js: REMOVED Phase 5 — packet dispatch now in src/ts/net/packhandlers.ts -->
 
 <!-- New TypeScript modules (built by Vite, loaded after legacy JS) -->
 <script type="module" src="/javascript/ts-bundle/main.js"></script>
 
-<!--
-  Patch: Override network_init to read port from JSON body (not just headers),
-  and handle the WebSocket proxy's array-wrapped packets.
-  Must load AFTER all source JS files but BEFORE $(document).ready fires.
--->
-<script>
-(function() {
-  // Patch network_init to read port from JSON response body
-  var _original_network_init = window.network_init;
-  window.network_init = function() {
-    if (!("WebSocket" in window)) {
-      swal("WebSockets not supported", "", "error");
-      return;
-    }
-
-    var url = "/civclientlauncher";
-    if ($.getUrlVar("action") != null) url += "?action=" + $.getUrlVar("action");
-    if ($.getUrlVar("action") == null && $.getUrlVar("civserverport") != null) url += "?";
-    if ($.getUrlVar("civserverport") != null) url += "&civserverport=" + $.getUrlVar("civserverport");
-
-    $.ajax({
-      type: "POST",
-      url: url,
-      dataType: "json",
-      success: function(data, textStatus, request) {
-        var port = null;
-        var result = null;
-
-        // Try JSON body first (works with Railway CDN which strips custom headers)
-        if (data && data.port != null) {
-          port = String(data.port);
-          result = data.result || "success";
-        }
-
-        // Fallback to response headers
-        if (!port) {
-          port = request.getResponseHeader("port");
-          result = request.getResponseHeader("result");
-        }
-
-        if (port != null && result == "success") {
-          civserverport = port;
-          websocket_init();
-          if (typeof load_game_check === "function") load_game_check();
-        } else {
-          show_dialog_message("Network error", "Invalid server port. Error: " + result);
-        }
-      },
-      error: function(request, textStatus, errorThrown) {
-        show_dialog_message("Network error",
-          "Unable to communicate with game launcher. Error: " +
-          textStatus + " " + errorThrown + " " +
-          (request.getResponseHeader ? request.getResponseHeader("result") : ""));
-      }
-    });
-  };
-
-  // Patch websocket_init to handle array-wrapped packets from the proxy
-  var _original_websocket_init = window.websocket_init;
-  window.websocket_init = function() {
-    $.blockUI({ message: "<h2>Please wait while connecting to the server.</h2>" });
-    var proxyport = 1000 + parseFloat(civserverport);
-    var ws_protocol = ("https:" == window.location.protocol) ? "wss://" : "ws://";
-    var port = window.location.port ? (":" + window.location.port) : "";
-    ws = new WebSocket(ws_protocol + window.location.hostname + port + "/civsocket/" + proxyport);
-
-    ws.onopen = check_websocket_ready;
-
-    ws.onmessage = function(event) {
-      if (typeof client_handle_packet !== "undefined") {
-        try {
-          var parsed = JSON.parse(event.data);
-          // The proxy may send a single packet object or an array of packets.
-          // client_handle_packet expects an array.
-          if (!Array.isArray(parsed)) {
-            parsed = [parsed];
-          }
-          client_handle_packet(parsed);
-        } catch (e) {
-          console.error("Failed to parse packet:", e);
-        }
-      }
-    };
-
-    ws.onclose = function(event) {
-      swal("Network Error", "Connection to server is closed. Please reload the page to restart. Sorry!", "error");
-      if (typeof message_log !== "undefined") {
-        message_log.update({
-          event: E_LOG_ERROR,
-          message: "Error: connection to server is closed. Please reload the page to restart. Sorry!"
-        });
-      }
-      console.info("WebSocket connection closed, code+reason: " + event.code + ", " + event.reason);
-      try {
-        $("#turn_done_button").button("option", "disabled", true);
-        $("#save_button").button("option", "disabled", true);
-      } catch(e) {}
-      if (typeof pbem_phase_ended !== "undefined") pbem_phase_ended = true;
-      $(window).unbind("beforeunload");
-      clearInterval(ping_timer);
-    };
-
-    ws.onerror = function(evt) {
-      show_dialog_message("Network error",
-        "A problem occured with the " + document.location.protocol +
-        " WebSocket connection to the server: " + ws.url);
-      console.error("WebSocket error:", evt);
-    };
-  };
-})();
-</script>
+<!-- Inline patch script: REMOVED Phase 5 — logic merged into src/ts/net/connection.ts -->
 
 </body>
 </html>

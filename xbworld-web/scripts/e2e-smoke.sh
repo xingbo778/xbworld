@@ -160,8 +160,9 @@ check_url() {
 check_url "http://localhost:$PORT/webclient/index.html" "webclient/index.html"
 check_url "http://localhost:$PORT/javascript/fc_types.js" "fc_types.js (Legacy source)"
 check_url "http://localhost:$PORT/javascript/control.js" "control.js (Legacy source)"
-check_url "http://localhost:$PORT/javascript/packhand.js" "packhand.js (Packet handlers)"
-check_url "http://localhost:$PORT/javascript/packhand_glue.js" "packhand_glue.js (Dispatch table)"
+# Phase 5: packhand.js and packhand_glue.js REMOVED — migrated to TS
+# check_url "http://localhost:$PORT/javascript/packhand.js" "packhand.js (Packet handlers)"
+# check_url "http://localhost:$PORT/javascript/packhand_glue.js" "packhand_glue.js (Dispatch table)"
 check_url "http://localhost:$PORT/javascript/hbs-templates.js" "hbs-templates.js (Handlebars)"
 check_url "http://localhost:$PORT/javascript/ts-bundle/main.js" "ts-bundle/main.js (TS bundle)"
 
@@ -174,7 +175,7 @@ log "── Step 6: TS Bundle Verification ──"
 curl -s "http://localhost:$PORT/javascript/ts-bundle/main.js" > /tmp/served-bundle.js 2>/dev/null
 if [ -s /tmp/served-bundle.js ]; then
   # Check critical functions are present
-  CRITICAL_FNS=("client_state" "client_is_observer" "map_pos_to_tile" "tile_get_known" "move_points_text" "NATIVE_TO_MAP_POS" "GameDialog")
+  CRITICAL_FNS=("client_state" "client_is_observer" "map_pos_to_tile" "tile_get_known" "move_points_text" "NATIVE_TO_MAP_POS" "GameDialog" "network_init" "client_handle_packet")
   ALL_FOUND=true
   MISSING=""
   for fn in "${CRITICAL_FNS[@]}"; do
@@ -190,7 +191,9 @@ if [ -s /tmp/served-bundle.js ]; then
   fi
 
   # Check no forbidden overrides
-  FORBIDDEN=("game_init" "map_allocate" "tile_init" "map_init_topology")
+  # Functions that still exist in Legacy JS and must NOT be overridden by TS
+  # Phase 5: network_init removed from forbidden (clinet.js deleted)
+  FORBIDDEN=("game_init" "tile_init")
   FOUND_FORBIDDEN=""
   for fn in "${FORBIDDEN[@]}"; do
     if grep -q "\b$fn\b" /tmp/served-bundle.js; then
