@@ -9,11 +9,11 @@ describe('Packet Handler', () => {
     store.mapInfo = { xsize: 10, ysize: 10, topology_id: 0, wrap_id: 0 };
   });
 
-  it('should dispatch GAME_INFO (pid=15)', () => {
+  it('should dispatch GAME_INFO (pid=16)', () => {
     const handler = vi.fn();
     globalEvents.on('game:info', handler);
 
-    handlePacket({ pid: 15, turn: 5, year: -4000, timeout: 30, first_timeout: -1, phase: 0, phase_mode: 0 });
+    handlePacket({ pid: 16, turn: 5, year: -4000, timeout: 30, first_timeout: -1, phase: 0, phase_mode: 0 });
 
     expect(store.gameInfo?.turn).toBe(5);
     expect(store.gameInfo?.year).toBe(-4000);
@@ -34,9 +34,9 @@ describe('Packet Handler', () => {
     expect(store.players[0]?.gold).toBe(200);
   });
 
-  it('should dispatch UNIT_INFO (pid=49)', () => {
+  it('should dispatch UNIT_INFO (pid=63)', () => {
     handlePacket({
-      pid: 49, id: 7, owner: 0, tile: 55, type: 1, hp: 10,
+      pid: 63, id: 7, owner: 0, tile: 55, type: 1, hp: 10,
       veteran: 0, movesleft: 3, activity: 0, transported_by: -1,
       homecity: 42, done_moving: false, ai: false, goto_tile: -1,
     });
@@ -56,9 +56,9 @@ describe('Packet Handler', () => {
     expect(store.units[7]).toBeUndefined();
   });
 
-  it('should dispatch CITY_INFO (pid=30)', () => {
+  it('should dispatch CITY_INFO (pid=31)', () => {
     handlePacket({
-      pid: 30, id: 10, owner: 0, tile: 55, name: 'Rome', size: 5,
+      pid: 31, id: 10, owner: 0, tile: 55, name: 'Rome', size: 5,
       food_stock: 20, shield_stock: 10, production_kind: 0, production_value: 1,
       surplus: [], waste: [], unhappy_penalty: [], prod: [], citizen_extra: [],
       ppl_happy: [], ppl_content: [], ppl_unhappy: [], ppl_angry: [],
@@ -69,7 +69,7 @@ describe('Packet Handler', () => {
     expect(store.cities[10]?.size).toBe(5);
   });
 
-  it('should dispatch CITY_REMOVE (pid=32)', () => {
+  it('should dispatch CITY_REMOVE (pid=30)', () => {
     store.cities[10] = {
       id: 10, owner: 0, tile: 55, name: 'Rome', size: 5,
       food_stock: 0, shield_stock: 0, production_kind: 0, production_value: 0,
@@ -78,23 +78,23 @@ describe('Packet Handler', () => {
       improvements: [],
     };
 
-    handlePacket({ pid: 32, city_id: 10 });
+    handlePacket({ pid: 30, city_id: 10 });
     expect(store.cities[10]).toBeUndefined();
   });
 
-  it('should dispatch CHAT_MSG (pid=24)', () => {
+  it('should dispatch CHAT_MSG (pid=25)', () => {
     const handler = vi.fn();
     globalEvents.on('chat:message', handler);
 
-    handlePacket({ pid: 24, message: 'Hello world', event: 0 });
+    handlePacket({ pid: 25, message: 'Hello world', event: 0 });
     expect(handler).toHaveBeenCalledWith(expect.objectContaining({ message: 'Hello world' }));
 
     globalEvents.off('chat:message', handler);
   });
 
-  it('should dispatch RULESET_TERRAIN (pid=21)', () => {
+  it('should dispatch RULESET_TERRAIN (pid=151)', () => {
     handlePacket({
-      pid: 21, id: 3, name: 'Plains', graphic_str: 'plains',
+      pid: 151, id: 3, name: 'Plains', graphic_str: 'plains',
       movement_cost: 1, defense_bonus: 0, output: [1, 1, 0],
     });
 

@@ -1,0 +1,6 @@
+dist/
+node_modules/
+src/main/webapp/javascript/
+src/main/webapp/css/
+*.min.js
+*.min.css
