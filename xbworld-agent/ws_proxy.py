@@ -131,6 +131,7 @@ class CivBridge:
             logger.warning("Server reader error for %s: %s", self.username, e)
         finally:
             if not self._stopped:
+                logger.info("[proxy:%s] TCP connection from civserver closed (server initiated)", self.username)
                 await self.close()
 
     async def _read_exact(self, n: int) -> Optional[bytes]:

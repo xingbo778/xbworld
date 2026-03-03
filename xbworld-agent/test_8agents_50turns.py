@@ -168,7 +168,7 @@ async def run_test():
         c = GameClient(username=cfg["name"])
         await c.join_game(port)
         clients.append(c)
-        await asyncio.sleep(0.8)
+        await asyncio.sleep(3)
 
     for i, cfg in enumerate(AGENT_CONFIGS):
         prompt = STRATEGY_PROMPT.format(**cfg)
