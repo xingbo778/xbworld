@@ -8,6 +8,7 @@ import type { Tile, Terrain } from './types';
 import { tileGetKnown, TILE_UNKNOWN } from './tile';
 import { mapstep, Direction } from './map';
 import { logError } from '../core/log';
+import { exposeToLegacy } from '../bridge/legacy';
 
 export function tileSetTerrain(ptile: Tile, terrain: number): void {
   ptile.terrain = terrain;
@@ -39,3 +40,11 @@ export function isOceanTile(ptile: Tile): boolean {
   if (!t) return false;
   return t.graphic_str === 'floor' || t.graphic_str === 'coast';
 }
+
+// ---------------------------------------------------------------------------
+// Expose to legacy JS via window (snake_case names matching old JS API)
+// ---------------------------------------------------------------------------
+exposeToLegacy('tile_set_terrain', tileSetTerrain);
+exposeToLegacy('tile_terrain', tileTerrain);
+exposeToLegacy('tile_terrain_near', tileTerrainNear);
+exposeToLegacy('is_ocean_tile', isOceanTile);

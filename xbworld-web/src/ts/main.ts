@@ -40,7 +40,11 @@ if (typeof win['update_unit_position'] !== 'function') {
 // ---------------------------------------------------------------------------
 import './data/game';
 import './data/unit';
+import './data/unittype';
 import './data/player';
+import './data/map';
+import './data/tile';
+import './data/terrain';
 
 // ---------------------------------------------------------------------------
 // Phase 2: Import client modules — client state queries and core functions.

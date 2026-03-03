@@ -5,6 +5,7 @@
 
 import { store } from './store';
 import { FC_WRAP } from '../utils/helpers';
+import { exposeToLegacy } from '../bridge/legacy';
 
 export const enum Direction {
   NORTHWEST = 0,
@@ -38,6 +39,25 @@ export function wrapHasFlag(flag: number): boolean {
   return ((store.mapInfo?.wrap_id ?? 0) & flag) !== 0;
 }
 
+/**
+ * Initialise a tile with default values.
+ * Migrated from map.js tile_init().
+ */
+export function tileInit(tile: Record<string, unknown>): Record<string, unknown> {
+  tile['known'] = null;
+  tile['seen'] = {};
+  tile['specials'] = [];
+  tile['terrain'] = T_UNKNOWN;
+  tile['units'] = [];
+  tile['owner'] = null;
+  tile['claimer'] = null;
+  tile['worked'] = null;
+  tile['spec_sprite'] = null;
+  tile['goto_dir'] = null;
+  tile['nuke'] = 0;
+  return tile;
+}
+
 export function mapAllocate(): void {
   const mi = store.mapInfo;
   if (!mi) return;
@@ -68,6 +88,33 @@ export function mapAllocate(): void {
       };
     }
   }
+}
+
+/**
+ * Initialise map topology: valid_dirs and cardinal_dirs arrays.
+ * Migrated from map.js map_init_topology().
+ */
+export function mapInitTopology(_setSizes: boolean): void {
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const m = (window as any).map;
+  if (!m) return;
+
+  m.valid_dirs = {};
+  m.cardinal_dirs = {};
+  m.num_valid_dirs = 0;
+  m.num_cardinal_dirs = 0;
+
+  for (let dir = 0; dir < 8; dir++) {
+    if (isValidDir(dir)) {
+      m.valid_dirs[m.num_valid_dirs] = dir;
+      m.num_valid_dirs++;
+    }
+    if (isCardinalDir(dir)) {
+      m.cardinal_dirs[m.num_cardinal_dirs] = dir;
+      m.num_cardinal_dirs++;
+    }
+  }
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 }
 
 export function isValidDir(dir: number): boolean {
@@ -141,11 +188,33 @@ export function nativeToMapPos(natX: number, natY: number) {
   return { mapX, mapY };
 }
 
+/**
+ * NATURAL_TO_MAP_POS — uses different formula from NATIVE_TO_MAP_POS.
+ * Migrated from map.js.
+ */
+export function naturalToMapPos(natX: number, natY: number) {
+  const mi = store.mapInfo!;
+  const pmap_x = Math.floor((natY + natX) / 2);
+  const pmap_y = Math.floor(natY - pmap_x + mi.xsize);
+  return { map_x: pmap_x, map_y: pmap_y };
+}
+
 export function mapToNativePos(mapX: number, mapY: number) {
   const mi = store.mapInfo!;
   const natY = Math.floor(mapX + mapY - mi.xsize);
   const natX = Math.floor((2 * mapX - natY - (natY & 1)) / 2);
   return { natX, natY };
+}
+
+/**
+ * MAP_TO_NATURAL_POS — uses different formula from MAP_TO_NATIVE_POS.
+ * Migrated from map.js.
+ */
+export function mapToNaturalPos(mapX: number, mapY: number) {
+  const mi = store.mapInfo!;
+  const pnat_y = Math.floor(mapX + mapY - mi.xsize);
+  const pnat_x = Math.floor(2 * mapX - pnat_y);
+  return { nat_y: pnat_y, nat_x: pnat_x };
 }
 
 export function mapDistanceVector(
@@ -223,3 +292,38 @@ export function clearGotoTiles(): void {
     }
   }
 }
+
+// ---------------------------------------------------------------------------
+// Expose to legacy JS via window (snake_case names matching old JS API)
+// ---------------------------------------------------------------------------
+exposeToLegacy('topo_has_flag', topoHasFlag);
+exposeToLegacy('wrap_has_flag', wrapHasFlag);
+exposeToLegacy('tile_init', tileInit);
+exposeToLegacy('map_allocate', mapAllocate);
+exposeToLegacy('map_init_topology', mapInitTopology);
+exposeToLegacy('is_valid_dir', isValidDir);
+exposeToLegacy('is_cardinal_dir', isCardinalDir);
+exposeToLegacy('map_pos_to_tile', mapPosToTile);
+exposeToLegacy('index_to_tile', indexToTile);
+exposeToLegacy('mapstep', mapstep);
+exposeToLegacy('get_direction_for_step', getDirectionForStep);
+exposeToLegacy('NATIVE_TO_MAP_POS', nativeToMapPos);
+exposeToLegacy('NATURAL_TO_MAP_POS', naturalToMapPos);
+exposeToLegacy('MAP_TO_NATIVE_POS', mapToNativePos);
+exposeToLegacy('MAP_TO_NATURAL_POS', mapToNaturalPos);
+exposeToLegacy('map_distance_vector', mapDistanceVector);
+exposeToLegacy('map_vector_to_sq_distance', mapVectorToSqDistance);
+exposeToLegacy('map_vector_to_distance', mapVectorToDistance);
+exposeToLegacy('dir_get_name', dirGetName);
+exposeToLegacy('dir_cw', dirCW);
+exposeToLegacy('dir_ccw', dirCCW);
+exposeToLegacy('clear_goto_tiles', clearGotoTiles);
+
+// Also expose constants
+exposeToLegacy('WRAP_X', WRAP_X);
+exposeToLegacy('WRAP_Y', WRAP_Y);
+exposeToLegacy('TF_ISO', TF_ISO);
+exposeToLegacy('TF_HEX', TF_HEX);
+exposeToLegacy('T_UNKNOWN', T_UNKNOWN);
+exposeToLegacy('DIR_DX', DIR_DX);
+exposeToLegacy('DIR_DY', DIR_DY);
