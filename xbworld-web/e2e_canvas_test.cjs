@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
-  const url = 'https://xbworld-production.up.railway.app/webclient/index.html?action=observe&civserverport=6001';
+  const url = 'https://xbworld-production.up.railway.app/webclient/index.html?action=observe&civserverport=6000';
   
   const errors = [];
   page.on('pageerror', err => errors.push(err.message));
@@ -63,14 +63,13 @@ const { chromium } = require('playwright');
     await page.screenshot({ path: '/tmp/canvas_test_2_game.png', fullPage: true });
     console.log('   Screenshot 2 saved');
 
-    const state2 = await page.evaluate(() => {
+    const state2 = await page.evaluate(function() {
+      var gp = document.getElementById('game_page');
+      var cv = document.getElementById('canvas');
       return {
-        gamePageVisible: document.getElementById('game_page')?.style.display !== 'none',
-        canvasExists: !!document.getElementById('canvas'),
-        canvasSize: document.getElementById('canvas') ? {
-          w: document.getElementById('canvas').width,
-          h: document.getElementById('canvas').height
-        } : null,
+        gamePageVisible: gp ? gp.style.display !== 'none' : false,
+        canvasExists: !!cv,
+        canvasSize: cv ? { w: cv.width, h: cv.height } : null,
         tilesLoaded: typeof tiles !== 'undefined' && tiles !== null,
         tileCount: typeof tiles !== 'undefined' && tiles !== null ? Object.keys(tiles).length : 0,
         mapExists: typeof map !== 'undefined' && map !== null,
@@ -113,9 +112,10 @@ const { chromium } = require('playwright');
       await page.waitForTimeout(25000);
       await page.screenshot({ path: '/tmp/canvas_test_2_game.png', fullPage: true });
       
-      const state2 = await page.evaluate(() => {
+      const state2 = await page.evaluate(function() {
+        var gp = document.getElementById('game_page');
         return {
-          gamePageVisible: document.getElementById('game_page')?.style.display !== 'none',
+          gamePageVisible: gp ? gp.style.display !== 'none' : false,
           canvasExists: !!document.getElementById('canvas'),
           tileCount: typeof tiles !== 'undefined' && tiles !== null ? Object.keys(tiles).length : 0,
           mapSize: typeof map !== 'undefined' && map !== null ? { x: map.xsize, y: map.ysize } : null,
