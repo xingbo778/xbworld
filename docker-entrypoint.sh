@@ -1,5 +1,3 @@
 #!/usr/bin/env bash
-
-/docker/scripts/start-freeciv-web.sh
-
-exec "$@"
+cd /app/xbworld-agent
+exec python3 server.py --host 0.0.0.0 "$@"

@@ -1,67 +1,47 @@
-# Freeciv-web docker file
-# Dockerfile update based on debian/tomcat package
+###############################################################################
+# Stage 1: Build the freeciv C server binary
+###############################################################################
+FROM debian:bookworm AS builder
 
-FROM debian:bookworm
+RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+        build-essential meson ninja-build pkg-config git ca-certificates \
+        libjansson-dev libicu-dev liblzma-dev libzstd-dev libsqlite3-dev zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-MAINTAINER The Freeciv Project version: 3.3
+COPY freeciv/ /build/freeciv/
+WORKDIR /build/freeciv
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update --yes --quiet && \
-    DEBIAN_FRONTEND=noninteractive apt-get install --yes \
-        sudo \
-        lsb-release \
-        locales \
-        adduser && \
-    DEBIAN_FRONTEND=noninteractive apt-get clean --yes && \
-    rm --recursive --force /var/lib/apt/lists/*
+RUN mkdir -p build && cd build && \
+    meson setup ../freeciv -Dserver='freeciv-web' \
+        -Dclients=[] -Dfcmp=cli -Djson-protocol=true -Dnls=false \
+        -Daudio=none -Dtools=manual \
+        -Dproject-definition=../freeciv-web.fcproj \
+        -Ddefault_library=static -Dprefix=/opt/freeciv \
+        -Doptimization=3 && \
+    ninja -C build && ninja -C build install
 
-RUN DEBIAN_FRONTEND=noninteractive locale-gen en_US.UTF-8 && \
-    localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
+###############################################################################
+# Stage 2: Slim runtime image
+###############################################################################
+FROM python:3.11-slim-bookworm
 
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
+RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+        libjansson4 libicu72 libsqlite3-0 liblzma5 libzstd1 zlib1g \
+    && rm -rf /var/lib/apt/lists/*
 
-## Create user and ensure no passwd questions during scripts
-RUN useradd -m docker && echo "docker:docker" | chpasswd && adduser docker sudo && \
-    echo "docker ALL = (root) NOPASSWD: ALL\n" > /etc/sudoers.d/docker && \
-    chmod 0440 /etc/sudoers.d/docker
+COPY --from=builder /opt/freeciv /opt/freeciv
+COPY xbworld-agent/ /app/xbworld-agent/
+COPY data/ /app/data/
+COPY xbworld-web/src/main/webapp/ /app/xbworld-web/src/main/webapp/
 
-## Add relevant content - to be pruned in the future
-COPY .git /docker/.git
-COPY freeciv /docker/freeciv
-COPY freeciv-proxy /docker/freeciv-proxy
-COPY freeciv-web /docker/freeciv-web
-COPY pbem /docker/pbem
-COPY publite2 /docker/publite2
-COPY LICENSE.txt /docker/LICENSE.txt
-COPY requirements.txt /docker/requirements.txt
+WORKDIR /app/xbworld-agent
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY scripts /docker/scripts
-COPY music /docker/music
-COPY blender /docker/blender
-COPY config /docker/config
+ENV FREECIV_BIN=/opt/freeciv/bin/freeciv-web \
+    FREECIV_DATA_PATH=/opt/freeciv/share/freeciv/ \
+    PYTHONUNBUFFERED=1
 
-RUN chown -R docker:docker /docker
-
-USER docker
-
-WORKDIR /docker/scripts/
-
-RUN DEBIAN_FRONTEND=noninteractive sudo apt-get update --yes --quiet && \
-    DEBIAN_FRONTEND=noninteractive DEB_NO_TOMCAT=Y \
-                                   PIP_SKIP=Y \
-                                   install/install.sh --mode=TEST && \
-    DEBIAN_FRONTEND=noninteractive sudo apt-get clean --yes && \
-    sudo rm --recursive --force /var/lib/apt/lists/*
-
-## Give server access to savegames / scenarios directory.
-## TODO: Figure out more targeted solution.
-RUN sudo adduser docker tomcat
-
-COPY docker-entrypoint.sh /docker/docker-entrypoint.sh
-
-EXPOSE 80 8080 4002 6000 6001 6002 7000 7001 7002
-
-ENTRYPOINT ["/docker/docker-entrypoint.sh"]
-
-CMD ["/usr/bin/env bash"]
+EXPOSE 8080
+CMD ["python3", "server.py", "--host", "0.0.0.0"]

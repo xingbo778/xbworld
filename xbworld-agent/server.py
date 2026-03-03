@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Unified XBWorld server — replaces Java/Tomcat/publite2 with a single FastAPI process.
+Unified XBWorld server — a single FastAPI process serving everything.
 
 Serves:
-- Static web client files (replaces Tomcat JSP)
-- Game launcher API (replaces CivclientLauncher servlet)
-- Metaserver status API (replaces RecentServerStatistics servlet)
-- AI agent management API (from multi_main.py)
-- WebSocket proxy management (spawns freeciv-proxy instances)
-- Game server process management (replaces publite2)
+- Static web client files
+- Game launcher API
+- Metaserver status API
+- AI agent management API
+- In-process WebSocket proxy (ws_proxy.py)
+- Game server process management
 
 Usage:
     python server.py                    # Start server on port 8080
@@ -101,7 +101,7 @@ class ServerManager:
 
         env = {**os.environ, "FREECIV_DATA_PATH": freeciv_data}
 
-        serv_script = f"pubscript_{game_type}.serv"
+        serv_script = str(PROJECT_ROOT / "data" / f"pubscript_{game_type}.serv")
         log_file = self._log_dir / f"server-{port}.log"
         self._servers[port] = subprocess.Popen(
             [freeciv_bin, "--debug", "1", "--port", str(port),
@@ -110,7 +110,6 @@ class ServerManager:
             stdout=open(log_file, "w"),
             stderr=subprocess.STDOUT,
             env=env,
-            cwd=str(PROJECT_ROOT / "publite2"),
         )
 
         logger.info("Spawned freeciv-server on port %d (pid %d), log=%s",
@@ -300,21 +299,19 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="XBWorld Server", lifespan=lifespan)
 
 
-# --- Metaserver API (replaces Java servlet /meta/status) ---
+# --- Metaserver API ---
 
 @app.get("/meta/status", response_class=PlainTextResponse)
-@app.get("/freeciv-web/meta/status", response_class=PlainTextResponse)
 async def meta_status():
-    """Metaserver status endpoint — compatible with publite2 polling format.
+    """Metaserver status endpoint.
     Returns semicolon-separated: ok;total;single;multi"""
     s = server_mgr.status()
     return f"ok;{s['total']};{s['single']};{s['multi']}"
 
 
-# --- Game Launcher API (replaces CivclientLauncher servlet) ---
+# --- Game Launcher API ---
 
 @app.post("/civclientlauncher")
-@app.post("/freeciv-web/civclientlauncher")
 async def civclient_launcher(request: Request):
     """Launch a new game server or connect to existing one.
     Compatible with the JS client which reads 'port' and 'result' from response headers."""
@@ -475,7 +472,7 @@ async def observer_page():
     return HTMLResponse("<h1>Observer not found</h1>", status_code=404)
 
 
-# --- In-process WebSocket proxy (replaces Tornado freeciv-proxy) ---
+# --- In-process WebSocket proxy ---
 
 @app.websocket("/civsocket/{proxy_port}")
 async def ws_civsocket(ws: WebSocket, proxy_port: int):
@@ -485,7 +482,7 @@ async def ws_civsocket(ws: WebSocket, proxy_port: int):
     await handle_civsocket(ws, proxy_port)
 
 
-# --- Static file serving (replaces Tomcat + nginx for dev) ---
+# --- Static file serving ---
 # Mount static directories from the webapp
 
 if WEBAPP_DIR.exists():

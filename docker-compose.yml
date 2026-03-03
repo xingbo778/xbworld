@@ -1,20 +1,17 @@
 version: "3"
 services:
-
-  freeciv-web:
-    image: freeciv/freeciv-web
-    build: .
-    container_name: freeciv-web
-    command: ["sleep", "infinity"]
-    volumes:
-      - "data:/var/lib/tomcat10/webapps/data"
+  xbworld:
+    build:
+      context: .
+      dockerfile: Dockerfile.railway
+    container_name: xbworld
     ports:
-      - "8080:80"
-      - "4002:4002"
+      - "8080:8080"
       - "6000-6009:6000-6009"
-      - "7000-7009:7000-7009"
-      - "8888:8080"
-    user: docker
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - data:/app/data/savegames
 
 volumes:
   data:

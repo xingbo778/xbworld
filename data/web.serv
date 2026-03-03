@@ -3,8 +3,7 @@ lock compresstype
 set maxconnectionsperhost 256
 lock maxconnectionsperhost
 
-# It can take very long time for the freeciv-web and web-client
-# to handle environmental disasters, so they are not usable.
+# Environmental disasters are too slow for the web client to handle.
 set globalwarming disabled
 lock globalwarming
 set nuclearwinter disabled

@@ -125,16 +125,16 @@ class GameOrchestrator:
         self.state_tracker = StateTracker()
 
     def _spawn_server(self, port: int) -> None:
-        """Start a freeciv-server + freeciv-proxy for standalone mode.
+        """Start a freeciv-server + standalone aiohttp WebSocket proxy for CLI mode.
 
         When running via server.py, the WebSocket proxy is in-process and
         only the C server needs to be spawned. In standalone CLI mode we
-        still need the Tornado proxy as a separate process.
+        launch the aiohttp-based standalone_proxy.py as a separate process.
         """
         freeciv_bin = os.path.expanduser("~/freeciv/bin/freeciv-web")
         freeciv_data = os.path.expanduser("~/freeciv/share/freeciv/")
         project_root = Path(__file__).resolve().parent.parent
-        proxy_script = project_root / "xbworld-proxy" / "freeciv-proxy.py"
+        proxy_script = Path(__file__).resolve().parent / "standalone_proxy.py"
         log_dir = project_root / "logs"
         log_dir.mkdir(exist_ok=True)
 
@@ -148,14 +148,14 @@ class GameOrchestrator:
             env=env,
         )
 
+        serv_script = str(project_root / "data" / "pubscript_multiplayer.serv")
         self._server_proc = subprocess.Popen(
             [freeciv_bin, "--debug", "1", "--port", str(port),
              "--Announce", "none", "--exit-on-end", "--quitidle", "120",
-             "--read", "pubscript_multiplayer.serv"],
+             "--read", serv_script],
             stdout=open(log_dir / f"server-{port}.log", "w"),
             stderr=subprocess.STDOUT,
             env=env,
-            cwd=str(project_root / "publite2"),
         )
         logger.info("Spawned freeciv-server on port %d, proxy on %d (pids %d, %d)",
                      port, proxy_port, self._server_proc.pid, self._proxy_proc.pid)

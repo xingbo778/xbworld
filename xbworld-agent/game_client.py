@@ -1,7 +1,7 @@
 """
 Lightweight headless XBWorld client.
 
-Connects via WebSocket to freeciv-proxy, sends commands as chat messages
+Connects via WebSocket to the proxy layer, sends commands as chat messages
 or raw packets, and maintains minimal game state from server pushes.
 """
 

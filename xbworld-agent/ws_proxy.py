@@ -1,8 +1,8 @@
 """
 Async WebSocket-to-TCP proxy for freeciv-server.
 
-Replaces the Tornado-based freeciv-proxy + civcom.py with a pure asyncio
-implementation that can run inside the FastAPI process.
+Pure asyncio WebSocket-to-TCP bridge. Runs as a module inside the
+FastAPI process (server.py).
 
 Protocol:
   Browser ←→ WebSocket (JSON text frames)

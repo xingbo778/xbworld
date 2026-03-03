@@ -51,7 +51,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
 COPY --from=builder /opt/freeciv /opt/freeciv
 
 COPY xbworld-agent/ /app/xbworld-agent/
-COPY publite2/*.serv /app/publite2/
+COPY data/ /app/data/
 COPY xbworld-web/src/main/webapp/ /app/xbworld-web/src/main/webapp/
 
 WORKDIR /app/xbworld-agent
