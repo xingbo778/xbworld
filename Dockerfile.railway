@@ -23,6 +23,14 @@ COPY freeciv/ /build/freeciv/
 
 WORKDIR /build/freeciv
 
+# If submodule source is missing (GitHub deploy without --recurse-submodules),
+# clone it directly
+RUN if [ ! -f freeciv/meson.build ]; then \
+        rm -rf freeciv && \
+        git clone --depth 1 --branch xbworld \
+            https://github.com/xingbo778/freeciv.git freeciv; \
+    fi
+
 RUN mkdir -p build && cd build && \
     meson setup ../freeciv -Dserver='freeciv-web' \
         -Dclients=[] -Dfcmp=cli -Djson-protocol=true -Dnls=false \
