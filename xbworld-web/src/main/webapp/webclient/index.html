@@ -155,14 +155,27 @@
   </div>
 </div>
 
-<!-- jQuery and core libs (must load before webclient.min.js) -->
+<!-- ============================================================
+     Third-party libraries
+     ============================================================ -->
+<!-- jQuery core + UI -->
 <script src="/javascript/libs/jquery.min.js"></script>
 <script src="/javascript/libs/jquery-ui.min.js"></script>
+<!-- jQuery plugins -->
 <script src="/javascript/libs/jquery.blockUI.js"></script>
 <script src="/javascript/libs/jquery.contextMenu.js"></script>
 <script src="/javascript/libs/jquery.dialogextend.js"></script>
 <script src="/javascript/libs/jquery.mCustomScrollbar.js"></script>
 <script src="/javascript/libs/jquery.tablesorter.min.js"></script>
+<!-- Previously bundled in webclient.min.js, now loaded separately -->
+<script src="/javascript/libs/spectrum.js"></script>
+<script src="/javascript/libs/raphael-min.js"></script>
+<script src="/javascript/libs/morris.min.js"></script>
+<script src="/javascript/libs/slider.js"></script>
+<script src="/javascript/libs/range.js"></script>
+<script src="/javascript/libs/handlebars.runtime.min.js"></script>
+<script src="/javascript/hbs-templates.js"></script>
+<!-- Standalone utilities -->
 <script src="/javascript/libs/sweetalert.min.js"></script>
 <script src="/javascript/libs/simpleStorage.min.js"></script>
 <script src="/javascript/libs/seedrandom.min.js"></script>
@@ -185,8 +198,78 @@ if (typeof audiojs === "undefined") {
 var ts = Date.now();
 </script>
 
-<!-- Legacy game client bundle (all game logic + 2D Canvas renderer) -->
-<script src="/javascript/webclient.min.js"></script>
+<!-- ============================================================
+     Game client source files (replaces webclient.min.js)
+     Loaded in dependency order: constants → data → tools → engine → UI → renderer
+     ============================================================ -->
+<!-- Tier 0: Constants and base types -->
+<script src="/javascript/fc_types.js"></script>
+<script src="/javascript/effects.js"></script>
+<script src="/javascript/specialist.js"></script>
+<!-- Tier 1: Data layer -->
+<script src="/javascript/bitvector.js"></script>
+<script src="/javascript/terrain.js"></script>
+<script src="/javascript/tile.js"></script>
+<script src="/javascript/map.js"></script>
+<script src="/javascript/unit.js"></script>
+<script src="/javascript/unittype.js"></script>
+<script src="/javascript/player.js"></script>
+<script src="/javascript/game.js"></script>
+<script src="/javascript/connection.js"></script>
+<script src="/javascript/actions.js"></script>
+<script src="/javascript/extra.js"></script>
+<script src="/javascript/improvement.js"></script>
+<script src="/javascript/requirements.js"></script>
+<script src="/javascript/nation.js"></script>
+<script src="/javascript/city.js"></script>
+<script src="/javascript/tech.js"></script>
+<script src="/javascript/government.js"></script>
+<!-- Tier 2: Utilities and network -->
+<script src="/javascript/utility.js"></script>
+<script src="/javascript/log.js"></script>
+<script src="/javascript/clinet.js"></script>
+<script src="/javascript/packhand.js"></script>
+<!-- Tier 3: Core engine -->
+<script src="/javascript/control.js"></script>
+<script src="/javascript/civclient.js"></script>
+<script src="/javascript/client_main.js"></script>
+<script src="/javascript/pages.js"></script>
+<!-- Tier 4: UI dialogs and panels -->
+<script src="/javascript/action_dialog.js"></script>
+<script src="/javascript/diplomacy.js"></script>
+<script src="/javascript/helpdata.js"></script>
+<script src="/javascript/hotseat.js"></script>
+<script src="/javascript/pbem.js"></script>
+<script src="/javascript/intel_dialog.js"></script>
+<script src="/javascript/messages.js"></script>
+<script src="/javascript/mobile.js"></script>
+<script src="/javascript/options.js"></script>
+<script src="/javascript/pillage_dialog.js"></script>
+<script src="/javascript/pregame.js"></script>
+<script src="/javascript/rates.js"></script>
+<script src="/javascript/replay.js"></script>
+<script src="/javascript/savegame.js"></script>
+<script src="/javascript/scorelog.js"></script>
+<script src="/javascript/sounds.js"></script>
+<script src="/javascript/spacerace.js"></script>
+<script src="/javascript/speech.js"></script>
+<script src="/javascript/hall_of_fame.js"></script>
+<script src="/javascript/banlist.js"></script>
+<script src="/javascript/cma.js"></script>
+<script src="/javascript/map-from-image.js"></script>
+<script src="/javascript/freeciv-wiki-doc.js"></script>
+<script src="/javascript/reqtree.js"></script>
+<!-- Tier 5: 2D Canvas renderer -->
+<script src="/javascript/2dcanvas/tileset_config_amplio2.js"></script>
+<script src="/javascript/2dcanvas/tileset_spec_amplio2.js"></script>
+<script src="/javascript/2dcanvas/mapview_common.js"></script>
+<script src="/javascript/2dcanvas/mapctrl.js"></script>
+<script src="/javascript/2dcanvas/mapview.js"></script>
+<script src="/javascript/2dcanvas/tilespec.js"></script>
+<script src="/javascript/overview.js"></script>
+
+<!-- Packet dispatch table (must load after ALL handle_* functions are defined) -->
+<script src="/javascript/packhand_glue.js"></script>
 
 <!-- New TypeScript modules (built by Vite, loaded after legacy JS) -->
 <script type="module" src="/javascript/ts-bundle/main.js"></script>
@@ -194,7 +277,7 @@ var ts = Date.now();
 <!--
   Patch: Override network_init to read port from JSON body (not just headers),
   and handle the WebSocket proxy's array-wrapped packets.
-  Must load AFTER webclient.min.js but BEFORE $(document).ready fires.
+  Must load AFTER all source JS files but BEFORE $(document).ready fires.
 -->
 <script>
 (function() {

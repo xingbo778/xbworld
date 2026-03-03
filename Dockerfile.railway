@@ -65,6 +65,11 @@ COPY xbworld-web/package.json xbworld-web/package-lock.json ./
 RUN npm ci
 COPY xbworld-web/src/ts/ ./src/ts/
 COPY xbworld-web/vite.config.ts xbworld-web/tsconfig.json ./
+# Compile Handlebars templates (previously embedded in webclient.min.js)
+COPY xbworld-web/src/main/webapp/webclient/*.hbs ./src/main/webapp/webclient/
+RUN mkdir -p src/main/webapp/javascript && \
+    npx handlebars src/main/webapp/webclient -e hbs \
+      -f src/main/webapp/javascript/hbs-templates.js --knownOnly
 # Build TS modules into src/main/webapp/javascript/ts-bundle/
 RUN mkdir -p src/main/webapp/javascript/ts-bundle && \
     npx vite build
@@ -95,6 +100,12 @@ COPY --from=tileset-builder /build/out/tileset_spec_amplio2.js \
 # Copy Vite-built TS bundle into the webapp
 COPY --from=ts-builder /build/xbworld-web/src/main/webapp/javascript/ts-bundle/ \
      /app/xbworld-web/src/main/webapp/javascript/ts-bundle/
+# Copy compiled Handlebars templates
+COPY --from=ts-builder /build/xbworld-web/src/main/webapp/javascript/hbs-templates.js \
+     /app/xbworld-web/src/main/webapp/javascript/hbs-templates.js
+# Copy Handlebars runtime (needed since templates were unbundled from webclient.min.js)
+COPY xbworld-web/src/main/webapp/javascript/libs/handlebars.runtime.min.js \
+     /app/xbworld-web/src/main/webapp/javascript/libs/handlebars.runtime.min.js
 WORKDIR /app/xbworld-agent
 RUN pip install --no-cache-dir -r requirements.txt
 RUN useradd -m -s /bin/bash xbworld && \

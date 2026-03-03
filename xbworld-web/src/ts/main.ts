@@ -69,7 +69,13 @@ import './client/clientState';
 import './client/clientCore';
 
 // ---------------------------------------------------------------------------
-// Phase 3: Initialise bridge and sync.
+// Phase 4: Import UI components.
+// ---------------------------------------------------------------------------
+import { exposeGameDialog } from './ui/GameDialog';
+import './ui/game-dialog.css';
+
+// ---------------------------------------------------------------------------
+// Initialise bridge and sync.
 // ---------------------------------------------------------------------------
 function init(): void {
   logNormal('[TS] XBWorld TypeScript modules loading...');
@@ -78,6 +84,10 @@ function init(): void {
   // This must happen AFTER webclient.min.js has set up globals.
   syncStoreWithLegacy();
   logNormal('[TS] Store ↔ legacy globals synced');
+
+  // Expose UI components to legacy JS
+  exposeGameDialog();
+  logNormal('[TS] GameDialog component exposed');
 
   logNormal('[TS] XBWorld TypeScript modules ready');
 }

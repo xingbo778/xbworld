@@ -1,0 +1,147 @@
+/* ============================================================
+   GameDialog — CSS for the modern dialog component
+   Replaces jQuery UI Dialog + dialogExtend styles
+   ============================================================ */
+
+/* Reset dialog defaults */
+dialog.game-dialog {
+  border: none;
+  border-radius: 6px;
+  padding: 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  background: #1a1a2e;
+  color: #e0e0e0;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: visible;
+}
+
+dialog.game-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Title bar */
+.game-dialog-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, #2a2a4a, #1a1a2e);
+  border-bottom: 1px solid #333;
+  border-radius: 6px 6px 0 0;
+  user-select: none;
+}
+
+.game-dialog-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f0f0f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.game-dialog-titlebar-buttons {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.game-dialog-titlebar-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #aaa;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.game-dialog-titlebar-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.game-dialog-btn-close:hover {
+  background: #e74c3c;
+  color: #fff;
+}
+
+/* Content area */
+.game-dialog-content {
+  padding: 12px;
+  overflow: auto;
+  max-height: calc(90vh - 80px);
+}
+
+/* Button pane */
+.game-dialog-buttonpane {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid #333;
+}
+
+.game-dialog-btn {
+  padding: 6px 16px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2a4a;
+  color: #e0e0e0;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.game-dialog-btn:hover {
+  background: #3a3a5a;
+  border-color: #777;
+}
+
+.game-dialog-btn:active {
+  background: #4a4a6a;
+}
+
+/* Minimized state */
+dialog.game-dialog.game-dialog-minimized .game-dialog-content,
+dialog.game-dialog.game-dialog-minimized .game-dialog-buttonpane {
+  display: none;
+}
+
+dialog.game-dialog.game-dialog-minimized {
+  resize: none;
+  overflow: hidden;
+}
+
+/* Maximized state */
+dialog.game-dialog.game-dialog-maximized {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw;
+  max-height: 100vh;
+  border-radius: 0;
+  margin: 0;
+}
+
+dialog.game-dialog.game-dialog-maximized .game-dialog-content {
+  max-height: calc(100vh - 80px);
+}
+
+/* No-close variant (used by unit panel) */
+dialog.game-dialog.no-close .game-dialog-btn-close {
+  display: none;
+}
+
+/* Unit dialog specific */
+dialog.game-dialog.unit_dialog {
+  min-width: 200px;
+}

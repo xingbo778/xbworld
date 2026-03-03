@@ -158,7 +158,11 @@ check_url() {
 }
 
 check_url "http://localhost:$PORT/webclient/index.html" "webclient/index.html"
-check_url "http://localhost:$PORT/javascript/webclient.min.js" "webclient.min.js (Legacy bundle)"
+check_url "http://localhost:$PORT/javascript/fc_types.js" "fc_types.js (Legacy source)"
+check_url "http://localhost:$PORT/javascript/control.js" "control.js (Legacy source)"
+check_url "http://localhost:$PORT/javascript/packhand.js" "packhand.js (Packet handlers)"
+check_url "http://localhost:$PORT/javascript/packhand_glue.js" "packhand_glue.js (Dispatch table)"
+check_url "http://localhost:$PORT/javascript/hbs-templates.js" "hbs-templates.js (Handlebars)"
 check_url "http://localhost:$PORT/javascript/ts-bundle/main.js" "ts-bundle/main.js (TS bundle)"
 
 # =============================================================================
@@ -170,11 +174,11 @@ log "── Step 6: TS Bundle Verification ──"
 curl -s "http://localhost:$PORT/javascript/ts-bundle/main.js" > /tmp/served-bundle.js 2>/dev/null
 if [ -s /tmp/served-bundle.js ]; then
   # Check critical functions are present
-  CRITICAL_FNS=("client_state" "client_is_observer" "map_pos_to_tile" "tile_get_known" "move_points_text" "NATIVE_TO_MAP_POS")
+  CRITICAL_FNS=("client_state" "client_is_observer" "map_pos_to_tile" "tile_get_known" "move_points_text" "NATIVE_TO_MAP_POS" "GameDialog")
   ALL_FOUND=true
   MISSING=""
   for fn in "${CRITICAL_FNS[@]}"; do
-    if ! grep -q "\"$fn\"" /tmp/served-bundle.js; then
+    if ! grep -q "$fn" /tmp/served-bundle.js; then
       ALL_FOUND=false
       MISSING="$MISSING $fn"
     fi
@@ -189,7 +193,7 @@ if [ -s /tmp/served-bundle.js ]; then
   FORBIDDEN=("game_init" "map_allocate" "tile_init" "map_init_topology")
   FOUND_FORBIDDEN=""
   for fn in "${FORBIDDEN[@]}"; do
-    if grep -q "\"$fn\"" /tmp/served-bundle.js; then
+    if grep -q "\b$fn\b" /tmp/served-bundle.js; then
       FOUND_FORBIDDEN="$FOUND_FORBIDDEN $fn"
     fi
   done
