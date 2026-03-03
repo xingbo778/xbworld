@@ -190,6 +190,10 @@ function handle_ruleset_unit(packet: any): void {
 }
 
 function handle_web_ruleset_unit_addition(packet: any): void {
+  // Convert utype_actions array to BitVector (matches legacy webclient.min.js behaviour)
+  if (packet['utype_actions'] != null) {
+    packet['utype_actions'] = new w.BitVector(packet['utype_actions']);
+  }
   if (w.unit_types[packet['id']] != null) {
     Object.assign(w.unit_types[packet['id']], packet);
   }
@@ -906,7 +910,7 @@ function handle_end_phase(_packet: any): void {
 }
 
 function handle_start_phase(_packet: any): void {
-  w.update_client_state(w.C_S_RUNNING);
+  w.set_client_state(w.C_S_RUNNING);
   w.set_phase_start();
   w.saved_this_turn = false;
   w.add_replay_frame();
@@ -914,7 +918,7 @@ function handle_start_phase(_packet: any): void {
 
 function handle_ruleset_control(packet: any): void {
   w.ruleset_control = packet;
-  w.update_client_state(w.C_S_PREPARING);
+  w.set_client_state(w.C_S_PREPARING);
 
   w.effects = {};
   w.ruleset_summary = null;
@@ -952,7 +956,7 @@ function handle_ruleset_control(packet: any): void {
 }
 
 function handle_endgame_report(_packet: any): void {
-  w.update_client_state(w.C_S_OVER);
+  w.set_client_state(w.C_S_OVER);
 }
 
 function handle_scenario_info(packet: any): void {

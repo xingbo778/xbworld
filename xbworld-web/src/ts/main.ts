@@ -27,6 +27,21 @@ if (typeof win['update_unit_position'] !== 'function') {
   logNormal('[TS] Patched missing update_unit_position (2D mode)');
 }
 
+// Patch missing WebGL functions that are referenced by legacy JS (overview.js,
+// control.js) but only defined in the WebGL renderer bundle which is not loaded
+// in 2D canvas mode.
+const webglStubs: Record<string, (...args: unknown[]) => unknown> = {
+  webgl_canvas_pos_to_tile: () => null,
+  init_webgl_mapview: () => {},
+  webgl_start_renderer: () => {},
+};
+for (const [name, fn] of Object.entries(webglStubs)) {
+  if (typeof win[name] !== 'function') {
+    win[name] = fn;
+    logNormal(`[TS] Patched missing ${name} (2D mode)`);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Phase 1: Import data modules.
 // ---------------------------------------------------------------------------
@@ -43,6 +58,7 @@ import './data/extra';
 import './data/improvement';
 import './data/requirements';
 import './data/government';
+import './data/eventConstants';
 
 // ---------------------------------------------------------------------------
 // Phase 2: Import utility modules.
@@ -50,8 +66,9 @@ import './data/government';
 import './utils/helpers';
 
 // ---------------------------------------------------------------------------
-// Phase 3+5: Import packet handlers (COMPLETE — all 135 handlers + router).
+// Phase 3+5: Import packet constants and handlers.
 // ---------------------------------------------------------------------------
+import './net/packetConstants';
 import './net/packhandlers';
 
 // ---------------------------------------------------------------------------
