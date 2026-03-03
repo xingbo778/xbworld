@@ -65,8 +65,9 @@ export async function networkInit(): Promise<void> {
 
   try {
     const response = await fetch(url, { method: 'POST' });
-    const port = response.headers.get('port');
-    const result = response.headers.get('result');
+    const data = await response.json();
+    const port = data.port?.toString() ?? response.headers.get('port');
+    const result = data.result ?? response.headers.get('result');
 
     if (port && result === 'success') {
       civserverport = port;

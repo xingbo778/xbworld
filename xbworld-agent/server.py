@@ -340,10 +340,13 @@ async def civclient_launcher(request: Request):
     action = params.get("action", "new")
     existing_port = params.get("civserverport")
 
+    expose = "port, result"
+
     if existing_port:
         return JSONResponse(
             content={"port": int(existing_port), "result": "success"},
-            headers={"result": "success", "port": str(existing_port)},
+            headers={"result": "success", "port": str(existing_port),
+                     "Access-Control-Expose-Headers": expose},
         )
 
     game_type = "multiplayer" if action == "multi" else "singleplayer"
@@ -353,14 +356,15 @@ async def civclient_launcher(request: Request):
     except Exception as e:
         return JSONResponse(
             content={"error": str(e)},
-            headers={"result": "error"},
+            headers={"result": "error", "Access-Control-Expose-Headers": expose},
             status_code=500,
         )
 
     await asyncio.sleep(1.5)
     return JSONResponse(
         content={"port": port, "result": "success"},
-        headers={"result": "success", "port": str(port)},
+        headers={"result": "success", "port": str(port),
+                 "Access-Control-Expose-Headers": expose},
     )
 
 
