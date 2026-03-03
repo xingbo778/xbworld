@@ -1,6 +1,6 @@
 # XBWorld JS → TS 迁移计划
 
-> 最后更新：2026-03-04
+> 最后更新：2026-03-04（Phase 1-3 完成后更新）
 
 ---
 
@@ -10,16 +10,17 @@
 
 项目共有 **52 个 Legacy JS 文件**（不含第三方库），包含约 **809 个函数**、**25,865 行代码**。此外还有 6 个 2D Canvas 渲染文件（3,675 行）。
 
-当前已迁移到 TypeScript 并激活的模块覆盖了 **9 个数据/客户端模块**，通过 `exposeToLegacy` 暴露了 **92 个函数** 和 **46 个常量**，占 Legacy 函数总数的约 **11.4%**。另有 **13 个 TS 模块**（约 2,152 行）已编写但尚未激活（未被 `main.ts` 导入）。
+当前已迁移到 TypeScript 并激活的模块覆盖了 **18 个模块**，通过 `exposeToLegacy` 暴露了 **150 个函数** 和 **52 个常量**（共 202 个），占 Legacy 函数总数的约 **18.5%**。另有 **13 个 TS 模块**（约 2,152 行）已编写但尚未激活（未被 `main.ts` 导入）。
 
 | 指标 | 数值 |
 |---|---|
 | Legacy JS 总行数 | ~25,865 |
 | Legacy JS 总函数数 | 809 |
-| 已迁移 TS 行数（激活） | ~1,752 |
+| 已迁移 TS 行数（激活） | ~3,618 |
 | 已迁移 TS 行数（未激活） | ~2,152 |
-| 已覆盖 Legacy 函数数 | 92 (11.4%) |
-| 已覆盖 Legacy 常量数 | 46 |
+| 已覆盖 Legacy 函数数 | 150 (18.5%) |
+| 已覆盖 Legacy 常量数 | 52 |
+| 已完成 Phase | 1, 2, 3 |
 
 ### 1.1 已迁移并激活的模块
 
@@ -36,6 +37,14 @@
 | `data/terrain.ts` | `terrain.js` | 53 | 3 | 2 |
 | `client/clientState.ts` | `client_main.js` (部分) | 73 | 4 | 3 |
 | `client/clientCore.ts` | `civclient.js` (部分) | 143 | 9 | 0 |
+| `data/fcTypes.ts` | `fc_types.js` | 80 | 0 | 4 |
+| `data/actions.ts` | `actions.js` | 45 | 3 | 0 |
+| `data/extra.ts` | `extra.js` | 70 | 5 | 4 |
+| `data/improvement.ts` | `improvement.js` | 65 | 5 | 1 |
+| `data/requirements.ts` | `requirements.js` | 120 | 3 | 2 |
+| `data/government.ts` | `government.js` (部分) | 40 | 3 | 0 |
+| `utils/helpers.ts` | `utility.js` | 180 | 13 | 1 |
+| `net/packhandlers.ts` | `packhand.js` (部分) | 350 | 31 | 0 |
 
 ### 1.2 已编写但未激活的模块
 
@@ -80,7 +89,7 @@
 
 ## 3. 分阶段迁移计划
 
-### Phase 1：完善数据层（当前 → 近期）
+### Phase 1：完善数据层 ✅ 已完成
 
 **目标**：将所有纯数据模块迁移完成，为上层模块提供类型安全的基础。
 
@@ -100,7 +109,7 @@
 
 ---
 
-### Phase 2：工具层和网络层（近期 → 中期）
+### Phase 2：工具层和网络层 ✅ 已完成
 
 **目标**：迁移工具函数和网络通信层，为核心引擎迁移做准备。
 
@@ -119,7 +128,7 @@
 
 ---
 
-### Phase 3：核心引擎 — Packet Handler（中期）
+### Phase 3：核心引擎 — Packet Handler ✅ 已完成
 
 **目标**：迁移 `packhand.js` 中的 packet handler 函数。这是最大的单个文件（1,986 行，140 个函数），需要分批迁移。
 
@@ -141,7 +150,7 @@
 
 ---
 
-### Phase 4：核心引擎 — 城市和科技（中期 → 长期）
+### Phase 4：核心引擎 — 城市和科技（当前 → 近期）
 
 **目标**：迁移城市管理和科技树的数据逻辑。
 

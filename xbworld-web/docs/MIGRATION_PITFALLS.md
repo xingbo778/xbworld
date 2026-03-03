@@ -483,3 +483,59 @@ Legacy 代码中大量使用 `new BitVector(raw)` 创建实例，且 `packhand.j
 
 11. **数学函数必须用 Node.js 验证**：迁移前用 `node -e "..."` 跑 Legacy 实现的边界用例（负数、零、大数），确认行为后再写 TS 版本。
 12. **构造函数/类不轻易覆盖**：如果 TS 版本改变了实例的属性名或内部存储结构，不应 `exposeToLegacy`。
+
+---
+
+## 坑 8：Vite dev proxy 的 TLS 握手失败
+
+### 现象
+
+本地 Vite dev server 代理 API 请求到 Railway HTTPS 后端时，所有请求都报错：
+```
+Error: Client network socket disconnected before secure TLS connection was established
+```
+
+### 根因
+
+Vite 的 `http-proxy` 默认使用 Node.js 的 HTTPS agent，在代理到 Railway 等 PaaS 平台时，TLS 握手可能因为平台的 TLS 配置（SNI、证书链）导致连接在握手完成前被断开。仅设置 `secure: false` 不够，因为它只跳过证书验证，不解决握手超时问题。
+
+### 解决方案
+
+创建自定义 `https.Agent` 并传入 proxy 配置：
+
+```typescript
+import https from 'https';
+
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false,
+  keepAlive: true,
+  timeout: 30000,  // 增加超时以应对 Railway 冷启动
+});
+
+const apiProxy = {
+  target: BACKEND,
+  changeOrigin: true,
+  secure: false,
+  agent: httpsAgent,  // 关键：使用自定义 agent
+};
+```
+
+### 教训
+
+> 本地 dev proxy 配置需要在首次搭建时就完整测试所有 API 端点，不能只测试页面加载。每次修改 proxy 配置后，必须验证 `/validate_user`、`/civclientlauncher`、`/civsocket` 三个关键端点。
+
+---
+
+## Phase 3 效率总结
+
+### 做得好的
+
+1. **先分析再动手** — 对 packhand.js 的 135 个函数做了完整分类（纯赋值 / 有副作用 / 依赖局部变量），避免了盲目迁移
+2. **果断跳过不适合的函数** — 识别出大量 handler 依赖模块局部变量或有 UI 副作用后，只迁移了 31 个安全的函数
+3. **本地 dev server 测试** — 不再需要每次部署到 Railway，节省了大量时间
+4. **调试日志系统** — `__TS_CALL_LOG` 可以快速确认函数是否被调用和返回值是否正确
+
+### 需要改进的
+
+1. **Vite proxy 配置应该一次性测试完整** — 每次启动 dev server 都要重新排查 proxy 问题，浪费时间
+2. **应该建立自动化的端到端测试脚本** — 目前每次都手动在浏览器中输入用户名、点击按钮、检查控制台，应该用 Playwright 自动化

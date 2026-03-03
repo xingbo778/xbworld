@@ -16,15 +16,27 @@
  */
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import https from 'https';
 
 const BACKEND = process.env.BACKEND_URL || 'https://xbworld-production.up.railway.app';
 const backendWs = BACKEND.replace(/^http/, 'ws');
+
+// Create a custom HTTPS agent that ignores certificate validation issues.
+// Railway's TLS setup sometimes causes "socket disconnected before TLS
+// handshake" errors with the default Node.js http-proxy agent.
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false,
+  keepAlive: true,
+  // Increase timeout to handle Railway's cold-start latency
+  timeout: 30000,
+});
 
 // Common proxy options for all API endpoints
 const apiProxy = {
   target: BACKEND,
   changeOrigin: true,
-  secure: false,  // Required for proxying to HTTPS backends with self-signed or Railway certs
+  secure: false,
+  agent: httpsAgent,
 };
 
 export default defineConfig({

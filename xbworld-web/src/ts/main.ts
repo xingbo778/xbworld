@@ -58,7 +58,12 @@ import './data/government';   // Phase 1: government data queries
 import './utils/helpers';      // Phase 2: utility functions (clone, DIVIDE, FC_WRAP, etc.)
 
 // ---------------------------------------------------------------------------
-// Phase 2: Import client modules — client state queries and core functions.
+// Phase 3: Import packet handlers.
+// ---------------------------------------------------------------------------
+import './net/packhandlers';  // Phase 3: packet handler migrations from packhand.js
+
+// ---------------------------------------------------------------------------
+// Import client modules — client state queries and core functions.
 // ---------------------------------------------------------------------------
 import './client/clientState';
 import './client/clientCore';
