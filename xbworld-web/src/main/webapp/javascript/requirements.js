@@ -1,6 +1,6 @@
 /***********************************************************************
-    Freeciv-web - the web version of Freeciv. https://www.freeciv.org/
-    Copyright (C) 2009-2015  The Freeciv-web project
+    XBWorld - AI-powered civilization strategy game. https://github.com/xbworld/
+    Copyright (C) 2009-2015  The XBWorld project
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -225,7 +225,7 @@ function universal_build_shield_cost(pcity, target)
   /* FIXME: The build cost of an improvement may be modified by the
    * Building_Build_Cost_Pct effect. The build cost of a unit may be
    * modified by the Unit_Build_Cost_Pct effect. Implement effect support
-   * in Freeciv-web and evaluate EFT_IMPR_BUILD_COST_PCT and
+   * in XBWorld and evaluate EFT_IMPR_BUILD_COST_PCT and
    * EFT_UNIT_BUILD_COST_PCT or start sending the correct (city dependent)
    * cost from the server.
    * Then port any direct read of build_cost from any improvements or units

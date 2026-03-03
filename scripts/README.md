@@ -1,8 +1,5 @@
-Freeciv-web scripts
--------------------
-
-* helpdata_gen - Generates Freeciv helpdata information in JSON format
-  based on the Freeciv helpdata text file.
+XBWorld Scripts
+---------------
 
 * generate_js_hand - generates packhand_gen.js and packets.js
   based on the Freeciv packets.def file.
@@ -11,10 +8,6 @@ Freeciv-web scripts
   and generates a version for the web. This produces a tileset PNG
   and Javascript.
 
-* start-freeciv-web.sh - starts Freeciv-web.
+* gen_event_types - generates event type constants from the C source.
 
-* stop-freeciv-web.sh - stops Freeciv-web.
-
-* status-freeciv-web.sh - checks if Freeciv-web is running.
-
-* update-wikipedia-docs.py - generates docs from wikipedia about techs, units and buildings.
+* generate_logo.py - generates the XBWorld logo via image API.

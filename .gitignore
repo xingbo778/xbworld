@@ -1,30 +1,24 @@
-# Freeciv C server — build artifacts only (source is a git submodule)
+# Freeciv C server build artifacts (source is a git submodule)
 freeciv/build/
 
-# Python virtual environment
+# Python
 .venv/
 *.pyc
 __pycache__/
 
-# Java (removed — no longer used)
+# Node / Frontend
+node_modules/
+**/dist/
+
+# Build output
 **/target/
 *.class
 *.war
 *.jar
-xbworld-web/src/main/java/
-xbworld-web/src/main/resources/db/
 
 # Logs
 logs/
 *.log
-
-# Node modules and build output
-node_modules/
-**/dist/
-
-# Test artifacts
-test-results/
-playwright-report/
 
 # IDE
 .idea/
@@ -33,13 +27,7 @@ playwright-report/
 *.swo
 *~
 
-# Legacy frontend build artifacts (copied from Tomcat, not source-controlled)
-xbworld-web/src/main/webapp/javascript/webclient.min.js
-xbworld-web/src/main/webapp/css/webclient.min.css
-xbworld-web/src/main/webapp/javascript/2dcanvas/tileset_spec_amplio2.js
-xbworld-web/src/main/webapp/tileset/
-
-# Docker/Vagrant
+# Docker
 .vagrant/
 docker-compose.override.yml
 
@@ -47,9 +35,16 @@ docker-compose.override.yml
 .DS_Store
 Thumbs.db
 
-# Music assets (large)
-music/
-
-# Generated docs
+# Generated / large assets
 doc/
 .github/
+music/
+
+# Large binary assets (music, tilesets, test results)
+xbworld-web/src/main/webapp/music/
+xbworld-web/src/main/webapp/tileset/
+xbworld-web/test-results/
+xbworld-web/playwright-report/
+
+# Data directory runtime files
+data/savegames/

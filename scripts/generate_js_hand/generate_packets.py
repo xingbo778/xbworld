@@ -37,7 +37,7 @@ packet_type_names = {};
 
 import re, sys
 import logging
-logger = logging.getLogger("freeciv-proxy");
+logger = logging.getLogger("xbworld-packets")
 
 lazy_overwrite=0
 

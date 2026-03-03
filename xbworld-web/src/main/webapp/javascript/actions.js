@@ -1,6 +1,6 @@
 /**********************************************************************
-    Freeciv-web - the web version of Freeciv. https://www.freeciv.org/
-    Copyright (C) 2021  The Freeciv-web project
+    XBWorld - AI-powered civilization strategy game. https://github.com/xbworld/
+    Copyright (C) 2021  The XBWorld project
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by

@@ -1,5 +1,5 @@
 /**********************************************************************
-    Freeciv-web - the web version of Freeciv. https://www.freeciv.org/
+    XBWorld - AI-powered civilization strategy game. https://github.com/xbworld/
     Copyright (C) 2022 FCIV.NET
 
     This program is free software: you can redistribute it and/or modify

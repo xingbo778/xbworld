@@ -1,6 +1,6 @@
 /**********************************************************************
-    Freeciv-web - the web version of Freeciv. https://www.freeciv.org/
-    Copyright (C) 2009-2015  The Freeciv-web project
+    XBWorld - AI-powered civilization strategy game. https://github.com/xbworld/
+    Copyright (C) 2009-2015  The XBWorld project
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -153,7 +153,7 @@ function supports_mp3() {
 
 /****************************************************************************
   Mac OS X and Chrome OS does not support the right-click-and-drag to select
-  units on the map in Freeciv-web at the moment.
+  units on the map in XBWorld at the moment.
 ****************************************************************************/
 function is_right_mouse_selection_supported()
 {

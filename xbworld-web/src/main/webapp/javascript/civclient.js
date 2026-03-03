@@ -1,6 +1,6 @@
 /***********************************************************************
-    Freeciv-web - the web version of Freeciv. https://www.freeciv.org/
-    Copyright (C) 2009-2015  The Freeciv-web project
+    XBWorld - AI-powered civilization strategy game. https://github.com/xbworld/
+    Copyright (C) 2009-2015  The XBWorld project
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -57,7 +57,7 @@ var renderer = RENDERER_2DCANVAS;  // This variable specifies which map renderer
 
 
 /**************************************************************************
- Main starting point for Freeciv-web
+ Main starting point for XBWorld
 **************************************************************************/
 $(document).ready(function() {
   civclient_init();
@@ -78,7 +78,7 @@ function civclient_init()
     if (action == null || action == 'multi') {
       swal({
              title: "Unknown game type",
-             text: "For some reason the client can't determine what kind of game this is. Please <a href='https://github.com/freeciv/freeciv-web/issues'>open an issue</a> detailing how you got here",
+             text: "For some reason the client can't determine what kind of game this is. Please <a href='https://github.com/freeciv/xbworld/issues'>open an issue</a> detailing how you got here",
              html: true,
              type: "error"
            },
@@ -105,7 +105,7 @@ function civclient_init()
   }
 
   // Initialize a seeded random number generator
-  fc_seedrandom = new Math.seedrandom('freeciv-web');
+  fc_seedrandom = new Math.seedrandom('xbworld');
 
   if (window.requestAnimationFrame == null) {
     swal("Please upgrade your browser.");

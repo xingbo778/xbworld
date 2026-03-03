@@ -1,6 +1,6 @@
 /***********************************************************************
-    Freeciv-web - the web version of Freeciv. https://www.freeciv.org/
-    Copyright (C) 2009-2015  The Freeciv-web project
+    XBWorld - AI-powered civilization strategy game. https://github.com/xbworld/
+    Copyright (C) 2009-2015  The XBWorld project
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -284,7 +284,7 @@ function update_unit_anim_list(old_unit, new_unit)
 
 /**************************************************************************
   Determines the pixel offset for the specified unit, based on the units
-  anim list. This is how Freeciv-web does unit animations.
+  anim list. This is how XBWorld does unit animations.
 **************************************************************************/
 function get_unit_anim_offset(punit)
 {

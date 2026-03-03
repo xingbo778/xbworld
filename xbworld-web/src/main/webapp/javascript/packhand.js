@@ -1,6 +1,6 @@
 /***********************************************************************
-    Freeciv-web - the web version of Freeciv. https://www.freeciv.org/
-    Copyright (C) 2009-2015  The Freeciv-web project
+    XBWorld - AI-powered civilization strategy game. https://github.com/xbworld/
+    Copyright (C) 2009-2015  The XBWorld project
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -70,7 +70,7 @@ function handle_thaw_hint(packet)
 /* 100% */
 function handle_ruleset_terrain(packet)
 {
-  /* FIXME: These two hacks are here since Freeciv-web doesn't support
+  /* FIXME: These two hacks are here since XBWorld doesn't support
    *        rendering Lake nor Glacier correctly. */
   if (packet['name'] == "Lake") packet['graphic_str'] = packet['graphic_alt'];
   if (packet['name'] == "Glacier") packet['graphic_str'] = "tundra";
@@ -286,7 +286,7 @@ function handle_early_chat_msg(packet)
   First one is the city_nationalities, followed by city_rally_point
 
   Finally, web_city_info_addition gives additional
-  information only needed by Freeciv-web. Its processing will therefore
+  information only needed by XBWorld. Its processing will therefore
   stop while it waits for the corresponding web_city_info_addition packet.
 ***************************************************************************/
 function handle_city_info(packet)
@@ -486,7 +486,7 @@ function handle_trade_route_info(packet)
   Handle information about a player.
 
   It is followed by web_player_info_addition that gives additional
-  information only needed by Freeciv-web. Its processing will therefore
+  information only needed by XBWorld. Its processing will therefore
   stop while it waits for the corresponding web_player_info_addition packet.
 ****************************************************************************/
 function handle_player_info(packet)
@@ -1384,7 +1384,7 @@ function recreate_old_tech_req(packet)
     }
   }
 
-  /* Fill in A_NONE just in case Freeciv-web assumes its size is 2. */
+  /* Fill in A_NONE just in case XBWorld assumes its size is 2. */
   while (packet['req'].length < 2) {
     packet['req'].push(A_NONE);
   }

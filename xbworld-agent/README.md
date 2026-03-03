@@ -15,10 +15,10 @@ pip install -r requirements.txt   # aiohttp, fastapi, uvicorn
 # Set your LLM API key
 export COMPASS_API_KEY="your-key-here"
 
-# Single agent (joins via Tomcat launcher)
+# Single agent
 python main.py --name Bot1
 
-# Multi-agent standalone (no Tomcat/MariaDB needed)
+# Multi-agent standalone
 python multi_main.py --agents 4 --standalone
 
 # Multi-agent with HTTP API
@@ -50,8 +50,8 @@ All settings are in `config.py` and can be overridden via environment variables:
 | `LLM_BASE_URL` | Compass endpoint | OpenAI-compatible API base URL |
 | `TURN_TIMEOUT` | `30` | Max seconds per agent turn (client-side) |
 | `GAME_TURN_TIMEOUT` | `30` | Server-side turn timeout |
-| `FREECIV_TOMCAT_HOST` | `localhost` | Tomcat host (for launcher) |
-| `FREECIV_TOMCAT_PORT` | `8080` | Tomcat port |
+| `SERVER_HOST` | `localhost` | XBWorld server host |
+| `SERVER_PORT` | `8080` | XBWorld server port |
 | `FREECIV_NGINX_HOST` | `localhost` | nginx host (for WebSocket) |
 | `FREECIV_NGINX_PORT` | `8000` | nginx port |
 | `FREECIV_API_HOST` | `0.0.0.0` | HTTP API bind address |
@@ -106,7 +106,7 @@ Key methods:
 
 | Method | Description |
 |--------|-------------|
-| `start_new_game(game_type)` | Create game via Tomcat launcher |
+| `start_new_game(game_type)` | Create game via launcher API |
 | `join_game(port)` | Connect to existing server on port |
 | `send_chat(text)` | Send chat/command (e.g. `/set timeout 30`) |
 | `send_packet(packet)` | Send raw JSON packet |
@@ -214,7 +214,7 @@ python multi_main.py --agents "alpha:aggressive,beta:defensive"
 # JSON config
 python multi_main.py --config agents.json
 
-# Standalone (no Tomcat)
+# Standalone mode
 python multi_main.py --agents 2 --standalone
 
 # HTTP API mode

@@ -1,6 +1,6 @@
 /**********************************************************************
-    Freeciv-web - the web version of Freeciv. https://www.freeciv.org/
-    Copyright (C) 2009-2017  The Freeciv-web project
+    XBWorld - AI-powered civilization strategy game. https://github.com/xbworld/
+    Copyright (C) 2009-2017  The XBWorld project
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -18,7 +18,7 @@
 ***********************************************************************/
 
 
-/* This is a list of banned users of Freeciv-web.
+/* This is a list of banned users of XBWorld.
    Note that user accounts can also be disabled by setting activated=0 in the auth DB table.
 */
 var banned_users = [];

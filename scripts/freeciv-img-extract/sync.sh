@@ -9,7 +9,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 : ${FREECIV_DIR:?Must specify (original) freeciv project dir with -f}
-: ${WEBAPP_DIR:?Must specify existing freeciv-web (webapp) dir with -o}
+: ${WEBAPP_DIR:?Must specify existing webapp dir with -o}
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 
@@ -24,7 +24,7 @@ echo "  extracting to ${TEMP_DIR}"
 mkdir -p "${TILESET_DEST}" "${SPEC_DEST}" "${FLAG_DEST}" &&
 python3 "${DIR}"/img-extract.py -f "${FREECIV_DIR}" -o "${TEMP_DIR}" &&
 echo "compressing .png files from ${TEMP_DIR} to ${TILESET_DEST}" &&
-pngcrush -q -d "${TILESET_DEST}" "${TEMP_DIR}"/freeciv-web-tileset*.png &&
+pngcrush -q -d "${TILESET_DEST}" "${TEMP_DIR}"/xbworld-tileset*.png &&
 cp "${TEMP_DIR}"/tileset_spec_*.js "${SPEC_DEST}" &&
 echo "converting flag .svg files to .png ..." &&
 (for svgfile in $(find "${FREECIV_DIR}"/data/flags/*.svg); do

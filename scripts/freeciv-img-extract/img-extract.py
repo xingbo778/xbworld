@@ -168,9 +168,9 @@ def increment_tileset_image(tileset_name):
   global tileset_inc;
 
   draw = ImageDraw.Draw(tileset)
-  draw.text((130, 0), "Freeciv-web - https://github.com/freeciv/freeciv-web  GPL Licensed  - Copyright 2007-2015  Andreas Rosdal", fill="rgb(0,0,0)")
+  draw.text((130, 0), "XBWorld - https://github.com/xbworld  GPL Licensed", fill="rgb(0,0,0)")
 
-  tileset_file = "freeciv-web-tileset-" + tileset_name + "-" + str(tileset_inc) + ".png"
+  tileset_file = "xbworld-tileset-" + tileset_name + "-" + str(tileset_inc) + ".png"
   tileset.save(path.join(out_dir, tileset_file))
   tileset_inc += 1;
 

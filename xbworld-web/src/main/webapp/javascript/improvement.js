@@ -1,6 +1,6 @@
 /**********************************************************************
-    Freeciv-web - the web version of Freeciv. https://www.freeciv.org/
-    Copyright (C) 2009-2015  The Freeciv-web project
+    XBWorld - AI-powered civilization strategy game. https://github.com/xbworld/
+    Copyright (C) 2009-2015  The XBWorld project
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -18,7 +18,7 @@
 ***********************************************************************/
 
 // incomplete list of (well defined) building names - populate as needed
-// Remove in favor of [Effects](https://github.com/freeciv/freeciv-web/issues/208) when implemented.
+// Remove in favor of [Effects](https://github.com/freeciv/xbworld/issues/208) when implemented.
 // IDs are dynamic based on ruleset
 const B_AIRPORT_NAME = 'Airport';
 

@@ -1,6 +1,6 @@
 /***********************************************************************
-    Freeciv-web - the web version of Freeciv. https://www.freeciv.org/
-    Copyright (C) 2009-2015  The Freeciv-web project
+    XBWorld - AI-powered civilization strategy game. https://github.com/xbworld/
+    Copyright (C) 2009-2015  The XBWorld project
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -1139,7 +1139,7 @@ function show_longturn_intro_dialog() {
         "occur in a standard multi-player XBWorld game. It takes a lot longer to play a game, about 2 to 6 months, but you can play it just a "+
         "little bit every day. <br><br> "+
         "Please be polite to the other players and don't cheat. "+
-        "Contact a moderator at <a style='color: black;' href='mailto:freeciv-web-moderation@tutanota.com'>freeciv-web-moderation@tutanota.com</a> "+
+        "Contact a moderator at <a style='color: black;' href='mailto:support@xbworld.dev'>support@xbworld.dev</a> "+
         "to report players who behave badly or cheat.<br><br>" +
         "You will get to play for turn immediately after signing up, and your next turn tomorrow. Please join the game only if you are interested in playing one turn every day. " +
         "Players who are idle for more than 12 turns can be replaced by new players. This means that idle players will continually be replaced by new players.<br><br>" +
@@ -1392,7 +1392,7 @@ function show_new_user_account_dialog(gametype)
 }
 
 /**************************************************************************
-  This will try to create a new Freeciv-web user account with password.
+  This will try to create a new XBWorld user account with password.
 **************************************************************************/
 function create_new_freeciv_user_account_request(action_type)
 {

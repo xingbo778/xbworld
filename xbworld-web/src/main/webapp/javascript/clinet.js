@@ -1,6 +1,6 @@
 /***********************************************************************
-    Freeciv-web - the web version of Freeciv. https://www.freeciv.org/
-    Copyright (C) 2009-2015  The Freeciv-web project
+    XBWorld - AI-powered civilization strategy game. https://github.com/xbworld/
+    Copyright (C) 2009-2015  The XBWorld project
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -82,7 +82,7 @@ function network_init()
        }
    },
    error: function (request, textStatus, errorThrown) {
-	show_dialog_message("Network error", "Unable to communicate with civclientlauncher servlet . Error: "
+	show_dialog_message("Network error", "Unable to communicate with game launcher. Error: "
 		+ textStatus + " " + errorThrown + " " + request.getResponseHeader('result'));
    }
   });
@@ -105,8 +105,8 @@ function websocket_init()
      if (typeof client_handle_packet !== 'undefined') {
        client_handle_packet(JSON.parse(event.data));
      } else {
-       console.error("Error, freeciv-web not compiled correctly. Please "
-             + "run sync.sh in freeciv-proxy correctly.");
+       console.error("Error, xbworld client not compiled correctly. Please "
+             + "rebuild the client correctly.");
      }
   };
 

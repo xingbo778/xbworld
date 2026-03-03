@@ -1,6 +1,6 @@
 /***********************************************************************
-    Freeciv-web - the web version of Freeciv. https://www.freeciv.org/
-    Copyright (C) 2009-2015  The Freeciv-web project
+    XBWorld - AI-powered civilization strategy game. https://github.com/xbworld/
+    Copyright (C) 2009-2015  The XBWorld project
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -541,7 +541,7 @@ function get_tech_infobox_html(tech_id)
   var width = tileset[tag][2];
   var height = tileset[tag][3];
   var i = tileset[tag][4];
-  var image_src = "/tileset/freeciv-web-tileset-" + tileset_name + "-" + i + get_tileset_file_extention() + "?ts=" + ts;
+  var image_src = "/tileset/xbworld-tileset-" + tileset_name + "-" + i + get_tileset_file_extention() + "?ts=" + ts;
   if (is_small_screen()) {
     infobox_html += "<div class='specific_tech' onclick='send_player_research(" + tech_id + ");' title='"
 	   + get_advances_text(tech_id).replace(/(<([^>]+)>)/ig,"") + "'>"

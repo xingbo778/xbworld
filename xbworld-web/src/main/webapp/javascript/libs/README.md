@@ -1,3 +1,3 @@
-Freeciv-web external JavaScript libraries.
+XBWorld external JavaScript libraries.
 
-
+These are vendored third-party libraries used by the web client.

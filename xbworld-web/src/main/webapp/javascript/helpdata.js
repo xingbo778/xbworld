@@ -1,6 +1,6 @@
 /**********************************************************************
-    Freeciv-web - the web version of Freeciv. https://www.freeciv.org/
-    Copyright (C) 2009-2015  The Freeciv-web project
+    XBWorld - AI-powered civilization strategy game. https://github.com/xbworld/
+    Copyright (C) 2009-2015  The XBWorld project
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -24,7 +24,7 @@ var hidden_menu_items = ["help_connecting", "help_languages", "help_governor",
     "help_chatline", "help_about", "help_worklist_editor"];
 
 /**************************************************************************
- Show the Freeciv-web Help Dialog
+ Show the XBWorld Help Dialog
 **************************************************************************/
 function show_help()
 {
@@ -356,7 +356,7 @@ function generate_help_text(key)
    *
    * Freeciv has the tool freeciv-manual. It can use the ruleset based auto
    * help text generation. It can output HTML. Some of its HTML output is
-   * machine readable enough to be usable for Freeciv-web.
+   * machine readable enough to be usable for XBWorld.
    *
    * Use the machine readable and wanted parts of freeciv-manual's output to
    * add auto generated help texts for the current ruleset. */

@@ -174,7 +174,7 @@ python test_8agents_50turns.py
 ```bash
 # Full-stack integration (requires all services running)
 cd tests
-bash test_freeciv_web.sh
+bash test_freeciv_source.sh
 ```
 
 ### What to Test
