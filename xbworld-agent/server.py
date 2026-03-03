@@ -104,6 +104,12 @@ class ServerManager:
         data_dir = PROJECT_ROOT / "data"
         serv_script = str(data_dir / f"pubscript_{game_type}.serv")
         log_file = self._log_dir / f"server-{port}.log"
+
+        if not Path(freeciv_bin).exists():
+            raise RuntimeError(f"freeciv binary not found: {freeciv_bin}")
+        if not Path(serv_script).exists():
+            raise RuntimeError(f"serv script not found: {serv_script}")
+
         self._servers[port] = subprocess.Popen(
             [freeciv_bin, "--debug", "1", "--port", str(port),
              "--Announce", "none", "--exit-on-end", "--quitidle", "120",
@@ -116,6 +122,15 @@ class ServerManager:
 
         logger.info("Spawned freeciv-server on port %d (pid %d), log=%s",
                      port, self._servers[port].pid, log_file)
+
+        time.sleep(1)
+        rc = self._servers[port].poll()
+        if rc is not None:
+            log_content = log_file.read_text()[:2000] if log_file.exists() else "(no log)"
+            logger.error("freeciv-server exited immediately (code %d): %s", rc, log_content)
+            self._servers.pop(port, None)
+            raise RuntimeError(f"freeciv-server crashed on startup (exit {rc}): {log_content[:500]}")
+
         return port
 
     def kill_game(self, port: int):
