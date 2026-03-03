@@ -50,7 +50,8 @@ export default defineConfig({
 
   server: {
     port: 3000,
-    open: '/webclient/index.html?action=new&type=singleplayer',
+    allowedHosts: true,
+    // open: '/webclient/index.html?action=new&type=singleplayer',
 
     proxy: {
       // WebSocket proxy — browser connects to local ws://localhost:3000/civsocket/...
@@ -61,7 +62,19 @@ export default defineConfig({
         changeOrigin: true,
       },
 
-      // API endpoints
+      // API endpoints — must cover all backend routes
+      '/civclientlauncher': {
+        target: BACKEND,
+        changeOrigin: true,
+      },
+      '/validate_user': {
+        target: BACKEND,
+        changeOrigin: true,
+      },
+      '/login_user': {
+        target: BACKEND,
+        changeOrigin: true,
+      },
       '/meta': {
         target: BACKEND,
         changeOrigin: true,
@@ -75,6 +88,14 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/motd.js': {
+        target: BACKEND,
+        changeOrigin: true,
+      },
+      '/agents': {
+        target: BACKEND,
+        changeOrigin: true,
+      },
+      '/observer': {
         target: BACKEND,
         changeOrigin: true,
       },
