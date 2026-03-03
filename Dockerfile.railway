@@ -42,7 +42,18 @@ RUN meson setup build freeciv -Dserver='freeciv-web' \
     ninja -C build install
 
 ###############################################################################
-# Stage 2: Slim runtime image
+# Stage 2: Build the web client (Vite/TypeScript)
+###############################################################################
+FROM node:20-slim AS web-builder
+
+COPY xbworld-web/ /build/xbworld-web/
+
+WORKDIR /build/xbworld-web
+
+RUN npm ci && npx vite build
+
+###############################################################################
+# Stage 3: Slim runtime image
 ###############################################################################
 FROM python:3.11-slim-bookworm
 
@@ -62,6 +73,7 @@ COPY --from=builder /opt/freeciv /opt/freeciv
 COPY xbworld-agent/ /app/xbworld-agent/
 COPY data/ /app/data/
 COPY xbworld-web/src/main/webapp/ /app/xbworld-web/src/main/webapp/
+COPY --from=web-builder /build/xbworld-web/dist/webclient/ /app/xbworld-web/dist/webclient/
 
 WORKDIR /app/xbworld-agent
 

@@ -45,6 +45,7 @@ logger = logging.getLogger("xbworld-server")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 WEBAPP_DIR = PROJECT_ROOT / "xbworld-web" / "src" / "main" / "webapp"
+DIST_DIR = PROJECT_ROOT / "xbworld-web" / "dist" / "webclient"
 
 STRATEGY_PROMPT_TEMPLATE = """You are an expert XBWorld player AI agent named "{name}". You control a civilization and make strategic decisions each turn.
 
@@ -500,15 +501,32 @@ async def ws_civsocket(ws: WebSocket, proxy_port: int):
 
 
 # --- Static file serving ---
-# Mount static directories from the webapp
+# Prefer Vite-built assets (dist/webclient/) over raw source files
 
-if WEBAPP_DIR.exists():
+if DIST_DIR.exists():
+    logger.info("Serving built web client from %s", DIST_DIR)
+    assets_dir = DIST_DIR / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+    dist_webclient = DIST_DIR / "webclient"
+    if dist_webclient.exists():
+        app.mount("/webclient", StaticFiles(directory=str(dist_webclient), html=True), name="webclient")
+    for subdir in ["css", "javascript", "images", "static", "fonts",
+                    "textures", "tileset", "music", "docs"]:
+        path = DIST_DIR / subdir
+        if not path.exists():
+            path = WEBAPP_DIR / subdir
+        if path.exists():
+            app.mount(f"/{subdir}", StaticFiles(directory=str(path)), name=subdir)
+            app.mount(f"/src/main/webapp/{subdir}", StaticFiles(directory=str(path)), name=f"compat_{subdir}")
+elif WEBAPP_DIR.exists():
+    logger.info("Serving raw web client from %s (no build found)", WEBAPP_DIR)
     for subdir in ["css", "javascript", "images", "static", "fonts",
                     "textures", "tileset", "music", "docs"]:
         path = WEBAPP_DIR / subdir
         if path.exists():
             app.mount(f"/{subdir}", StaticFiles(directory=str(path)), name=subdir)
-
+            app.mount(f"/src/main/webapp/{subdir}", StaticFiles(directory=str(path)), name=f"compat_{subdir}")
     webclient_dir = WEBAPP_DIR / "webclient"
     if webclient_dir.exists():
         app.mount("/webclient", StaticFiles(directory=str(webclient_dir), html=True), name="webclient")
@@ -524,10 +542,13 @@ async def motd_js():
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    """Redirect root to the game client."""
-    index_path = WEBAPP_DIR / "webclient" / "index.html"
-    if index_path.exists():
-        return index_path.read_text()
+    """Serve the game client index page."""
+    dist_index = DIST_DIR / "webclient" / "index.html"
+    if dist_index.exists():
+        return dist_index.read_text()
+    raw_index = WEBAPP_DIR / "webclient" / "index.html"
+    if raw_index.exists():
+        return raw_index.read_text()
     return HTMLResponse("<h1>XBWorld</h1><p><a href='/webclient/index.html'>Launch Game</a></p>")
 
 

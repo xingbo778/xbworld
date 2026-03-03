@@ -28,10 +28,11 @@ xbworld-proxy/
 xbworld-agent/test_*
 xbworld-agent/static/
 xbworld-web/src/main/java/
-xbworld-web/src/ts/
 xbworld-web/tests/
 xbworld-web/pom.xml
 xbworld-web/build*.sh
+xbworld-web/dist/
+xbworld-web/node_modules/
 install-macos.sh
 start-macos.sh
 stop-macos.sh
