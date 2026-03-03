@@ -20,6 +20,10 @@ import './data/game';
 import './data/unit';
 import './data/player';
 
+// Client modules — client state queries and core game functions.
+import './client/clientState';
+import './client/clientCore';
+
 function init(): void {
   logNormal('[TS] XBWorld TypeScript modules loading...');
 
