@@ -541,9 +541,7 @@ if DIST_DIR.exists():
         app.mount("/webclient", StaticFiles(directory=str(DIST_WEBCLIENT_DIR), html=True), name="webclient")
     for subdir in ["css", "javascript", "images", "static", "fonts",
                     "textures", "tileset", "music", "docs"]:
-        path = DIST_DIR / subdir
-        if not path.exists():
-            path = WEBAPP_DIR / subdir
+        path = WEBAPP_DIR / subdir
         if path.exists():
             app.mount(f"/{subdir}", StaticFiles(directory=str(path)), name=subdir)
             app.mount(f"/src/main/webapp/{subdir}", StaticFiles(directory=str(path)), name=f"compat_{subdir}")
