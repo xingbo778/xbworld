@@ -8,6 +8,7 @@ import { globalEvents } from '../core/events';
 import { logError, logNormal } from '../core/log';
 import { BitVector } from '../utils/bitvector';
 import { mapAllocate } from '../data/map';
+import { sendMessage } from './connection';
 
 type PacketHandler = (packet: Record<string, unknown>) => void;
 
@@ -37,6 +38,10 @@ registerHandler(5, (packet) => {
   if (packet['you_can_join'] as boolean) {
     store.client.conn.id = packet['conn_id'] as number;
     globalEvents.emit('net:joined', packet);
+    if (store.observing) {
+      logNormal('Observer mode: sending /observe command');
+      sendMessage('/observe ');
+    }
   } else {
     globalEvents.emit('ui:alert', {
       title: 'Connection refused',
