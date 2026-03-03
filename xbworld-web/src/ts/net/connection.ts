@@ -100,8 +100,11 @@ function websocketInit(): void {
   ws.onmessage = (event) => {
     pingLast = Date.now();
     try {
-      const packet = JSON.parse(event.data as string);
-      globalEvents.emit('packet:received', packet);
+      const parsed = JSON.parse(event.data as string);
+      const packets = Array.isArray(parsed) ? parsed : [parsed];
+      for (const packet of packets) {
+        globalEvents.emit('packet:received', packet);
+      }
     } catch (e) {
       logError('Failed to parse packet:', e);
     }
