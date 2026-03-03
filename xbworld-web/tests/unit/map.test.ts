@@ -39,6 +39,22 @@ describe('Map', () => {
     expect(win.tiles[99]?.y).toBe(9);
   });
 
+  it('should allocate tiles with correct default values (matching legacy)', () => {
+    const tile = win.tiles[0];
+    expect(tile.known).toBeNull();
+    expect(tile.seen).toEqual({});
+    expect(tile.specials).toEqual([]);
+    expect(tile.terrain).toBe(0); // T_UNKNOWN
+    expect(tile.units).toEqual([]);
+    expect(tile.owner).toBeNull();
+    expect(tile.claimer).toBeNull();
+    expect(tile.worked).toBeNull();
+    expect(tile.spec_sprite).toBeNull();
+    expect(tile.goto_dir).toBeNull();
+    expect(tile.nuke).toBe(0);
+    expect(tile.height).toBe(0);
+  });
+
   it('should convert map position to tile', () => {
     const tile = mapPosToTile(3, 4);
     expect(tile).toBeDefined();
@@ -82,16 +98,18 @@ describe('Map', () => {
     expect(dir).toBe(Direction.EAST);
   });
 
-  it('should convert native to map positions', () => {
+  it('should convert native to map positions with legacy property names', () => {
     const result = nativeToMapPos(3, 4);
-    expect(result.mapX).toBeTypeOf('number');
-    expect(result.mapY).toBeTypeOf('number');
+    // Legacy API returns {map_x, map_y} — NOT {mapX, mapY}
+    expect(result.map_x).toBeTypeOf('number');
+    expect(result.map_y).toBeTypeOf('number');
   });
 
-  it('should convert map to native positions', () => {
+  it('should convert map to native positions with legacy property names', () => {
     const result = mapToNativePos(5, 5);
-    expect(result.natX).toBeTypeOf('number');
-    expect(result.natY).toBeTypeOf('number');
+    // Legacy API returns {nat_x, nat_y} — NOT {natX, natY}
+    expect(result.nat_x).toBeTypeOf('number');
+    expect(result.nat_y).toBeTypeOf('number');
   });
 
   it('should compute distance vectors', () => {

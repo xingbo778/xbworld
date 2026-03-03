@@ -6,6 +6,11 @@
  * NOT through the TS store. This is because legacy globals are declared
  * with `var` (configurable: false) and cannot be intercepted by
  * Object.defineProperty. See docs/MIGRATION_PITFALLS.md §4.
+ *
+ * NOTE: `map_allocate`, `tile_init`, and `map_init_topology` are NOT
+ * exposed via exposeToLegacy because the legacy versions contain
+ * additional side-effects (e.g. calling init_overview()) that the TS
+ * versions do not replicate. See MIGRATION_PITFALLS.md §5.
  */
 
 import { FC_WRAP } from '../utils/helpers';
@@ -73,6 +78,9 @@ export function wrapHasFlag(flag: number): boolean {
 /**
  * Initialise a tile with default values.
  * Migrated from map.js tile_init().
+ *
+ * NOT exposed to legacy — the legacy version is used at runtime.
+ * This function is available for TS-internal use and testing only.
  */
 export function tileInit(tile: Record<string, unknown>): Record<string, unknown> {
   tile['known'] = null;
@@ -92,6 +100,10 @@ export function tileInit(tile: Record<string, unknown>): Record<string, unknown>
 /**
  * Allocate the tile array. Writes directly to window.tiles so that
  * legacy code sees the new tiles immediately.
+ *
+ * NOT exposed to legacy — the legacy version calls init_overview()
+ * and other side-effects that this TS version does not replicate.
+ * This function is available for TS-internal use and testing only.
  */
 export function mapAllocate(): void {
   const mi = getMapInfo();
@@ -101,26 +113,14 @@ export function mapAllocate(): void {
   for (let x = 0; x < mi.xsize; x++) {
     for (let y = 0; y < mi.ysize; y++) {
       const index = x + y * mi.xsize;
-      newTiles[index] = {
+      let tile: Record<string, unknown> = {
         index,
         x,
         y,
-        terrain: T_UNKNOWN,
-        known: 0,
-        extras: [],
-        owner: -1,
-        worked: -1,
-        resource: -1,
-        continent: 0,
         height: 0,
-        specials: [],
-        units: [],
-        claimer: null,
-        spec_sprite: null,
-        goto_dir: null,
-        nuke: 0,
-        seen: {},
       };
+      tile = tileInit(tile);
+      newTiles[index] = tile;
     }
   }
   // Write to the global tiles object so legacy code sees it.
@@ -138,6 +138,8 @@ export function mapAllocate(): void {
 /**
  * Initialise map topology: valid_dirs and cardinal_dirs arrays.
  * Migrated from map.js map_init_topology().
+ *
+ * NOT exposed to legacy — kept for TS-internal use only.
  */
 export function mapInitTopology(_setSizes: boolean): void {
   const m = win.map;
@@ -225,17 +227,24 @@ export function getDirectionForStep(
   return -1;
 }
 
+/**
+ * NATIVE_TO_MAP_POS — convert native coordinates to map coordinates.
+ *
+ * Returns {map_x, map_y} to match the legacy JS API exactly.
+ * Legacy callers use `result.map_x` and `result.map_y`.
+ */
 export function nativeToMapPos(natX: number, natY: number) {
   const mi = getMapInfo();
-  if (!mi) return { mapX: 0, mapY: 0 };
-  const mapX = Math.floor((natY + (natY & 1)) / 2 + natX);
-  const mapY = Math.floor(natY - mapX + mi.xsize);
-  return { mapX, mapY };
+  if (!mi) return { map_x: 0, map_y: 0 };
+  const pmap_x = Math.floor((natY + (natY & 1)) / 2 + natX);
+  const pmap_y = Math.floor(natY - pmap_x + mi.xsize);
+  return { map_x: pmap_x, map_y: pmap_y };
 }
 
 /**
  * NATURAL_TO_MAP_POS — uses different formula from NATIVE_TO_MAP_POS.
- * Migrated from map.js.
+ *
+ * Returns {map_x, map_y} to match the legacy JS API exactly.
  */
 export function naturalToMapPos(natX: number, natY: number) {
   const mi = getMapInfo();
@@ -245,17 +254,24 @@ export function naturalToMapPos(natX: number, natY: number) {
   return { map_x: pmap_x, map_y: pmap_y };
 }
 
+/**
+ * MAP_TO_NATIVE_POS — convert map coordinates to native coordinates.
+ *
+ * Returns {nat_x, nat_y} to match the legacy JS API exactly.
+ * Legacy callers use `result.nat_x` and `result.nat_y`.
+ */
 export function mapToNativePos(mapX: number, mapY: number) {
   const mi = getMapInfo();
-  if (!mi) return { natX: 0, natY: 0 };
-  const natY = Math.floor(mapX + mapY - mi.xsize);
-  const natX = Math.floor((2 * mapX - natY - (natY & 1)) / 2);
-  return { natX, natY };
+  if (!mi) return { nat_x: 0, nat_y: 0 };
+  const pnat_y = Math.floor(mapX + mapY - mi.xsize);
+  const pnat_x = Math.floor((2 * mapX - pnat_y - (pnat_y & 1)) / 2);
+  return { nat_x: pnat_x, nat_y: pnat_y };
 }
 
 /**
  * MAP_TO_NATURAL_POS — uses different formula from MAP_TO_NATIVE_POS.
- * Migrated from map.js.
+ *
+ * Returns {nat_x, nat_y} to match the legacy JS API exactly.
  */
 export function mapToNaturalPos(mapX: number, mapY: number) {
   const mi = getMapInfo();
@@ -345,12 +361,16 @@ export function clearGotoTiles(): void {
 
 // ---------------------------------------------------------------------------
 // Expose to legacy JS via window (snake_case names matching old JS API)
+//
+// ONLY pure data-access / query functions are exposed here.
+// Initialization functions (map_allocate, tile_init, map_init_topology)
+// are NOT exposed because the legacy versions contain side-effects
+// (e.g. init_overview, startpos_table) that the TS versions don't replicate.
+// See docs/MIGRATION_PITFALLS.md §5 for details.
 // ---------------------------------------------------------------------------
 exposeToLegacy('topo_has_flag', topoHasFlag);
 exposeToLegacy('wrap_has_flag', wrapHasFlag);
-exposeToLegacy('tile_init', tileInit);
-exposeToLegacy('map_allocate', mapAllocate);
-exposeToLegacy('map_init_topology', mapInitTopology);
+// NOT exposed: tile_init, map_allocate, map_init_topology
 exposeToLegacy('is_valid_dir', isValidDir);
 exposeToLegacy('is_cardinal_dir', isCardinalDir);
 exposeToLegacy('map_pos_to_tile', mapPosToTile);
