@@ -46,6 +46,7 @@ logger = logging.getLogger("xbworld-server")
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 WEBAPP_DIR = PROJECT_ROOT / "xbworld-web" / "src" / "main" / "webapp"
 DIST_DIR = PROJECT_ROOT / "xbworld-web" / "dist" / "webclient"
+DIST_WEBCLIENT_DIR = DIST_DIR / "src" / "main" / "webapp" / "webclient"
 
 STRATEGY_PROMPT_TEMPLATE = """You are an expert XBWorld player AI agent named "{name}". You control a civilization and make strategic decisions each turn.
 
@@ -536,9 +537,8 @@ if DIST_DIR.exists():
     assets_dir = DIST_DIR / "assets"
     if assets_dir.exists():
         app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
-    dist_webclient = DIST_DIR / "webclient"
-    if dist_webclient.exists():
-        app.mount("/webclient", StaticFiles(directory=str(dist_webclient), html=True), name="webclient")
+    if DIST_WEBCLIENT_DIR.exists():
+        app.mount("/webclient", StaticFiles(directory=str(DIST_WEBCLIENT_DIR), html=True), name="webclient")
     for subdir in ["css", "javascript", "images", "static", "fonts",
                     "textures", "tileset", "music", "docs"]:
         path = DIST_DIR / subdir
@@ -571,7 +571,7 @@ async def motd_js():
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """Serve the game client index page."""
-    dist_index = DIST_DIR / "webclient" / "index.html"
+    dist_index = DIST_WEBCLIENT_DIR / "index.html"
     if dist_index.exists():
         return dist_index.read_text()
     raw_index = WEBAPP_DIR / "webclient" / "index.html"
