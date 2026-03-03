@@ -20,6 +20,13 @@ import { resolve } from 'path';
 const BACKEND = process.env.BACKEND_URL || 'https://xbworld-production.up.railway.app';
 const backendWs = BACKEND.replace(/^http/, 'ws');
 
+// Common proxy options for all API endpoints
+const apiProxy = {
+  target: BACKEND,
+  changeOrigin: true,
+  secure: false,  // Required for proxying to HTTPS backends with self-signed or Railway certs
+};
+
 export default defineConfig({
   root: resolve(__dirname, 'src/main/webapp'),
 
@@ -51,7 +58,6 @@ export default defineConfig({
   server: {
     port: 3000,
     allowedHosts: true,
-    // open: '/webclient/index.html?action=new&type=singleplayer',
 
     proxy: {
       // WebSocket proxy — browser connects to local ws://localhost:3000/civsocket/...
@@ -60,45 +66,19 @@ export default defineConfig({
         target: backendWs,
         ws: true,
         changeOrigin: true,
+        secure: false,
       },
 
       // API endpoints — must cover all backend routes
-      '/civclientlauncher': {
-        target: BACKEND,
-        changeOrigin: true,
-      },
-      '/validate_user': {
-        target: BACKEND,
-        changeOrigin: true,
-      },
-      '/login_user': {
-        target: BACKEND,
-        changeOrigin: true,
-      },
-      '/meta': {
-        target: BACKEND,
-        changeOrigin: true,
-      },
-      '/game': {
-        target: BACKEND,
-        changeOrigin: true,
-      },
-      '/servers': {
-        target: BACKEND,
-        changeOrigin: true,
-      },
-      '/motd.js': {
-        target: BACKEND,
-        changeOrigin: true,
-      },
-      '/agents': {
-        target: BACKEND,
-        changeOrigin: true,
-      },
-      '/observer': {
-        target: BACKEND,
-        changeOrigin: true,
-      },
+      '/civclientlauncher': apiProxy,
+      '/validate_user': apiProxy,
+      '/login_user': apiProxy,
+      '/meta': apiProxy,
+      '/game': apiProxy,
+      '/servers': apiProxy,
+      '/motd.js': apiProxy,
+      '/agents': apiProxy,
+      '/observer': apiProxy,
     },
   },
 });

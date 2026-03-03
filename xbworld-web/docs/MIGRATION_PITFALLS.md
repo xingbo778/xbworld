@@ -343,3 +343,60 @@ return { map_x: ..., map_y: ... };
 6. **渐进式覆盖**：`exposeToLegacy` 一次只覆盖少量函数，每批覆盖后都要完整测试。
 7. **不覆盖初始化/编排函数**：包含副作用或调用多个子函数的初始化函数，应保留 Legacy 版本。
 8. **只覆盖纯查询/计算函数**：适合 `exposeToLegacy` 的是无副作用的纯函数。
+
+
+---
+
+## 坑 7：TS 覆盖的函数依赖 Legacy 模块的局部变量
+
+### 现象
+
+`improvement_id_by_name('Palace')` 报错 `Cannot read properties of undefined (reading 'hasOwnProperty')`。
+
+### 根因
+
+Legacy `improvement.js` 中有一个模块级局部变量 `improvements_name_index`（用 `const` 声明），它是 `improvements_init()` 中构建的名称→ID 缓存。Legacy 的 `improvement_id_by_name` 函数可以直接访问它（同一闭包内），但 TS 版本通过 `(window as any).improvements_name_index` 去读取——这个变量**不在 `window` 上**，所以永远是 `undefined`。
+
+```javascript
+// Legacy improvement.js
+const improvements_name_index = {};  // 模块局部变量，不在 window 上
+
+function improvements_init() {
+  // ... 构建 improvements_name_index ...
+}
+
+function improvement_id_by_name(name) {
+  return improvements_name_index.hasOwnProperty(name)  // 可以访问
+    ? improvements_name_index[name] : -1;
+}
+```
+
+```typescript
+// TS improvement.ts — 错误做法
+function improvementIdByName(name: string): number {
+  const idx = (window as any).improvements_name_index;  // undefined!
+  return idx.hasOwnProperty(name) ? idx[name] : -1;     // 报错!
+}
+exposeToLegacy('improvement_id_by_name', improvementIdByName);  // 覆盖了能正常工作的 Legacy 版本
+```
+
+### 解决方案
+
+**不 exposeToLegacy 这个函数**。Legacy 版本能正常工作，TS 版本反而破坏了它。TS 内部如需此功能，提供一个不覆盖 Legacy 的内部实现（遍历 `window.improvements`）。
+
+### 教训
+
+**迁移前必须检查函数是否依赖模块局部变量**。以下情况不应 `exposeToLegacy`：
+
+1. 函数读取模块级 `const`/`let`/`var` 声明的变量（不在 `window` 上）
+2. 函数依赖模块级缓存（如 `improvements_name_index`、`xxx_cache` 等）
+3. 函数依赖模块级闭包中的状态
+
+**检查方法**：在浏览器控制台执行 `typeof window.xxx` 确认变量是否在全局作用域上。
+
+---
+
+## 迁移原则（Phase 1 更新）
+
+9. **不覆盖依赖模块局部变量的函数**：如果 Legacy 函数依赖模块内的 `const`/`let`/`var` 局部变量（不在 `window` 上），TS 版本无法访问这些变量，不应 `exposeToLegacy`。迁移前用 `typeof window.xxx` 验证。
+10. **本地 dev server 测试流程**：每次修改后，用 `BACKEND_URL=... npx vite --config vite.config.dev.ts` 启动本地 dev server，连接远程后端进行端到端测试，避免每次都重新部署。

@@ -45,6 +45,12 @@ import './data/player';
 import './data/map';
 import './data/tile';
 import './data/terrain';
+import './data/fcTypes';      // Phase 1: constants (no exposeToLegacy, TS-only imports)
+import './data/actions';      // Phase 1: action queries
+import './data/extra';        // Phase 1: extra queries
+import './data/improvement';  // Phase 1: improvement queries
+import './data/requirements'; // Phase 1: requirement system
+import './data/government';   // Phase 1: government data queries
 
 // ---------------------------------------------------------------------------
 // Phase 2: Import client modules — client state queries and core functions.
