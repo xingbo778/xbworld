@@ -173,7 +173,7 @@
 <script src="/javascript/libs/bmp_lib.js"></script>
 <script src="/javascript/libs/gif.js"></script>
 
-<!-- Stubs for optional dependencies not deployed (audio, etc.) -->
+<!-- Stubs for optional dependencies not deployed -->
 <script>
 if (typeof audiojs === "undefined") {
   window.audiojs = {
@@ -181,6 +181,7 @@ if (typeof audiojs === "undefined") {
     createAll: function() { return [null]; }
   };
 }
+var ts = Date.now();
 </script>
 
 <!-- Legacy game client bundle (all game logic + 2D Canvas renderer) -->
