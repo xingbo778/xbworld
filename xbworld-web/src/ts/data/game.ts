@@ -154,7 +154,7 @@ export function sum_width(): number {
 // Expose to legacy JS via window
 // ---------------------------------------------------------------------------
 exposeToLegacy('IDENTITY_NUMBER_ZERO', IDENTITY_NUMBER_ZERO);
-exposeToLegacy('game_init', game_init);
+// game_init is an initialization function — DO NOT expose (Pitfall #5)
 exposeToLegacy('game_find_city_by_number', game_find_city_by_number);
 exposeToLegacy('game_find_unit_by_number', game_find_unit_by_number);
 exposeToLegacy('civ_population', civ_population);

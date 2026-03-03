@@ -51,11 +51,29 @@ export function canClientIssueOrders(): boolean {
 
 /**
  * Returns TRUE if the client is an observer.
+ *
+ * PITFALL: Legacy uses `client.conn.playing == null` WITHOUT optional
+ * chaining. When `client` or `client.conn` is not yet initialized, the
+ * Legacy version throws an error (caught by the caller), effectively
+ * returning a non-true value. Using `?.` here would silently return
+ * `undefined == null → true`, incorrectly marking the player as an
+ * observer. This breaks `advance_unit_focus()` which skips observers,
+ * preventing the map from centering on the player's units at game start.
+ *
+ * Fix: Guard against uninitialized `client`/`conn` by returning `false`
+ * early, matching Legacy's effective behavior.
  */
 export function clientIsObserver(): boolean {
   const c = (window as any).client;
   const obs = (window as any).observing;
-  return c?.conn?.playing == null || c?.conn?.observer || obs;
+
+  // If client or conn is not yet initialized, we are NOT an observer —
+  // we simply don't know yet. Legacy would throw here; we return false.
+  if (c == null || c.conn == null) {
+    return false;
+  }
+
+  return c.conn.playing == null || c.conn.observer || obs;
 }
 
 // ---------------------------------------------------------------------------
