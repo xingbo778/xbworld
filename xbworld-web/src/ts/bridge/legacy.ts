@@ -11,7 +11,7 @@
  *   legacy.centerTileMapcanvas(tile);
  */
 
-const win = window as Record<string, unknown>;
+const win = window as unknown as Record<string, unknown>;
 
 function legacyFn(name: string): ((...args: unknown[]) => unknown) | null {
   const fn = win[name];

@@ -33,6 +33,13 @@ export default [
       'no-var': 'error',
     },
   },
+  {
+    files: ['src/ts/**/*.d.ts'],
+    rules: {
+      'no-redeclare': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+    },
+  },
   prettier,
   {
     ignores: [

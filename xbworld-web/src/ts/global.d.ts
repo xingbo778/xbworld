@@ -47,9 +47,20 @@ declare let game_info: {
   turn: number;
   year: number;
   timeout: number;
+  first_timeout: number;
   phase: number;
   [key: string]: any;
 } | null;
+
+declare let calendar_info: {
+  positive_year_label: string;
+  negative_year_label: string;
+  [key: string]: any;
+} | null;
+
+declare let game_rules: any;
+declare let resources: Record<number, any>;
+declare let server_settings: Record<string, any>;
 
 declare let client: {
   conn: {
@@ -97,6 +108,8 @@ declare let loaded_images: number;
 declare let tileset_image_count: number;
 
 declare let ruleset_control: any;
+declare let ruleset_summary: string | null;
+declare let ruleset_description: string | null;
 declare let terrain_control: any;
 declare let roads: any[];
 declare let bases: any[];
@@ -119,6 +132,9 @@ declare function client_is_observer(): boolean;
 // ---------------------------------------------------------------------------
 // Core functions — network
 // ---------------------------------------------------------------------------
+declare function numberWithCommas(x: number | string): string;
+declare function is_small_screen(): boolean;
+
 declare function send_request(packet: string): void;
 declare function send_message(msg: string): void;
 declare function network_init(): void;
@@ -148,6 +164,7 @@ declare function game_find_unit_by_number(id: number): any;
 // Core functions — cities
 // ---------------------------------------------------------------------------
 declare function city_owner(city: any): any;
+declare function city_population(city: any): number;
 declare function game_find_city_by_number(id: number): any;
 
 // ---------------------------------------------------------------------------
@@ -170,6 +187,7 @@ declare function get_unit_image_sprite(unit: any): any;
 // Core functions — UI
 // ---------------------------------------------------------------------------
 declare function show_dialog_message(title: string, message: string): void;
+declare function show_tax_rates_dialog(): void;
 declare function update_game_status_panel(): void;
 declare function update_city_screen(): void;
 declare function update_nation_screen(): void;
@@ -177,6 +195,14 @@ declare function send_end_turn(): void;
 declare function update_unit_focus(): void;
 declare function advance_unit_focus(): void;
 declare function request_new_unit_activity(unit: any, activity: number): void;
+
+// ---------------------------------------------------------------------------
+// Actions & tech helpers (legacy)
+// ---------------------------------------------------------------------------
+declare function action_by_number(action_id: number): any;
+declare function action_has_result(paction: any, result: number): boolean;
+declare function player_invention_state(player: any, tech_id: number): number;
+declare const TECH_KNOWN: number;
 
 // ---------------------------------------------------------------------------
 // Packet handling
@@ -209,3 +235,53 @@ declare const audiojs: any;
 declare const bmp_lib: {
   render(elementId: string, data: any, palette: any): void;
 };
+
+// ---------------------------------------------------------------------------
+// Legacy functions referenced by migrated modules
+// ---------------------------------------------------------------------------
+declare function control_unit_killed(punit: any): void;
+declare function unit_is_in_focus(punit: any): boolean;
+declare function webgl_clear_unit_focus(): void;
+declare function map_to_gui_pos(x: number, y: number): { gui_dx: number; gui_dy: number };
+declare function tile_has_extra(ptile: any, extra_id: number): boolean;
+declare function is_extra_removed_by(extra: any, cause: number): boolean;
+declare function action_by_number(act_id: number): any;
+declare function action_has_result(paction: any, result: number): boolean;
+declare function player_invention_state(player: any, tech_id: number): number;
+declare function city_population(pcity: any): number;
+declare function numberWithCommas(n: number): string;
+declare function is_small_screen(): boolean;
+declare function show_tax_rates_dialog(): void;
+declare function city_owner_player_id(city: any): number;
+declare function city_has_building(city: any, improvement_id: number): boolean;
+declare function city_owner(city: any): any;
+declare function check_text_with_banlist_exact(text: string): boolean;
+declare function is_primary_capital(city: any): boolean;
+declare function utype_can_do_action(putype: any, action_id: number): boolean;
+
+// Legacy constants
+declare const TECH_KNOWN: number;
+declare const ACTION_PILLAGE: number;
+declare const ACTIVITY_PILLAGE: number;
+declare const VUT_EXTRA: number;
+declare const ERM_PILLAGE: number;
+declare const EXTRA_NONE: number;
+declare const O_FOOD: number;
+declare const O_SHIELD: number;
+declare const O_GOLD: number;
+declare const ACTION_COUNT: number;
+
+// Additional globals
+declare let calendar_info: any;
+declare let game_rules: any;
+declare let resources: Record<number, any>;
+declare let server_settings: Record<string, any>;
+declare let ruleset_summary: string | null;
+declare let ruleset_description: string | null;
+
+declare class BitVector {
+  constructor(data: any[]);
+  isSet(index: number): boolean;
+  set(index: number): void;
+  unset(index: number): void;
+}
