@@ -30,15 +30,15 @@ xbworld-proxy/
 xbworld-agent/test_*
 xbworld-agent/static/
 xbworld-web/src/main/java/
-xbworld-web/src/ts/
 xbworld-web/tests/
 xbworld-web/pom.xml
 xbworld-web/build*.sh
 xbworld-web/dist/
 xbworld-web/node_modules/
-xbworld-web/package*.json
-xbworld-web/tsconfig*.json
-xbworld-web/vite.config.ts
+xbworld-web/eslint.config.mjs
+xbworld-web/vitest.config.ts
+# Note: src/ts/, package*.json, tsconfig*.json, vite.config.ts are now
+# INCLUDED in the build context for the Vite TS build stage (Stage 3).
 install-macos.sh
 start-macos.sh
 stop-macos.sh
