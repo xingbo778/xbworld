@@ -32,11 +32,10 @@ RUN if [ ! -f freeciv/meson.build ]; then \
             https://github.com/xingbo778/freeciv.git freeciv; \
     fi
 
-RUN mkdir -p build && cd build && \
-    meson setup ../freeciv -Dserver='freeciv-web' \
+RUN meson setup build freeciv -Dserver='freeciv-web' \
         -Dclients=[] -Dfcmp=cli -Djson-protocol=true -Dnls=false \
         -Daudio=none -Dtools=manual \
-        -Dproject-definition=../freeciv-web.fcproj \
+        -Dproject-definition=freeciv-web.fcproj \
         -Ddefault_library=static -Dprefix=/opt/freeciv \
         -Doptimization=3 && \
     ninja -C build && \
