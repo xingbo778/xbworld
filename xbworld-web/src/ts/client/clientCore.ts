@@ -97,27 +97,35 @@ export function sendSurrenderGame(): void {
 
 /**
  * Returns the reason a username is invalid, or null if valid.
- * Migrated from the logic in civclient.js / validate_username().
+ * Migrated from player.js / get_invalid_username_reason().
+ *
+ * NOTE: The legacy `check_text_with_banlist_exact(name)` returns TRUE
+ * when the name is VALID (not banned), and FALSE when banned.
  */
 export function getInvalidUsernameReason(name: string | null): string | null {
   if (name == null || name.length === 0) {
     return 'empty';
   }
-  if (name.length < 3) {
-    return 'too short (minimum 3 characters)';
+  if (name.length <= 2) {
+    return 'too short';
   }
-  if (name.length > 32) {
-    return 'too long (maximum 32 characters)';
+  if (name.length >= 32) {
+    return 'too long';
   }
-  if (/[^a-zA-Z0-9]/.test(name)) {
-    return 'invalid (only letters and numbers allowed)';
+  const lower = name.toLowerCase();
+  if (lower === 'pbem') {
+    return 'not available';
   }
-  // Check against banlist if available
+  // Must start with a letter, then letters and numbers only
+  if (!/^[a-z][a-z0-9]*$/g.test(lower)) {
+    return 'invalid: only English letters and numbers are allowed, and must start with a letter';
+  }
+  // check_text_with_banlist_exact returns TRUE = valid, FALSE = banned
   if (
     typeof win.check_text_with_banlist_exact === 'function' &&
-    win.check_text_with_banlist_exact(name)
+    !win.check_text_with_banlist_exact(lower)
   ) {
-    return 'not allowed';
+    return 'banned';
   }
   return null;
 }
