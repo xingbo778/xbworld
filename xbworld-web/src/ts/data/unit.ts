@@ -176,17 +176,20 @@ export function get_unit_moves_left(punit: Unit | null): string | 0 {
 }
 
 export function move_points_text(moves: number): string {
+  // Read SINGLE_MOVE from window because it is set by legacy packhand.js
+  // (handle_ruleset_terrain_control), not by TS code.
+  const sm: number = (window as any).SINGLE_MOVE;
   let result: string;
 
-  if (moves % SINGLE_MOVE !== 0) {
-    if (Math.floor(moves / SINGLE_MOVE) > 0) {
+  if (moves % sm !== 0) {
+    if (Math.floor(moves / sm) > 0) {
       result =
-        Math.floor(moves / SINGLE_MOVE) + ' ' + Math.floor(moves % SINGLE_MOVE) + '/' + SINGLE_MOVE;
+        Math.floor(moves / sm) + ' ' + Math.floor(moves % sm) + '/' + sm;
     } else {
-      result = Math.floor(moves % SINGLE_MOVE) + '/' + SINGLE_MOVE;
+      result = Math.floor(moves % sm) + '/' + sm;
     }
   } else {
-    result = String(Math.floor(moves / SINGLE_MOVE));
+    result = String(Math.floor(moves / sm));
   }
 
   return result;
