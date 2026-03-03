@@ -328,6 +328,20 @@ async def meta_status():
 
 
 
+# --- User validation stubs (legacy client expects these) ---
+
+@app.post("/validate_user", response_class=PlainTextResponse)
+@app.get("/validate_user", response_class=PlainTextResponse)
+async def validate_user(request: Request):
+    return "user_does_not_exist"
+
+
+@app.post("/login_user", response_class=PlainTextResponse)
+@app.get("/login_user", response_class=PlainTextResponse)
+async def login_user(request: Request):
+    return "OK"
+
+
 # --- Game Launcher API ---
 
 @app.post("/civclientlauncher")
