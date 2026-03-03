@@ -75,20 +75,10 @@ function civclient_init()
   var action = $.getUrlVar('action');
   game_type = $.getUrlVar('type');
   if (game_type == null) {
-    if (action == null || action == 'multi') {
-      swal({
-             title: "Unknown game type",
-             text: "For some reason the client can't determine what kind of game this is. Please <a href='https://github.com/freeciv/xbworld/issues'>open an issue</a> detailing how you got here",
-             html: true,
-             type: "error"
-           },
-           // Requires a parameter to also be called on cancel
-           function (unused) {
-             window.location.href ='/';
-           }
-      );
-      return;
-    } else if (action == 'pbem') {
+    // TODO: When no type param is provided (e.g. direct URL access),
+    // we default to singleplayer. In the future, consider showing a
+    // proper lobby/landing page instead of going straight into a game.
+    if (action == 'pbem') {
       game_type = 'pbem';
     } else {
       game_type = 'singleplayer';
