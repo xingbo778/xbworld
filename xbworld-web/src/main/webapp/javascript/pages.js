@@ -71,6 +71,11 @@ function set_client_page(page)
     if (renderer == RENDERER_WEBGL) webgl_start_renderer();
     set_chat_direction(null);
 
+    /* Trigger initial map render after page switch */
+    if (typeof update_map_canvas_full === 'function') {
+      update_map_canvas_full();
+    }
+
     break;
   case PAGE_LOAD:
     /*update_load_page();*/
@@ -83,7 +88,7 @@ function set_client_page(page)
     break;
   }
 
-
+  old_page = new_page;
 
 }
 

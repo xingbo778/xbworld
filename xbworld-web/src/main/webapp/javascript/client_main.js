@@ -41,9 +41,13 @@ function set_client_state(newstate)
 
     switch (civclient_state) {
     case C_S_RUNNING:
-      clear_chatbox();
-      $.unblockUI();
-      show_new_game_message();
+      try {
+        clear_chatbox();
+        $.unblockUI();
+        show_new_game_message();
+      } catch (e) {
+        console.error('[set_client_state] Error in pre-page setup:', e);
+      }
 
       set_client_page(PAGE_GAME);
       setup_window_size();
