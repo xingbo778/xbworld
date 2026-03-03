@@ -327,6 +327,26 @@ async def meta_status():
     return f"ok;{s['total']};{s['single']};{s['multi']}"
 
 
+@app.get("/debug/paths")
+async def debug_paths():
+    """Debug: show file paths for troubleshooting."""
+    import os
+    result = {
+        "PROJECT_ROOT": str(PROJECT_ROOT),
+        "WEBAPP_DIR": str(WEBAPP_DIR),
+        "WEBAPP_DIR_exists": WEBAPP_DIR.exists(),
+        "DIST_DIR": str(DIST_DIR),
+        "DIST_DIR_exists": DIST_DIR.exists(),
+    }
+    if DIST_DIR.exists():
+        result["DIST_DIR_contents"] = os.listdir(str(DIST_DIR))
+        wc = DIST_DIR / "webclient"
+        result["dist_webclient_exists"] = wc.exists()
+        if wc.exists():
+            result["dist_webclient_contents"] = os.listdir(str(wc))
+    return result
+
+
 # --- Game Launcher API ---
 
 @app.post("/civclientlauncher")
