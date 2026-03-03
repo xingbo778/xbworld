@@ -136,7 +136,7 @@ export function getDirectionForStep(
 
 export function nativeToMapPos(natX: number, natY: number) {
   const mi = store.mapInfo!;
-  const mapX = Math.floor(((natY) + ((natY) & 1)) / 2 + natX);
+  const mapX = Math.floor((natY + (natY & 1)) / 2 + natX);
   const mapY = Math.floor(natY - mapX + mi.xsize);
   return { mapX, mapY };
 }

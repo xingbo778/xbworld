@@ -55,7 +55,7 @@ registerHandler(5, (packet) => {
 
 registerHandler(15, (packet) => {
   // PACKET_TILE_INFO = 15
-  const index = packet['tile'] as number ?? packet['index'] as number;
+  const index = (packet['tile'] as number) ?? (packet['index'] as number);
   const existing = store.tiles[index];
   if (existing) {
     Object.assign(existing, packet);
@@ -99,21 +99,21 @@ registerHandler(30, (packet) => {
 
 registerHandler(31, (packet) => {
   // PACKET_CITY_INFO = 31
-  const city = packet as unknown as typeof store.cities[0];
+  const city = packet as unknown as (typeof store.cities)[0];
   store.cities[city.id] = city;
   globalEvents.emit('city:updated', city.id);
 });
 
 registerHandler(32, (packet) => {
   // PACKET_CITY_SHORT_INFO = 32
-  const city = packet as unknown as typeof store.cities[0];
+  const city = packet as unknown as (typeof store.cities)[0];
   store.cities[city.id] = { ...store.cities[city.id], ...city };
   globalEvents.emit('city:updated', city.id);
 });
 
 registerHandler(51, (packet) => {
   // PACKET_PLAYER_INFO = 51
-  const player = packet as unknown as typeof store.players[0];
+  const player = packet as unknown as (typeof store.players)[0];
   store.players[player.playerno] = player;
   globalEvents.emit('player:updated', player.playerno);
 });
@@ -127,14 +127,14 @@ registerHandler(62, (packet) => {
 
 registerHandler(63, (packet) => {
   // PACKET_UNIT_INFO = 63
-  const unit = packet as unknown as typeof store.units[0];
+  const unit = packet as unknown as (typeof store.units)[0];
   store.units[unit.id] = unit;
   globalEvents.emit('unit:updated', unit.id);
 });
 
 registerHandler(64, (packet) => {
   // PACKET_UNIT_SHORT_INFO = 64
-  const unit = packet as unknown as typeof store.units[0];
+  const unit = packet as unknown as (typeof store.units)[0];
   store.units[unit.id] = { ...store.units[unit.id], ...unit };
   globalEvents.emit('unit:updated', unit.id);
 });
@@ -146,7 +146,7 @@ registerHandler(88, (packet) => {
 
 registerHandler(115, (packet) => {
   // PACKET_CONN_INFO = 115
-  const conn = packet as unknown as typeof store.connections[0];
+  const conn = packet as unknown as (typeof store.connections)[0];
   store.connections[conn.id] = conn;
   globalEvents.emit('connection:updated', conn.id);
 });
@@ -178,37 +178,37 @@ registerHandler(129, (packet) => {
 
 registerHandler(140, (packet) => {
   // PACKET_RULESET_UNIT = 140
-  const ut = packet as unknown as typeof store.unitTypes[0];
+  const ut = packet as unknown as (typeof store.unitTypes)[0];
   store.unitTypes[ut.id] = ut;
 });
 
 registerHandler(144, (packet) => {
   // PACKET_RULESET_TECH = 144
-  const tech = packet as unknown as typeof store.techs[0];
+  const tech = packet as unknown as (typeof store.techs)[0];
   store.techs[tech.id] = tech;
 });
 
 registerHandler(145, (packet) => {
   // PACKET_RULESET_GOVERNMENT = 145
-  const gov = packet as unknown as typeof store.governments[0];
+  const gov = packet as unknown as (typeof store.governments)[0];
   store.governments[gov.id] = gov;
 });
 
 registerHandler(148, (packet) => {
   // PACKET_RULESET_NATION = 148
-  const nation = packet as unknown as typeof store.nations[0];
+  const nation = packet as unknown as (typeof store.nations)[0];
   store.nations[nation.id] = nation;
 });
 
 registerHandler(150, (packet) => {
   // PACKET_RULESET_BUILDING = 150
-  const imp = packet as unknown as typeof store.improvements[0];
+  const imp = packet as unknown as (typeof store.improvements)[0];
   store.improvements[imp.id] = imp;
 });
 
 registerHandler(151, (packet) => {
   // PACKET_RULESET_TERRAIN = 151
-  const terrain = packet as unknown as typeof store.terrains[0];
+  const terrain = packet as unknown as (typeof store.terrains)[0];
   store.terrains[terrain.id] = terrain;
 });
 
@@ -230,7 +230,7 @@ registerHandler(165, (packet) => {
 
 registerHandler(232, (packet) => {
   // PACKET_RULESET_EXTRA = 232
-  const extra = packet as unknown as typeof store.extras[0];
+  const extra = packet as unknown as (typeof store.extras)[0];
   store.extras[extra.id] = extra;
 });
 

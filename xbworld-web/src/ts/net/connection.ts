@@ -28,11 +28,7 @@ export function getCivserverPort(): string | null {
   return civserverport;
 }
 
-export function networkInitManualHack(
-  port: string,
-  username: string,
-  savegame?: string,
-): void {
+export function networkInitManualHack(port: string, username: string, savegame?: string): void {
   civserverport = port;
   store.username = username;
   websocketInit();
@@ -148,7 +144,8 @@ function checkWebsocketReady(): void {
     shaPassword = storedPassword;
   }
 
-  const googleToken = (window as unknown as Record<string, unknown>).google_user_token as string | null ?? null;
+  const googleToken =
+    ((window as unknown as Record<string, unknown>).google_user_token as string | null) ?? null;
 
   const loginMessage = {
     pid: 4,

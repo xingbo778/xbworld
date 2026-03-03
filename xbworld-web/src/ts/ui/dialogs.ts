@@ -3,7 +3,7 @@
  * Uses native HTML dialog element with custom styling.
  */
 
-import { $id, create, remove, on, setHtml } from '../utils/dom';
+import { create, on } from '../utils/dom';
 
 interface DialogOptions {
   title: string;
@@ -75,7 +75,8 @@ export function showDialog(id: string, options: DialogOptions): HTMLDialogElemen
   });
 
   // Draggable header
-  let dragX = 0, dragY = 0;
+  let dragX = 0,
+    dragY = 0;
   on(header, 'pointerdown', (e: PointerEvent) => {
     dragX = e.clientX - dialog.offsetLeft;
     dragY = e.clientY - dialog.offsetTop;
@@ -117,7 +118,11 @@ export function closeDialog(id: string): void {
   }
 }
 
-export function showAlert(title: string, text: string, type: 'info' | 'error' | 'warning' = 'info'): void {
+export function showAlert(
+  title: string,
+  text: string,
+  type: 'info' | 'error' | 'warning' = 'info',
+): void {
   showDialog('xb-alert', {
     title,
     content: `<p class="xb-alert-${type}">${text}</p>`,

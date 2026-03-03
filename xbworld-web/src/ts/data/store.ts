@@ -4,9 +4,22 @@
  */
 
 import type {
-  GameInfo, CalendarInfo, MapInfo, Tile, Terrain, UnitType,
-  Unit, City, Player, Tech, Connection, Nation, Government,
-  Improvement, Extra, ServerSetting,
+  GameInfo,
+  CalendarInfo,
+  MapInfo,
+  Tile,
+  Terrain,
+  UnitType,
+  Unit,
+  City,
+  Player,
+  Tech,
+  Connection,
+  Nation,
+  Government,
+  Improvement,
+  Extra,
+  ServerSetting,
 } from './types';
 import { globalEvents } from '../core/events';
 

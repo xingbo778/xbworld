@@ -50,7 +50,7 @@ export function player_by_full_username(pname: string): Player | null {
   for (const player_id in players) {
     const pplayer = players[player_id];
     if (pplayer.username === pname) return pplayer;
-    if ("AI " + pplayer.name === pname) return pplayer;
+    if ('AI ' + pplayer.name === pname) return pplayer;
   }
   return null;
 }
@@ -76,55 +76,55 @@ export function player_number(player: Player): number {
 export function get_diplstate_text(state_id: number): string {
   switch (state_id) {
     case DiplState.DS_ARMISTICE:
-      return "Armistice";
+      return 'Armistice';
     case DiplState.DS_WAR:
-      return "War";
+      return 'War';
     case DiplState.DS_CEASEFIRE:
-      return "Ceasefire";
+      return 'Ceasefire';
     case DiplState.DS_PEACE:
-      return "Peace";
+      return 'Peace';
     case DiplState.DS_ALLIANCE:
-      return "Alliance";
+      return 'Alliance';
     case DiplState.DS_NO_CONTACT:
-      return "No contact";
+      return 'No contact';
     case DiplState.DS_TEAM:
-      return "Team";
+      return 'Team';
     default:
-      return "Unknown";
+      return 'Unknown';
   }
 }
 
 export function get_embassy_text(player_id: number): string {
   const pplayer = players[player_id];
-  if (pplayer == null) return "";
+  if (pplayer == null) return '';
   if (pplayer.embassy_txt != null) return pplayer.embassy_txt;
-  return "";
+  return '';
 }
 
 export function get_ai_level_text(player: Player): string {
-  if (player.ai_skill_level === 0) return "Away";
-  if (player.ai_skill_level === 1) return "Handicapped";
-  if (player.ai_skill_level === 2) return "Novice";
-  if (player.ai_skill_level === 3) return "Easy";
-  if (player.ai_skill_level === 4) return "Normal";
-  if (player.ai_skill_level === 5) return "Hard";
-  if (player.ai_skill_level === 6) return "Cheating";
-  if (player.ai_skill_level === 7) return "Experimental";
-  return "";
+  if (player.ai_skill_level === 0) return 'Away';
+  if (player.ai_skill_level === 1) return 'Handicapped';
+  if (player.ai_skill_level === 2) return 'Novice';
+  if (player.ai_skill_level === 3) return 'Easy';
+  if (player.ai_skill_level === 4) return 'Normal';
+  if (player.ai_skill_level === 5) return 'Hard';
+  if (player.ai_skill_level === 6) return 'Cheating';
+  if (player.ai_skill_level === 7) return 'Experimental';
+  return '';
 }
 
 export function get_player_connection_status(pplayer: Player): string {
-  if (pplayer == null) return "";
+  if (pplayer == null) return '';
 
   for (const cid in connections) {
     const pconn = connections[cid];
     if (pconn.playing != null && pconn.playing.playerno === pplayer.playerno) {
-      return "connected";
+      return 'connected';
     }
   }
 
-  if (pplayer.ai_skill_level > 0) return "AI";
-  return "disconnected";
+  if (pplayer.ai_skill_level > 0) return 'AI';
+  return 'disconnected';
 }
 
 export function research_get(pplayer: Player): any | null {
@@ -135,8 +135,11 @@ export function research_get(pplayer: Player): any | null {
 export function player_has_wonder(playerno: number, improvement_id: number): boolean {
   for (const city_id in cities) {
     const pcity = cities[city_id] as City;
-    if (pcity.owner === playerno && pcity.improvements != null
-        && pcity.improvements[improvement_id] === true) {
+    if (
+      pcity.owner === playerno &&
+      pcity.improvements != null &&
+      pcity.improvements[improvement_id] === true
+    ) {
       return true;
     }
   }
@@ -145,22 +148,22 @@ export function player_has_wonder(playerno: number, improvement_id: number): boo
 
 export function get_invalid_username_reason(username: string): string | null {
   if (username == null || username.length === 0) {
-    return "Username cannot be empty.";
+    return 'Username cannot be empty.';
   }
   if (username.length < 3) {
-    return "Username must be at least 3 characters.";
+    return 'Username must be at least 3 characters.';
   }
   if (username.length > 32) {
-    return "Username must be at most 32 characters.";
+    return 'Username must be at most 32 characters.';
   }
   if (/\s/.test(username)) {
-    return "Username cannot contain spaces.";
+    return 'Username cannot contain spaces.';
   }
   if (!/^[a-zA-Z]/.test(username)) {
-    return "Username must start with a letter.";
+    return 'Username must start with a letter.';
   }
   if (!/^[a-zA-Z0-9_.-]+$/.test(username)) {
-    return "Username can only contain letters, numbers, underscores, hyphens, and periods.";
+    return 'Username can only contain letters, numbers, underscores, hyphens, and periods.';
   }
   return null;
 }

@@ -12,16 +12,16 @@ let gotoActive = false;
 let focusedUnitId: number | null = null;
 
 const HOTKEYS: Record<string, () => void> = {
-  'g': activateGoto,
-  'x': () => sendUnitOrder('explore'),
-  'f': () => sendUnitOrder('fortify'),
-  'b': () => sendUnitOrder('build_city'),
-  's': () => sendUnitOrder('sentry'),
-  'r': () => sendUnitOrder('road'),
-  'i': () => sendUnitOrder('irrigate'),
-  'm': () => sendUnitOrder('mine'),
-  'a': () => sendUnitOrder('auto_work'),
-  'w': () => sendUnitOrder('wait'),
+  g: activateGoto,
+  x: () => sendUnitOrder('explore'),
+  f: () => sendUnitOrder('fortify'),
+  b: () => sendUnitOrder('build_city'),
+  s: () => sendUnitOrder('sentry'),
+  r: () => sendUnitOrder('road'),
+  i: () => sendUnitOrder('irrigate'),
+  m: () => sendUnitOrder('mine'),
+  a: () => sendUnitOrder('auto_work'),
+  w: () => sendUnitOrder('wait'),
   ' ': advanceUnitFocus,
 };
 
@@ -109,8 +109,9 @@ function advanceUnitFocus(): void {
   const myPlayerno = store.client.conn.playing?.playerno;
   if (myPlayerno == null) return;
 
-  const myUnits = Object.values(store.units)
-    .filter((u) => u.owner === myPlayerno && !u.done_moving && u.movesleft > 0);
+  const myUnits = Object.values(store.units).filter(
+    (u) => u.owner === myPlayerno && !u.done_moving && u.movesleft > 0,
+  );
 
   if (myUnits.length === 0) return;
 
@@ -122,17 +123,17 @@ function advanceUnitFocus(): void {
 
 function setupOrderButtons(): void {
   const orders: Record<string, () => void> = {
-    'order_goto': activateGoto,
-    'order_explore': () => sendUnitOrder('explore'),
-    'order_fortify': () => sendUnitOrder('fortify'),
-    'order_sentry': () => sendUnitOrder('sentry'),
-    'order_build_city': () => sendUnitOrder('build_city'),
-    'order_road': () => sendUnitOrder('road'),
-    'order_irrigate': () => sendUnitOrder('irrigate'),
-    'order_mine': () => sendUnitOrder('mine'),
-    'order_auto_workers': () => sendUnitOrder('auto_work'),
-    'order_disband': () => sendUnitOrder('disband'),
-    'order_pillage': () => sendUnitOrder('pillage'),
+    order_goto: activateGoto,
+    order_explore: () => sendUnitOrder('explore'),
+    order_fortify: () => sendUnitOrder('fortify'),
+    order_sentry: () => sendUnitOrder('sentry'),
+    order_build_city: () => sendUnitOrder('build_city'),
+    order_road: () => sendUnitOrder('road'),
+    order_irrigate: () => sendUnitOrder('irrigate'),
+    order_mine: () => sendUnitOrder('mine'),
+    order_auto_workers: () => sendUnitOrder('auto_work'),
+    order_disband: () => sendUnitOrder('disband'),
+    order_pillage: () => sendUnitOrder('pillage'),
   };
 
   for (const [id, handler] of Object.entries(orders)) {

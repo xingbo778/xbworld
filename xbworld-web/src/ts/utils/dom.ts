@@ -74,7 +74,11 @@ export function delegate(
   });
 }
 
-export function create(tag: string, attrs?: Record<string, string>, parent?: HTMLElement): HTMLElement {
+export function create(
+  tag: string,
+  attrs?: Record<string, string>,
+  parent?: HTMLElement,
+): HTMLElement {
   const el = document.createElement(tag);
   if (attrs) {
     for (const [k, v] of Object.entries(attrs)) {

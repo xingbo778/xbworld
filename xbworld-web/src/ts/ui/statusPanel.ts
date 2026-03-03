@@ -5,7 +5,7 @@
 
 import { store } from '../data/store';
 import { $id, setHtml, show, hide, setCSS } from '../utils/dom';
-import { numberWithCommas, isSmallScreen, secondsToHumanTime } from '../utils/helpers';
+import { numberWithCommas, isSmallScreen } from '../utils/helpers';
 import { globalEvents } from '../core/events';
 
 export function initStatusPanel(): void {
@@ -26,9 +26,8 @@ export function updateGameStatusPanel(): void {
     const tax = player.tax;
     const lux = player.luxury;
     const sci = player.science;
-    const netIncome = player.expected_income >= 0
-      ? `+${player.expected_income}`
-      : `${player.expected_income}`;
+    const netIncome =
+      player.expected_income >= 0 ? `+${player.expected_income}` : `${player.expected_income}`;
     const negClass = player.expected_income < 0 ? ' class="negative_net_income"' : '';
 
     if (!isSmallScreen()) {
@@ -50,7 +49,10 @@ export function updateGameStatusPanel(): void {
   const panelBottom = $id('game_status_panel_bottom');
 
   if (window.innerWidth > 800) {
-    if (panelTop) { show(panelTop); setHtml(panelTop, html); }
+    if (panelTop) {
+      show(panelTop);
+      setHtml(panelTop, html);
+    }
     if (panelBottom) hide(panelBottom);
   } else {
     if (panelTop) hide(panelTop);
@@ -84,9 +86,7 @@ export function getYearString(): string {
   } else {
     year = `${gi.year}${ci?.positive_year_label ?? ' AD'}`;
   }
-  return isSmallScreen()
-    ? `${year} (T:${gi.turn})`
-    : `${year} (Turn:${gi.turn})`;
+  return isSmallScreen() ? `${year} (T:${gi.turn})` : `${year} (Turn:${gi.turn})`;
 }
 
 export function currentTurnTimeout(): number {

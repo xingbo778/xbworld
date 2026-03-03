@@ -4,6 +4,9 @@
  * These declarations let TypeScript code safely reference globals that
  * are defined in the legacy webclient.min.js bundle. As modules are
  * migrated to TS, their declarations should be removed from this file.
+ *
+ * IMPORTANT: Do NOT add declarations here for functions/variables that
+ * already have TypeScript implementations in src/ts/. Use imports instead.
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -132,9 +135,6 @@ declare function client_is_observer(): boolean;
 // ---------------------------------------------------------------------------
 // Core functions — network
 // ---------------------------------------------------------------------------
-declare function numberWithCommas(x: number | string): string;
-declare function is_small_screen(): boolean;
-
 declare function send_request(packet: string): void;
 declare function send_message(msg: string): void;
 declare function network_init(): void;
@@ -143,6 +143,8 @@ declare function check_websocket_ready(): void;
 
 // ---------------------------------------------------------------------------
 // Core functions — map & tiles
+// (index_to_tile, map_pos_to_tile, mapstep are also in data/map.ts;
+//  tile_units is also in data/unit.ts — kept here for legacy JS callers)
 // ---------------------------------------------------------------------------
 declare function index_to_tile(index: number): any;
 declare function map_pos_to_tile(x: number, y: number): any;
@@ -155,6 +157,8 @@ declare function canvas_pos_to_tile(x: number, y: number): any;
 
 // ---------------------------------------------------------------------------
 // Core functions — units
+// (unit_type, unit_owner also in data/unit.ts;
+//  game_find_unit_by_number also in data/game.ts — kept for legacy JS)
 // ---------------------------------------------------------------------------
 declare function unit_type(unit: any): any;
 declare function unit_owner(unit: any): any;
@@ -202,7 +206,37 @@ declare function request_new_unit_activity(unit: any, activity: number): void;
 declare function action_by_number(action_id: number): any;
 declare function action_has_result(paction: any, result: number): boolean;
 declare function player_invention_state(player: any, tech_id: number): number;
+declare function utype_can_do_action(putype: any, action_id: number): boolean;
+declare function numberWithCommas(n: number | string): string;
+declare function is_small_screen(): boolean;
+
+// ---------------------------------------------------------------------------
+// Legacy functions referenced by migrated modules
+// ---------------------------------------------------------------------------
+declare function control_unit_killed(punit: any): void;
+declare function unit_is_in_focus(punit: any): boolean;
+declare function webgl_clear_unit_focus(): void;
+declare function map_to_gui_pos(x: number, y: number): { gui_dx: number; gui_dy: number };
+declare function tile_has_extra(ptile: any, extra_id: number): boolean;
+declare function is_extra_removed_by(extra: any, cause: number): boolean;
+declare function city_owner_player_id(city: any): number;
+declare function city_has_building(city: any, improvement_id: number): boolean;
+declare function check_text_with_banlist_exact(text: string): boolean;
+declare function is_primary_capital(city: any): boolean;
+
+// ---------------------------------------------------------------------------
+// Legacy constants
+// ---------------------------------------------------------------------------
 declare const TECH_KNOWN: number;
+declare const ACTION_PILLAGE: number;
+declare const ACTIVITY_PILLAGE: number;
+declare const VUT_EXTRA: number;
+declare const ERM_PILLAGE: number;
+declare const EXTRA_NONE: number;
+declare const O_FOOD: number;
+declare const O_SHIELD: number;
+declare const O_GOLD: number;
+declare const ACTION_COUNT: number;
 
 // ---------------------------------------------------------------------------
 // Packet handling
@@ -237,48 +271,9 @@ declare const bmp_lib: {
 };
 
 // ---------------------------------------------------------------------------
-// Legacy functions referenced by migrated modules
+// BitVector — also implemented in utils/bitvector.ts; this declaration is
+// for legacy JS that creates BitVector via `new BitVector(data)`.
 // ---------------------------------------------------------------------------
-declare function control_unit_killed(punit: any): void;
-declare function unit_is_in_focus(punit: any): boolean;
-declare function webgl_clear_unit_focus(): void;
-declare function map_to_gui_pos(x: number, y: number): { gui_dx: number; gui_dy: number };
-declare function tile_has_extra(ptile: any, extra_id: number): boolean;
-declare function is_extra_removed_by(extra: any, cause: number): boolean;
-declare function action_by_number(act_id: number): any;
-declare function action_has_result(paction: any, result: number): boolean;
-declare function player_invention_state(player: any, tech_id: number): number;
-declare function city_population(pcity: any): number;
-declare function numberWithCommas(n: number): string;
-declare function is_small_screen(): boolean;
-declare function show_tax_rates_dialog(): void;
-declare function city_owner_player_id(city: any): number;
-declare function city_has_building(city: any, improvement_id: number): boolean;
-declare function city_owner(city: any): any;
-declare function check_text_with_banlist_exact(text: string): boolean;
-declare function is_primary_capital(city: any): boolean;
-declare function utype_can_do_action(putype: any, action_id: number): boolean;
-
-// Legacy constants
-declare const TECH_KNOWN: number;
-declare const ACTION_PILLAGE: number;
-declare const ACTIVITY_PILLAGE: number;
-declare const VUT_EXTRA: number;
-declare const ERM_PILLAGE: number;
-declare const EXTRA_NONE: number;
-declare const O_FOOD: number;
-declare const O_SHIELD: number;
-declare const O_GOLD: number;
-declare const ACTION_COUNT: number;
-
-// Additional globals
-declare let calendar_info: any;
-declare let game_rules: any;
-declare let resources: Record<number, any>;
-declare let server_settings: Record<string, any>;
-declare let ruleset_summary: string | null;
-declare let ruleset_description: string | null;
-
 declare class BitVector {
   constructor(data: any[]);
   isSet(index: number): boolean;

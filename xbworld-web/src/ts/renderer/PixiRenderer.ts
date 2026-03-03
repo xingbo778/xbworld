@@ -6,8 +6,8 @@
 import { Application, Container, Sprite, Texture, Assets, Graphics } from 'pixi.js';
 import { store } from '../data/store';
 import { globalEvents } from '../core/events';
-import { TILE_KNOWN_SEEN, TILE_KNOWN_UNSEEN, tileGetKnown } from '../data/tile';
-import { mapPosToTile, Direction, DIR_DX, DIR_DY } from '../data/map';
+import { TILE_KNOWN_UNSEEN, tileGetKnown } from '../data/tile';
+import { mapPosToTile } from '../data/map';
 import { logNormal, logError } from '../core/log';
 import type { Tile } from '../data/types';
 
@@ -21,34 +21,48 @@ const DEFAULT_TILE_W = 96;
 const DEFAULT_TILE_H = 48;
 
 const TERRAIN_COLORS: Record<string, number> = {
-  grassland: 0x7CCD7C, grass: 0x7CCD7C,
-  plains: 0xCDB79E, plain: 0xCDB79E,
-  ocean: 0x1E5090, deep_ocean: 0x0A2A5E,
-  lake: 0x4682B4,
-  coast: 0x4A90D9,
-  desert: 0xEDC9AF, desert2: 0xEDC9AF,
-  forest: 0x2E8B57,
-  hills: 0x8B7355,
-  mountains: 0x8B8378, mountain: 0x8B8378,
+  grassland: 0x7ccd7c,
+  grass: 0x7ccd7c,
+  plains: 0xcdb79e,
+  plain: 0xcdb79e,
+  ocean: 0x1e5090,
+  deep_ocean: 0x0a2a5e,
+  lake: 0x4682b4,
+  coast: 0x4a90d9,
+  desert: 0xedc9af,
+  desert2: 0xedc9af,
+  forest: 0x2e8b57,
+  hills: 0x8b7355,
+  mountains: 0x8b8378,
+  mountain: 0x8b8378,
   jungle: 0x006400,
-  swamp: 0x556B2F,
-  tundra: 0xB0C4DE,
-  arctic: 0xF0F8FF, glacier: 0xE0E8F0,
+  swamp: 0x556b2f,
+  tundra: 0xb0c4de,
+  arctic: 0xf0f8ff,
+  glacier: 0xe0e8f0,
   inaccessible: 0x333333,
 };
 
 const TERRAIN_COLORS_BY_ID: Record<number, number> = {
-  0: 0x4A90D9, 1: 0x1E5090, 2: 0xEDC9AF, 3: 0x2E8B57,
-  4: 0x7CCD7C, 5: 0x8B7355, 6: 0x006400, 7: 0x8B8378,
-  8: 0xCDB79E, 9: 0x556B2F, 10: 0xB0C4DE, 11: 0xF0F8FF,
-  12: 0x4682B4, 13: 0x0A2A5E,
+  0: 0x4a90d9,
+  1: 0x1e5090,
+  2: 0xedc9af,
+  3: 0x2e8b57,
+  4: 0x7ccd7c,
+  5: 0x8b7355,
+  6: 0x006400,
+  7: 0x8b8378,
+  8: 0xcdb79e,
+  9: 0x556b2f,
+  10: 0xb0c4de,
+  11: 0xf0f8ff,
+  12: 0x4682b4,
+  13: 0x0a2a5e,
 };
 
 const PLAYER_COLORS = [
-  0xFF0000, 0x0000FF, 0x00CC00, 0xFFFF00,
-  0xFF00FF, 0x00FFFF, 0xFF8800, 0x8800FF,
-  0x88FF00, 0xFF0088, 0x0088FF, 0x888888,
-  0xFFBB00, 0x00FF88, 0xBB00FF, 0xFF4444,
+  0xff0000, 0x0000ff, 0x00cc00, 0xffff00, 0xff00ff, 0x00ffff, 0xff8800, 0x8800ff, 0x88ff00,
+  0xff0088, 0x0088ff, 0x888888, 0xffbb00, 0x00ff88, 0xbb00ff, 0xff4444,
 ];
 
 export class PixiRenderer {
@@ -210,7 +224,7 @@ export class PixiRenderer {
     }
     const terrainData = store.terrains[terrainId];
     const name = terrainData?.graphic_str ?? terrainData?.name?.toLowerCase() ?? '';
-    const color = TERRAIN_COLORS[name] ?? TERRAIN_COLORS_BY_ID[terrainId] ?? 0x228B22;
+    const color = TERRAIN_COLORS[name] ?? TERRAIN_COLORS_BY_ID[terrainId] ?? 0x228b22;
     const g = new Graphics();
     g.rect(0, 0, this.tileW, this.tileH).fill(color);
     const tex = this.app.renderer.generateTexture(g);
@@ -318,7 +332,7 @@ export class PixiRenderer {
     const w = Math.floor(this.tileW * 0.6);
     const h = Math.floor(this.tileH * 0.8);
     const g = new Graphics();
-    g.roundRect(0, 0, w, h, 4).fill(color).stroke({ width: 2, color: 0xFFFFFF });
+    g.roundRect(0, 0, w, h, 4).fill(color).stroke({ width: 2, color: 0xffffff });
     const tex = this.app.renderer.generateTexture(g);
     this.cityColorTextures.set(owner, tex);
     return tex;
@@ -414,13 +428,17 @@ export class PixiRenderer {
       this.isDragging = false;
     });
 
-    canvas.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      // Scroll to pan
-      this.viewX += e.deltaX;
-      this.viewY += e.deltaY;
-      this.renderAll();
-    }, { passive: false });
+    canvas.addEventListener(
+      'wheel',
+      (e) => {
+        e.preventDefault();
+        // Scroll to pan
+        this.viewX += e.deltaX;
+        this.viewY += e.deltaY;
+        this.renderAll();
+      },
+      { passive: false },
+    );
   }
 
   private renderScheduled = false;

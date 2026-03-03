@@ -49,7 +49,9 @@ export function registerGameHandlers(): void {
 
   registerHandler(PacketType.TIMEOUT_INFO, (packet) => {
     if (store.gameInfo) {
-      (store.gameInfo as Record<string, unknown>).timeout = (packet as Record<string, unknown>).timeout;
+      (store.gameInfo as Record<string, unknown>).timeout = (
+        packet as Record<string, unknown>
+      ).timeout;
     }
   });
 

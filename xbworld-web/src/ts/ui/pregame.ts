@@ -4,11 +4,10 @@
  */
 
 import { store } from '../data/store';
-import { globalEvents } from '../core/events';
-import { $id, on, show, hide, setHtml } from '../utils/dom';
+import { $id, on, show } from '../utils/dom';
 import { getUrlVar, isSmallScreen } from '../utils/helpers';
 import { networkInit, networkInitManualHack, sendMessage } from '../net/connection';
-import { showDialog, closeDialog, showAlert } from './dialogs';
+import { showDialog, closeDialog } from './dialogs';
 
 export function initPregame(): void {
   const startBtn = $id('start_game_button');
@@ -67,8 +66,10 @@ export function initCommonIntroDialog(): void {
   const action = getUrlVar('action');
 
   if (store.observing) {
-    showIntroDialog('Welcome to XBWorld',
-      'You have joined the game as an observer. Please enter your name:');
+    showIntroDialog(
+      'Welcome to XBWorld',
+      'You have joined the game as an observer. Please enter your name:',
+    );
     return;
   }
 
@@ -85,14 +86,20 @@ export function initCommonIntroDialog(): void {
   }
 
   if (action === 'multi') {
-    showIntroDialog('Welcome to XBWorld',
-      'You are about to join a multiplayer game. Customize settings and wait for players.');
+    showIntroDialog(
+      'Welcome to XBWorld',
+      'You are about to join a multiplayer game. Customize settings and wait for players.',
+    );
   } else if (action === 'load') {
-    showIntroDialog('Welcome to XBWorld',
-      'Load a savegame, tutorial, or scenario map. Please enter your name:');
+    showIntroDialog(
+      'Welcome to XBWorld',
+      'Load a savegame, tutorial, or scenario map. Please enter your name:',
+    );
   } else {
-    showIntroDialog('Welcome to XBWorld',
-      'Play a singleplayer game against the XBWorld AI. Enter your name to start:');
+    showIntroDialog(
+      'Welcome to XBWorld',
+      'Play a singleplayer game against the XBWorld AI. Enter your name to start:',
+    );
   }
 }
 

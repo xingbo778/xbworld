@@ -47,3 +47,6 @@ xbworld-web/playwright-report/
 
 # Data directory runtime files
 data/savegames/
+
+# Vite-built TS bundle (generated during Docker build)
+xbworld-web/src/main/webapp/javascript/ts-bundle/

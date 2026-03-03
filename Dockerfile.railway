@@ -2,7 +2,6 @@
 # Stage 1: Build the freeciv-web C server binary
 ###############################################################################
 FROM debian:bookworm AS builder
-
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
         build-essential \
@@ -19,11 +18,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
         libsqlite3-dev \
         zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
-
 COPY freeciv/ /build/freeciv/
-
 WORKDIR /build/freeciv
-
 # If submodule source is missing (GitHub deploy without --recurse-submodules),
 # clone it directly
 RUN if [ ! -f freeciv/meson.build ]; then \
@@ -31,7 +27,6 @@ RUN if [ ! -f freeciv/meson.build ]; then \
         git clone --depth 1 --branch xbworld \
             https://github.com/xingbo778/freeciv.git freeciv; \
     fi
-
 RUN meson setup build freeciv -Dserver='freeciv-web' \
         -Dclients=[] -Dfcmp=cli -Djson-protocol=true -Dnls=false \
         -Daudio=none -Dtools=manual \
@@ -45,12 +40,9 @@ RUN meson setup build freeciv -Dserver='freeciv-web' \
 # Stage 2: Generate tileset images from freeciv source data
 ###############################################################################
 FROM python:3.11-slim-bookworm AS tileset-builder
-
 RUN pip install --no-cache-dir Pillow
-
 COPY scripts/freeciv-img-extract/ /build/scripts/
 COPY freeciv/ /build/freeciv/
-
 # If submodule source is missing, clone it
 RUN if [ ! -f /build/freeciv/freeciv/data/amplio2.tilespec ]; then \
         rm -rf /build/freeciv/freeciv && \
@@ -59,17 +51,28 @@ RUN if [ ! -f /build/freeciv/freeciv/data/amplio2.tilespec ]; then \
             https://github.com/xingbo778/freeciv.git /build/freeciv/freeciv && \
         rm -rf /var/lib/apt/lists/*; \
     fi
-
 RUN mkdir -p /build/out && \
     python3 /build/scripts/img-extract.py \
         -f /build/freeciv/freeciv \
         -o /build/out
 
 ###############################################################################
-# Stage 3: Slim runtime image
+# Stage 3: Build TypeScript modules with Vite
+###############################################################################
+FROM node:22-slim AS ts-builder
+WORKDIR /build/xbworld-web
+COPY xbworld-web/package.json xbworld-web/package-lock.json ./
+RUN npm ci
+COPY xbworld-web/src/ts/ ./src/ts/
+COPY xbworld-web/vite.config.ts xbworld-web/tsconfig.json ./
+# Build TS modules into src/main/webapp/javascript/ts-bundle/
+RUN mkdir -p src/main/webapp/javascript/ts-bundle && \
+    npx vite build
+
+###############################################################################
+# Stage 4: Slim runtime image
 ###############################################################################
 FROM python:3.11-slim-bookworm
-
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
         libcurl4 \
@@ -80,32 +83,25 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
         libzstd1 \
         zlib1g \
     && rm -rf /var/lib/apt/lists/*
-
 COPY --from=builder /opt/freeciv /opt/freeciv
-
 COPY xbworld-agent/ /app/xbworld-agent/
 COPY data/ /app/data/
 COPY xbworld-web/src/main/webapp/ /app/xbworld-web/src/main/webapp/
-
 # Copy generated tileset PNGs and spec JS into the webapp
 COPY --from=tileset-builder /build/out/xbworld-tileset-amplio2-*.png \
      /app/xbworld-web/src/main/webapp/tileset/
 COPY --from=tileset-builder /build/out/tileset_spec_amplio2.js \
      /app/xbworld-web/src/main/webapp/javascript/2dcanvas/
-
+# Copy Vite-built TS bundle into the webapp
+COPY --from=ts-builder /build/xbworld-web/src/main/webapp/javascript/ts-bundle/ \
+     /app/xbworld-web/src/main/webapp/javascript/ts-bundle/
 WORKDIR /app/xbworld-agent
-
 RUN pip install --no-cache-dir -r requirements.txt
-
 RUN useradd -m -s /bin/bash xbworld && \
     chown -R xbworld:xbworld /app /opt/freeciv
-
 ENV FREECIV_BIN=/opt/freeciv/bin/freeciv-web \
     FREECIV_DATA_PATH=/opt/freeciv/share/freeciv/ \
     PYTHONUNBUFFERED=1
-
 USER xbworld
-
 EXPOSE 8080
-
 CMD ["python3", "server.py", "--host", "0.0.0.0"]

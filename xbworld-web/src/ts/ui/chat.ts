@@ -3,7 +3,7 @@
  * Migrated from messages.js.
  */
 
-import { $id, on, create, setHtml } from '../utils/dom';
+import { $id, on } from '../utils/dom';
 import { globalEvents, ThrottledEmitter } from '../core/events';
 import { sendMessage } from '../net/connection';
 
@@ -49,7 +49,7 @@ export function initChat(): void {
   globalEvents.on<Record<string, unknown>>('chat:message', (packet) => {
     addMessage({
       event: packet?.['event'] as number,
-      message: packet?.['message'] as string ?? '',
+      message: (packet?.['message'] as string) ?? '',
       timestamp: Date.now(),
     });
   });
@@ -71,9 +71,7 @@ function renderMessages(): void {
   if (!target) return;
 
   const last20 = messageHistory.slice(-20);
-  const html = last20
-    .map((m) => `<li>${escapeHtml(m.message)}</li>`)
-    .join('');
+  const html = last20.map((m) => `<li>${escapeHtml(m.message)}</li>`).join('');
   target.innerHTML = html;
   target.scrollTop = target.scrollHeight;
 }

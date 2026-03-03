@@ -172,20 +172,18 @@ export function get_unit_moves_left(punit: Unit | null): string | 0 {
     return 0;
   }
 
-  return "Moves:" + move_points_text(punit.movesleft);
+  return 'Moves:' + move_points_text(punit.movesleft);
 }
 
 export function move_points_text(moves: number): string {
   let result: string;
 
-  if ((moves % SINGLE_MOVE) !== 0) {
+  if (moves % SINGLE_MOVE !== 0) {
     if (Math.floor(moves / SINGLE_MOVE) > 0) {
-      result = Math.floor(moves / SINGLE_MOVE)
-               + " " + Math.floor(moves % SINGLE_MOVE)
-               + "/" + SINGLE_MOVE;
+      result =
+        Math.floor(moves / SINGLE_MOVE) + ' ' + Math.floor(moves % SINGLE_MOVE) + '/' + SINGLE_MOVE;
     } else {
-      result = Math.floor(moves % SINGLE_MOVE)
-               + "/" + SINGLE_MOVE;
+      result = Math.floor(moves % SINGLE_MOVE) + '/' + SINGLE_MOVE;
     }
   } else {
     result = String(Math.floor(moves / SINGLE_MOVE));
@@ -203,7 +201,7 @@ export function unit_has_goto(punit: Unit): boolean {
     return false;
   }
 
-  return (punit.goto_tile !== -1);
+  return punit.goto_tile !== -1;
 }
 
 // ---------------------------------------------------------------------------
@@ -331,9 +329,12 @@ export function is_unit_visible(punit: Unit | null): boolean {
   const unit_gui_x: number = r['gui_dx'];
   const unit_gui_y: number = r['gui_dy'];
 
-  if (unit_gui_x < mapview['gui_x0'] || unit_gui_y < mapview['gui_y0']
-      || unit_gui_x > mapview['gui_x0'] + mapview['width']
-      || unit_gui_y > mapview['gui_y0'] + mapview['height']) {
+  if (
+    unit_gui_x < mapview['gui_x0'] ||
+    unit_gui_y < mapview['gui_y0'] ||
+    unit_gui_x > mapview['gui_x0'] + mapview['width'] ||
+    unit_gui_y > mapview['gui_y0'] + mapview['height']
+  ) {
     return false;
   }
 
@@ -370,19 +371,22 @@ export function unittype_ids_alphabetic(): string[] {
 // ---------------------------------------------------------------------------
 
 export function get_unit_city_info(punit: Unit): string {
-  let result = "";
+  let result = '';
 
   const ptype = unit_type(punit);
 
-  result += ptype!['name'] + "\nFood/Shield/Gold: ";
+  result += ptype!['name'] + '\nFood/Shield/Gold: ';
 
   if ((punit as any)['upkeep'] != null) {
-    result += (punit as any)['upkeep'][O_FOOD] + "/"
-           + (punit as any)['upkeep'][O_SHIELD] + "/"
-           + (punit as any)['upkeep'][O_GOLD];
+    result +=
+      (punit as any)['upkeep'][O_FOOD] +
+      '/' +
+      (punit as any)['upkeep'][O_SHIELD] +
+      '/' +
+      (punit as any)['upkeep'][O_GOLD];
   }
 
-  result += "\n" + get_unit_moves_left(punit) + "\n";
+  result += '\n' + get_unit_moves_left(punit) + '\n';
 
   const homecity = get_unit_homecity_name(punit);
   if (homecity != null) {
@@ -431,8 +435,7 @@ export function get_what_can_unit_pillage_from(punit: Unit | null, ptile: any): 
   }
 
   for (let i = 0; i < ruleset_control['num_extra_types']; i++) {
-    if (is_extra_removed_by(extras[i], ERM_PILLAGE)
-        && !cannot_pillage.isSet(i)) {
+    if (is_extra_removed_by(extras[i], ERM_PILLAGE) && !cannot_pillage.isSet(i)) {
       if (game_info!.pillage_select) {
         targets.push(i);
       } else {

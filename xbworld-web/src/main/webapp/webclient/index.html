@@ -188,6 +188,9 @@ var ts = Date.now();
 <!-- Legacy game client bundle (all game logic + 2D Canvas renderer) -->
 <script src="/javascript/webclient.min.js"></script>
 
+<!-- New TypeScript modules (built by Vite, loaded after legacy JS) -->
+<script type="module" src="/javascript/ts-bundle/main.js"></script>
+
 <!--
   Patch: Override network_init to read port from JSON body (not just headers),
   and handle the WebSocket proxy's array-wrapped packets.

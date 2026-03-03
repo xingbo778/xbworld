@@ -3,7 +3,7 @@ import { resolve } from 'path';
 
 export default defineConfig({
   root: '.',
-  publicDir: resolve(__dirname, 'src/main/webapp/static'),
+  publicDir: false,
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src/ts'),
@@ -11,13 +11,19 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist/webclient',
+    outDir: resolve(__dirname, 'src/main/webapp/javascript/ts-bundle'),
     emptyOutDir: true,
     sourcemap: true,
+    lib: {
+      entry: resolve(__dirname, 'src/ts/main.ts'),
+      formats: ['es'],
+      fileName: 'main',
+    },
     rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'src/main/webapp/webclient/index.html'),
-      },
+      // PixiJS is only used by the new renderer (not yet active in prod);
+      // mark it external so the bundle stays small and doesn't fail if
+      // pixi.js is not installed in the Docker build.
+      external: ['pixi.js'],
     },
     target: 'es2022',
     minify: 'esbuild',
