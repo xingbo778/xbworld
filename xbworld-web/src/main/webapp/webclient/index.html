@@ -265,6 +265,38 @@ var FEELING_BASE=0,FEELING_LUXURY=1,FEELING_EFFECT=2,FEELING_NATIONALITY=3,FEELI
 var MAX_LEN_WORKLIST=64,INCITE_IMPOSSIBLE_COST=1e9;
 // Phase 8 shim: unit globals (originally from unit.js, now defined in webclient.min.js)
 var units={},SINGLE_MOVE,ANIM_STEPS=8,anim_units_max=30,anim_units_count=0;
+// Phase 10 shim: control.js globals
+var mouse_x,mouse_y,prev_mouse_x,prev_mouse_y;
+var keyboard_input=true,unitpanel_active=false,allow_right_click=false,mapview_mouse_movement=false;
+var roads=[],bases=[],current_focus=[],urgent_focus_queue=[];
+var goto_active=false,paradrop_active=false,airlift_active=false,action_tgt_sel_active=false;
+var goto_last_order=-1,goto_last_action=-1;
+var SELECT_POPUP=0,SELECT_SEA=1,SELECT_LAND=2,SELECT_APPEND=3;
+var intro_click_description=true,resize_enabled=true;
+var goto_request_map={},goto_turns_request_map={},current_goto_turns=0;
+var waiting_units_list=[],show_citybar=true,context_menu_active=true;
+var has_movesleft_warning_been_shown=false,game_unit_panel_state=null;
+var chat_send_to=-1;
+var CHAT_ICON_EVERYBODY=String.fromCharCode(62075),CHAT_ICON_ALLIES=String.fromCharCode(61746);
+var end_turn_info_message_shown=false,action_selection_in_progress_for=0,is_more_user_input_needed=false;
+// Phase 10 shim: action_dialog.js globals
+var auto_attack=false,action_selection_restart=false,did_not_decide=false;
+// Phase 10 shim: diplomacy.js globals
+var CLAUSE_ADVANCE=0,CLAUSE_GOLD=1,CLAUSE_MAP=2,CLAUSE_SEAMAP=3,CLAUSE_CITY=4;
+var CLAUSE_CEASEFIRE=5,CLAUSE_PEACE=6,CLAUSE_ALLIANCE=7,CLAUSE_VISION=8,CLAUSE_EMBASSY=9;
+var CLAUSE_SHARED_TILES=10,SPECENUM_COUNT=11,clause_infos={},diplomacy_clause_map={};
+// Phase 10 shim: helpdata.js globals
+var toplevel_menu_items=["help_terrain","help_economy","help_cities","help_units","help_improvements","help_wonders","help_tech","help_governments","help_about"];
+var hidden_menu_items=["help_connecting","help_languages","help_governor","help_chatline","help_worklist"];
+// Phase 10 shim: messages.js globals
+var chatbox_active=true,previous_scroll=0,current_message_dialog_state=null,max_chat_message_length=350;
+// Phase 10 shim: cma.js globals
+var _cma_val_sliders=[1,0,0,0,0,0],_cma_min_sliders=[0,0,0,0,0,0],_cma_happy_slider=0;
+var _cma_celebrate=false,_cma_allow_disorder=false,_cma_max_growth=false,_cma_allow_specialists=true;
+// Phase 11 shim: mapctrl.js globals
+var touch_start_x,touch_start_y,map_select_setting_enabled=true,map_select_check=false;
+var map_select_check_started=0,map_select_active=false,map_select_x,map_select_y;
+var mouse_touch_started_on_unit=false;
 </script>
 <!-- Tier 1: Data layer -->
 <!-- bitvector.js REMOVED Phase 7.5 — replaced by ts/utils/bitvector.ts (exposes BitVector to window) -->
@@ -280,7 +312,7 @@ var units={},SINGLE_MOVE,ANIM_STEPS=8,anim_units_max=30,anim_units_count=0;
 <!-- extra.js: REMOVED Phase 10 — migrated to src/ts/data/extra.ts -->
 <!-- improvement.js: REMOVED Phase 9 — migrated to src/ts/data/improvement.ts -->
 <!-- requirements.js REMOVED Phase 7.5 — replaced by ts/data/requirements.ts (REQ_RANGE_* in fcTypes.ts) -->
-<script src="/javascript/nation.js"></script>
+<!-- nation.js REMOVED Phase 9/10 — all 18 functions fully migrated to ts/data/nation.ts -->
 <!-- city.js REMOVED Phase 8 — migrated to ts/data/city.ts -->
 <!-- tech.js REMOVED Phase 8 — migrated to ts/data/tech.ts -->
 <!-- government.js REMOVED Phase 7.5 — all fns in webclient.min.js; data fns in ts/data/government.ts -->
