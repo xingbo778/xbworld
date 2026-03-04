@@ -252,13 +252,26 @@ var MATCH_NONE = 0, MATCH_SAME = 1, MATCH_PAIR = 2, MATCH_FULL = 3;
 var CELL_WHOLE = 0, CELL_CORNER = 1;
 var DARKNESS_NONE = 0, DARKNESS_ISORECT = 1, DARKNESS_CARD_SINGLE = 2,
     DARKNESS_CARD_FULL = 3, DARKNESS_CORNER = 4;
+// Phase 8 shim: DIR8_* constants (originally from map.js, now defined in webclient.min.js line 722)
+// tilespec.js and control.js reference these at parse time, before webclient.min.js loads.
+var DIR8_NORTHWEST=0,DIR8_NORTH=1,DIR8_NORTHEAST=2,DIR8_WEST=3,DIR8_EAST=4,DIR8_SOUTHWEST=5,DIR8_SOUTH=6,DIR8_SOUTHEAST=7,DIR8_LAST=8,DIR8_COUNT=DIR8_LAST;
+var WRAP_X=1,WRAP_Y=2,TF_ISO=1,TF_HEX=2;
+var T_NONE=0,T_UNKNOWN=0,T_FIRST=0;
+// Phase 8 shim: city globals (originally from city.js, now defined in webclient.min.js line 121)
+// control.js and cma.js reference these at parse time.
+var active_city=null,worklist_dialog_active=false,production_selection=[],worklist_selection=[];
+var CITYO_DISBAND=0,CITYO_NEW_EINSTEIN=1,CITYO_NEW_TAXMAN=2,CITYO_LAST=3;
+var FEELING_BASE=0,FEELING_LUXURY=1,FEELING_EFFECT=2,FEELING_NATIONALITY=3,FEELING_MARTIAL=4,FEELING_FINAL=5;
+var MAX_LEN_WORKLIST=64,INCITE_IMPOSSIBLE_COST=1e9;
+// Phase 8 shim: unit globals (originally from unit.js, now defined in webclient.min.js)
+var units={},SINGLE_MOVE,ANIM_STEPS=8,anim_units_max=30,anim_units_count=0;
 </script>
 <!-- Tier 1: Data layer -->
 <!-- bitvector.js REMOVED Phase 7.5 — replaced by ts/utils/bitvector.ts (exposes BitVector to window) -->
 <!-- terrain.js: REMOVED Phase 9 — migrated to src/ts/data/terrain.ts -->
 <!-- tile.js: REMOVED Phase 9 — migrated to src/ts/data/tile.ts -->
-<script src="/javascript/map.js"></script>
-<script src="/javascript/unit.js"></script>
+<!-- map.js REMOVED Phase 8 — migrated to ts/data/map.ts -->
+<!-- unit.js REMOVED Phase 8 — migrated to ts/data/unit.ts -->
 <!-- unittype.js: REMOVED Phase 10 — migrated to src/ts/data/unittype.ts -->
 <!-- player.js: REMOVED Phase 9 — migrated to src/ts/data/player.ts -->
 <!-- game.js: REMOVED Phase 9 — migrated to src/ts/data/game.ts -->
@@ -268,8 +281,8 @@ var DARKNESS_NONE = 0, DARKNESS_ISORECT = 1, DARKNESS_CARD_SINGLE = 2,
 <!-- improvement.js: REMOVED Phase 9 — migrated to src/ts/data/improvement.ts -->
 <!-- requirements.js REMOVED Phase 7.5 — replaced by ts/data/requirements.ts (REQ_RANGE_* in fcTypes.ts) -->
 <script src="/javascript/nation.js"></script>
-<script src="/javascript/city.js"></script>
-<script src="/javascript/tech.js"></script>
+<!-- city.js REMOVED Phase 8 — migrated to ts/data/city.ts -->
+<!-- tech.js REMOVED Phase 8 — migrated to ts/data/tech.ts -->
 <!-- government.js REMOVED Phase 7.5 — all fns in webclient.min.js; data fns in ts/data/government.ts -->
 <!-- Tier 2: Utilities -->
 <!-- utility.js: REMOVED Phase 9 — migrated to src/ts/utils/helpers.ts -->
