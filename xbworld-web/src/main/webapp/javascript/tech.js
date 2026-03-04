@@ -746,19 +746,6 @@ function show_observer_tech_dialog()
 }
 
 /**************************************************************************
- Calculates current research output.
-
- Returns:
-    self_bulbs: current "gross" bulbs output from player
-    self_upkeep: upkeep cost for player (to deduce from self_bulbs)
-    pooled: whether there's pooled research AND other players in the team
-    team_bulbs: total bulbs output from the team, player included
-    team_upkeep: total upkeep cost for the team, player included
-
-/**************************************************************************
- Returns a textual description of current bulbs output.
-
-/**************************************************************************
  Updates bulbs output info.
 **************************************************************************/
 function update_bulbs_output_info()
@@ -767,8 +754,4 @@ function update_bulbs_output_info()
   $('#bulbs_output').html(get_current_bulbs_output_text(cbo));
   update_net_bulbs(cbo.self_bulbs - cbo.self_upkeep);
 }
-
-/**************************************************************************
- Finds tech id by exact name.
- Null if not found.
 
