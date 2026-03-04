@@ -8,8 +8,6 @@
  * request_report) are NOT migrated — they remain in Legacy.
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
-
 // ---------------------------------------------------------------------------
 // Functions
 // ---------------------------------------------------------------------------
@@ -71,5 +69,3 @@ function canPlayerGetGov(govtId: number): boolean {
 // Expose to legacy
 // ---------------------------------------------------------------------------
 
-exposeToLegacy('government_max_rate', governmentMaxRate);
-exposeToLegacy('can_player_get_gov', canPlayerGetGov);

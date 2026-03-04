@@ -10,8 +10,6 @@
  *   - Handle array-wrapped packets from the WebSocket proxy
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
-
 const w = window as any;
 
 // Module-local state (was var in clinet.js)
@@ -294,20 +292,7 @@ function send_message(message: string): void {
 // Expose to Legacy — exact same names as clinet.js
 // ============================================================================
 
-exposeToLegacy('network_init', network_init);
-exposeToLegacy('network_init_manual_hack', network_init_manual_hack);
-exposeToLegacy('websocket_init', websocket_init);
-exposeToLegacy('check_websocket_ready', check_websocket_ready);
-exposeToLegacy('network_stop', network_stop);
-exposeToLegacy('send_request', send_request);
-exposeToLegacy('send_message', send_message);
-exposeToLegacy('send_message_delayed', send_message_delayed);
-exposeToLegacy('clinet_debug_collect', clinet_debug_collect);
-exposeToLegacy('ping_check', ping_check);
-
 // Expose module-local state that Legacy code reads
-exposeToLegacy('debug_client_speed_list', debug_client_speed_list);
-
 // Override ws/civserverport/ping_last with getters so legacy reads get current values
 Object.defineProperty(w, 'ws', {
   get: () => ws,

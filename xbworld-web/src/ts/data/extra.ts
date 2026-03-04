@@ -5,8 +5,6 @@
  * All functions read from `window.extras`, `window.ruleset_control`, etc.
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
-
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -69,12 +67,3 @@ function territoryClaimingExtra(pextra: any): boolean {
 // Expose to legacy
 // ---------------------------------------------------------------------------
 
-exposeToLegacy('EXTRA_NONE', EXTRA_NONE);
-exposeToLegacy('BASE_GUI_FORTRESS', BASE_GUI_FORTRESS);
-exposeToLegacy('BASE_GUI_AIRBASE', BASE_GUI_AIRBASE);
-
-exposeToLegacy('extra_by_number', extraByNumber);
-exposeToLegacy('extra_owner', extraOwner);
-exposeToLegacy('is_extra_caused_by', isExtraCausedBy);
-exposeToLegacy('is_extra_removed_by', isExtraRemovedBy);
-exposeToLegacy('territory_claiming_extra', territoryClaimingExtra);

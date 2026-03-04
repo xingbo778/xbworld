@@ -14,8 +14,6 @@
  * below will initialise them.
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
-
 const w = window as any;
 
 // ---------------------------------------------------------------------------
@@ -396,11 +394,3 @@ export function setDefaultMapviewActive(): void {
 // ---------------------------------------------------------------------------
 // Expose to legacy JS
 // ---------------------------------------------------------------------------
-exposeToLegacy('set_client_state',                       setClientState);
-exposeToLegacy('setup_window_size',                      setupWindowSize);
-exposeToLegacy('show_new_game_message',                  showNewGameMessage);
-exposeToLegacy('alert_war',                              alertWar);
-exposeToLegacy('show_endgame_dialog',                    showEndgameDialog);
-exposeToLegacy('update_metamessage_on_gamestart',        updateMetamessageOnGamestart);
-exposeToLegacy('update_metamessage_game_running_status', updateMetamessageGameRunningStatus);
-exposeToLegacy('set_default_mapview_active',             setDefaultMapviewActive);

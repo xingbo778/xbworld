@@ -6,7 +6,6 @@
  * a module-local name→id cache (improvements_name_index).
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
 import { MAX_NUM_BUILDINGS } from '../core/constants';
 
 const w = window as any;
@@ -113,13 +112,4 @@ export { improvement_id_by_name as improvementIdByName };
 // Expose to legacy
 // ---------------------------------------------------------------------------
 
-exposeToLegacy('improvements_init', improvements_init);
-exposeToLegacy('improvements_add_building', improvements_add_building);
-exposeToLegacy('get_improvements_from_tech', get_improvements_from_tech);
-exposeToLegacy('is_wonder', is_wonder);
-exposeToLegacy('get_improvement_requirements', get_improvement_requirements);
-exposeToLegacy('improvement_id_by_name', improvement_id_by_name);
-
 // Constants
-exposeToLegacy('B_AIRPORT_NAME', B_AIRPORT_NAME);
-exposeToLegacy('B_LAST', B_LAST);

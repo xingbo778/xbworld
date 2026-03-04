@@ -6,8 +6,6 @@
  * `window` via a bulk expose loop for legacy JS compatibility.
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
-
 export const TRUE = true;
 export const FALSE = false;
 export const TRI_NO = 0;
@@ -791,6 +789,5 @@ const _allConstants: Record<string, unknown> = {
 };
 
 for (const [key, val] of Object.entries(_allConstants)) {
-  exposeToLegacy(key, val);
-}
+  }
 

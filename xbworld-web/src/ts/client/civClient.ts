@@ -15,8 +15,6 @@
  * is still loaded. Guards below initialise them once civclient.js is removed.
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
-
 const w = window as any;
 
 // ---------------------------------------------------------------------------
@@ -475,10 +473,3 @@ w.$(function () {
 // ---------------------------------------------------------------------------
 // Expose to legacy JS
 // ---------------------------------------------------------------------------
-exposeToLegacy('civclient_init',           civClientInit);
-exposeToLegacy('init_common_intro_dialog', initCommonIntroDialog);
-exposeToLegacy('close_dialog_message',     closeDialogMessage);
-exposeToLegacy('closing_dialog_message',   closingDialogMessage);
-exposeToLegacy('show_dialog_message',      showDialogMessage);
-exposeToLegacy('show_auth_dialog',         showAuthDialog);
-exposeToLegacy('switch_renderer',          switchRenderer);

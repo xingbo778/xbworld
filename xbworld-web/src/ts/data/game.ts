@@ -1,6 +1,4 @@
 import type { City } from './types';
-import { exposeToLegacy } from '../bridge/legacy';
-
 export const IDENTITY_NUMBER_ZERO = 0;
 
 export function game_init(): void {
@@ -154,16 +152,6 @@ export function sum_width(): number {
 // ---------------------------------------------------------------------------
 // Expose to legacy JS via window
 // ---------------------------------------------------------------------------
-exposeToLegacy('IDENTITY_NUMBER_ZERO', IDENTITY_NUMBER_ZERO);
-exposeToLegacy('game_init', game_init);
-exposeToLegacy('game_find_city_by_number', game_find_city_by_number);
-exposeToLegacy('game_find_unit_by_number', game_find_unit_by_number);
-exposeToLegacy('civ_population', civ_population);
-exposeToLegacy('update_game_status_panel', update_game_status_panel);
-exposeToLegacy('get_year_string', get_year_string);
-exposeToLegacy('current_turn_timeout', current_turn_timeout);
-exposeToLegacy('sum_width', sum_width);
-
 // Ensure global variables exist (previously declared in game.js)
 // These are also synced via bridge/sync.ts, but need initial values
 // before sync runs.

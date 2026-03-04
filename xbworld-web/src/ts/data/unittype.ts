@@ -1,7 +1,5 @@
 import type { UnitType, Player } from './types';
 import { ACTION_COUNT, MAX_NUM_UNITS } from '../core/constants';
-import { exposeToLegacy } from '../bridge/legacy';
-
 export const enum UCF {
   TERRAIN_SPEED = 0,
   TERRAIN_DEFENSE = 1,
@@ -78,24 +76,3 @@ export function get_units_from_tech(tech_id: number): UnitType[] {
   return result;
 }
 
-exposeToLegacy('utype_can_do_action', utype_can_do_action);
-exposeToLegacy('utype_can_do_action_result', utype_can_do_action_result);
-exposeToLegacy('can_player_build_unit_direct', can_player_build_unit_direct);
-exposeToLegacy('get_units_from_tech', get_units_from_tech);
-exposeToLegacy('unit_classes', unit_classes);
-exposeToLegacy('UCF_TERRAIN_SPEED', UCF.TERRAIN_SPEED);
-exposeToLegacy('UCF_TERRAIN_DEFENSE', UCF.TERRAIN_DEFENSE);
-exposeToLegacy('UCF_DAMAGE_SLOWS', UCF.DAMAGE_SLOWS);
-exposeToLegacy('UCF_CAN_OCCUPY_CITY', UCF.CAN_OCCUPY_CITY);
-exposeToLegacy('UCF_MISSILE', UCF.MISSILE);
-exposeToLegacy('UCF_BUILD_ANYWHERE', UCF.BUILD_ANYWHERE);
-exposeToLegacy('UCF_UNREACHABLE', UCF.UNREACHABLE);
-exposeToLegacy('UCF_COLLECT_RANSOM', UCF.COLLECT_RANSOM);
-exposeToLegacy('UCF_ZOC', UCF.ZOC);
-exposeToLegacy('UCF_CAN_FORTIFY', UCF.CAN_FORTIFY);
-exposeToLegacy('UCF_CAN_PILLAGE', UCF.CAN_PILLAGE);
-exposeToLegacy('UCF_HUT_FRIGHTEN', UCF.HUT_FRIGHTEN);
-exposeToLegacy('UTYF_FLAGLESS', UTYF_FLAGLESS);
-exposeToLegacy('UTYF_PROVIDES_RANSOM', UTYF_PROVIDES_RANSOM);
-exposeToLegacy('U_NOT_OBSOLETED', U_NOT_OBSOLETED);
-exposeToLegacy('U_LAST', U_LAST);

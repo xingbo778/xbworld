@@ -5,8 +5,6 @@
  * All functions read from `window.actions` (set by Legacy packhand.js).
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
-
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -68,6 +66,3 @@ function actionProbPossible(aprob: ActionProb): boolean {
 // Expose to legacy
 // ---------------------------------------------------------------------------
 
-exposeToLegacy('action_by_number', actionByNumber);
-exposeToLegacy('action_has_result', actionHasResult);
-exposeToLegacy('action_prob_possible', actionProbPossible);

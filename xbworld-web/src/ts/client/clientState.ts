@@ -9,8 +9,6 @@
  */
 
 import { ClientState } from '../core/constants';
-import { exposeToLegacy } from '../bridge/legacy';
-
 // ---------------------------------------------------------------------------
 // State accessors — read from legacy globals directly
 // ---------------------------------------------------------------------------
@@ -79,12 +77,6 @@ export function clientIsObserver(): boolean {
 // ---------------------------------------------------------------------------
 // Expose to legacy JS
 // ---------------------------------------------------------------------------
-exposeToLegacy('client_state', clientState);
-exposeToLegacy('can_client_change_view', canClientChangeView);
-exposeToLegacy('can_client_control', canClientControl);
-exposeToLegacy('can_client_issue_orders', canClientIssueOrders);
-exposeToLegacy('client_is_observer', clientIsObserver);
-
 // Also expose the constants so legacy code like `C_S_RUNNING` still works.
 // These are already declared as `var` in client_main.js, so we don't
 // override them — they remain as globals. But we export them for TS usage.

@@ -11,7 +11,6 @@
  *   - player_invention_state() (from Legacy tech.js)
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
 import {
   TRI_NO,
   TRI_YES,
@@ -259,7 +258,3 @@ function universalBuildShieldCost(_pcity: any, target: any): number {
 // Expose to legacy
 // ---------------------------------------------------------------------------
 
-exposeToLegacy('is_req_active', isReqActive);
-exposeToLegacy('are_reqs_active', areReqsActive);
-exposeToLegacy('is_tech_in_range', isTechInRange);
-exposeToLegacy('universal_build_shield_cost', universalBuildShieldCost);

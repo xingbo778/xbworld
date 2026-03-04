@@ -4,8 +4,6 @@
  */
 
 import type { Unit, UnitType, City, Tile, Player } from './types';
-import { exposeToLegacy } from '../bridge/legacy';
-
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -455,44 +453,3 @@ export function get_what_can_unit_pillage_from(punit: Unit | null, ptile: any): 
 // Expose to legacy JS via window
 // ---------------------------------------------------------------------------
 
-exposeToLegacy('idex_lookup_unit', idex_lookup_unit);
-exposeToLegacy('unit_owner', unit_owner);
-exposeToLegacy('client_remove_unit', client_remove_unit);
-exposeToLegacy('tile_units', tile_units);
-exposeToLegacy('get_supported_units', get_supported_units);
-exposeToLegacy('update_tile_unit', update_tile_unit);
-exposeToLegacy('clear_tile_unit', clear_tile_unit);
-exposeToLegacy('unit_list_size', unit_list_size);
-exposeToLegacy('unit_list_without', unit_list_without);
-exposeToLegacy('unit_type', unit_type);
-exposeToLegacy('unit_can_do_action', unit_can_do_action);
-exposeToLegacy('get_unit_moves_left', get_unit_moves_left);
-exposeToLegacy('move_points_text', move_points_text);
-exposeToLegacy('unit_has_goto', unit_has_goto);
-exposeToLegacy('update_unit_anim_list', update_unit_anim_list);
-exposeToLegacy('get_unit_anim_offset', get_unit_anim_offset);
-exposeToLegacy('reset_unit_anim_list', reset_unit_anim_list);
-exposeToLegacy('get_unit_homecity_name', get_unit_homecity_name);
-exposeToLegacy('is_unit_visible', is_unit_visible);
-exposeToLegacy('unittype_ids_alphabetic', unittype_ids_alphabetic);
-exposeToLegacy('get_unit_city_info', get_unit_city_info);
-exposeToLegacy('get_what_can_unit_pillage_from', get_what_can_unit_pillage_from);
-
-exposeToLegacy('ORDER_MOVE', Order.MOVE);
-exposeToLegacy('ORDER_ACTIVITY', Order.ACTIVITY);
-exposeToLegacy('ORDER_FULL_MP', Order.FULL_MP);
-exposeToLegacy('ORDER_ACTION_MOVE', Order.ACTION_MOVE);
-exposeToLegacy('ORDER_PERFORM_ACTION', Order.PERFORM_ACTION);
-exposeToLegacy('ORDER_LAST', Order.LAST);
-
-exposeToLegacy('USSDT_QUEUE', UnitSSDataType.QUEUE);
-exposeToLegacy('USSDT_UNQUEUE', UnitSSDataType.UNQUEUE);
-exposeToLegacy('USSDT_BATTLE_GROUP', UnitSSDataType.BATTLE_GROUP);
-exposeToLegacy('USSDT_SENTRY', UnitSSDataType.SENTRY);
-
-exposeToLegacy('SSA_NONE', ServerSideAgent.NONE);
-exposeToLegacy('SSA_AUTOWORKER', ServerSideAgent.AUTOWORKER);
-exposeToLegacy('SSA_AUTOEXPLORE', ServerSideAgent.AUTOEXPLORE);
-exposeToLegacy('SSA_COUNT', ServerSideAgent.COUNT);
-
-exposeToLegacy('ANIM_STEPS', ANIM_STEPS);

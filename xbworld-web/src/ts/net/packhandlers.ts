@@ -13,8 +13,6 @@
  *   - terrain_control, roads[], bases[], page_msg{}
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
-
 const w = window as any;
 
 // ============================================================================
@@ -26,8 +24,6 @@ let bases: any[] = [];
 let page_msg: any = {};
 
 // Also expose these so legacy JS can access them
-exposeToLegacy('terrain_control', terrain_control);
-
 // Constants (were const in packhand.js)
 const auto_attack_actions = [
   w.ACTION_ATTACK, w.ACTION_SUICIDE_ATTACK,
@@ -1464,180 +1460,22 @@ function register_packet_handler(pid: number, handler: (packet: any) => void): v
 // ============================================================================
 
 // Freeze/thaw
-exposeToLegacy('handle_processing_started', handle_processing_started);
-exposeToLegacy('handle_processing_finished', handle_processing_finished);
-exposeToLegacy('handle_investigate_started', handle_investigate_started);
-exposeToLegacy('handle_investigate_finished', handle_investigate_finished);
-exposeToLegacy('handle_freeze_hint', handle_freeze_hint);
-exposeToLegacy('handle_thaw_hint', handle_thaw_hint);
-exposeToLegacy('handle_freeze_client', handle_freeze_client);
-exposeToLegacy('handle_thaw_client', handle_thaw_client);
-
 // Ruleset data
-exposeToLegacy('handle_ruleset_terrain', handle_ruleset_terrain);
-exposeToLegacy('handle_ruleset_resource', handle_ruleset_resource);
-exposeToLegacy('handle_ruleset_game', handle_ruleset_game);
-exposeToLegacy('handle_ruleset_specialist', handle_ruleset_specialist);
-exposeToLegacy('handle_ruleset_nation_groups', handle_ruleset_nation_groups);
-exposeToLegacy('handle_ruleset_nation', handle_ruleset_nation);
-exposeToLegacy('handle_ruleset_city', handle_ruleset_city);
-exposeToLegacy('handle_ruleset_government', handle_ruleset_government);
-exposeToLegacy('handle_ruleset_summary', handle_ruleset_summary);
-exposeToLegacy('handle_ruleset_description_part', handle_ruleset_description_part);
-exposeToLegacy('handle_ruleset_action', handle_ruleset_action);
-exposeToLegacy('handle_ruleset_goods', handle_ruleset_goods);
-exposeToLegacy('handle_ruleset_clause', handle_ruleset_clause);
-exposeToLegacy('handle_ruleset_effect', handle_ruleset_effect);
-exposeToLegacy('handle_ruleset_unit', handle_ruleset_unit);
-exposeToLegacy('handle_web_ruleset_unit_addition', handle_web_ruleset_unit_addition);
-exposeToLegacy('handle_ruleset_tech', handle_ruleset_tech);
-exposeToLegacy('handle_ruleset_tech_class', handle_ruleset_tech_class);
-exposeToLegacy('handle_ruleset_tech_flag', handle_ruleset_tech_flag);
-exposeToLegacy('handle_ruleset_terrain_control', handle_ruleset_terrain_control);
-exposeToLegacy('handle_ruleset_building', handle_ruleset_building);
-exposeToLegacy('handle_ruleset_unit_class', handle_ruleset_unit_class);
-exposeToLegacy('handle_ruleset_disaster', handle_ruleset_disaster);
-exposeToLegacy('handle_ruleset_trade', handle_ruleset_trade);
-exposeToLegacy('handle_rulesets_ready', handle_rulesets_ready);
-exposeToLegacy('handle_ruleset_choices', handle_ruleset_choices);
-exposeToLegacy('handle_game_load', handle_game_load);
-exposeToLegacy('handle_ruleset_unit_flag', handle_ruleset_unit_flag);
-exposeToLegacy('handle_ruleset_unit_class_flag', handle_ruleset_unit_class_flag);
-exposeToLegacy('handle_ruleset_unit_bonus', handle_ruleset_unit_bonus);
-exposeToLegacy('handle_ruleset_terrain_flag', handle_ruleset_terrain_flag);
-exposeToLegacy('handle_ruleset_impr_flag', handle_ruleset_impr_flag);
-exposeToLegacy('handle_ruleset_government_ruler_title', handle_ruleset_government_ruler_title);
-exposeToLegacy('handle_ruleset_base', handle_ruleset_base);
-exposeToLegacy('handle_ruleset_road', handle_ruleset_road);
-exposeToLegacy('handle_ruleset_action_enabler', handle_ruleset_action_enabler);
-exposeToLegacy('handle_ruleset_extra', handle_ruleset_extra);
-exposeToLegacy('handle_ruleset_counter', handle_ruleset_counter);
-exposeToLegacy('handle_ruleset_extra_flag', handle_ruleset_extra_flag);
-exposeToLegacy('handle_ruleset_nation_sets', handle_ruleset_nation_sets);
-exposeToLegacy('handle_ruleset_style', handle_ruleset_style);
-exposeToLegacy('handle_nation_availability', handle_nation_availability);
-exposeToLegacy('handle_ruleset_music', handle_ruleset_music);
-exposeToLegacy('handle_ruleset_multiplier', handle_ruleset_multiplier);
-exposeToLegacy('handle_ruleset_action_auto', handle_ruleset_action_auto);
-exposeToLegacy('handle_ruleset_achievement', handle_ruleset_achievement);
-exposeToLegacy('handle_achievement_info', handle_achievement_info);
-exposeToLegacy('handle_team_name_info', handle_team_name_info);
-exposeToLegacy('handle_popup_image', handle_popup_image);
-exposeToLegacy('handle_worker_task', handle_worker_task);
-exposeToLegacy('handle_play_music', handle_play_music);
-exposeToLegacy('handle_ruleset_control', handle_ruleset_control);
-
 // Game state
-exposeToLegacy('handle_game_info', handle_game_info);
-exposeToLegacy('handle_calendar_info', handle_calendar_info);
-exposeToLegacy('handle_spaceship_info', handle_spaceship_info);
-exposeToLegacy('handle_new_year', handle_new_year);
-exposeToLegacy('handle_timeout_info', handle_timeout_info);
-exposeToLegacy('handle_trade_route_info', handle_trade_route_info);
-exposeToLegacy('handle_endgame_player', handle_endgame_player);
-exposeToLegacy('handle_unknown_research', handle_unknown_research);
-
 // Server/connection
-exposeToLegacy('handle_server_join_reply', handle_server_join_reply);
-exposeToLegacy('handle_conn_info', handle_conn_info);
-exposeToLegacy('handle_authentication_req', handle_authentication_req);
-exposeToLegacy('handle_server_shutdown', handle_server_shutdown);
-exposeToLegacy('handle_server_info', handle_server_info);
-exposeToLegacy('handle_conn_ping', handle_conn_ping);
-exposeToLegacy('handle_conn_ping_info', handle_conn_ping_info);
-exposeToLegacy('handle_connect_msg', handle_connect_msg);
-exposeToLegacy('handle_set_topology', handle_set_topology);
-exposeToLegacy('handle_server_setting_const', handle_server_setting_const);
-exposeToLegacy('handle_server_setting_int', handle_server_setting_int);
-exposeToLegacy('handle_server_setting_enum', handle_server_setting_enum);
-exposeToLegacy('handle_server_setting_bitwise', handle_server_setting_bitwise);
-exposeToLegacy('handle_server_setting_bool', handle_server_setting_bool);
-exposeToLegacy('handle_server_setting_str', handle_server_setting_str);
-exposeToLegacy('handle_server_setting_control', handle_server_setting_control);
-
 // Map/tile
-exposeToLegacy('handle_tile_info', handle_tile_info);
-exposeToLegacy('handle_map_info', handle_map_info);
-exposeToLegacy('handle_nuke_tile_info', handle_nuke_tile_info);
-
 // City
-exposeToLegacy('handle_city_info', handle_city_info);
-exposeToLegacy('handle_city_nationalities', handle_city_nationalities);
-exposeToLegacy('handle_city_rally_point', handle_city_rally_point);
-exposeToLegacy('handle_web_city_info_addition', handle_web_city_info_addition);
-exposeToLegacy('handle_city_short_info', handle_city_short_info);
-exposeToLegacy('handle_city_update_counters', handle_city_update_counters);
-exposeToLegacy('handle_city_update_counter', handle_city_update_counter);
-exposeToLegacy('handle_city_remove', handle_city_remove);
-exposeToLegacy('handle_city_name_suggestion_info', handle_city_name_suggestion_info);
-exposeToLegacy('handle_city_sabotage_list', handle_city_sabotage_list);
-
 // Player
-exposeToLegacy('handle_player_info', handle_player_info);
-exposeToLegacy('handle_web_player_info_addition', handle_web_player_info_addition);
-exposeToLegacy('handle_player_remove', handle_player_remove);
-exposeToLegacy('handle_player_attribute_chunk', handle_player_attribute_chunk);
-exposeToLegacy('handle_player_diplstate', handle_player_diplstate);
-
 // Unit
-exposeToLegacy('handle_unit_remove', handle_unit_remove);
-exposeToLegacy('handle_unit_info', handle_unit_info);
-exposeToLegacy('handle_unit_short_info', handle_unit_short_info);
-exposeToLegacy('handle_unit_combat_info', handle_unit_combat_info);
-exposeToLegacy('handle_unit_action_answer', handle_unit_action_answer);
-exposeToLegacy('handle_unit_actions', handle_unit_actions);
-
 // Diplomacy
-exposeToLegacy('handle_diplomacy_init_meeting', handle_diplomacy_init_meeting);
-exposeToLegacy('handle_diplomacy_cancel_meeting', handle_diplomacy_cancel_meeting);
-exposeToLegacy('handle_diplomacy_create_clause', handle_diplomacy_create_clause);
-exposeToLegacy('handle_diplomacy_remove_clause', handle_diplomacy_remove_clause);
-exposeToLegacy('handle_diplomacy_accept_treaty', handle_diplomacy_accept_treaty);
-
 // Chat/message
-exposeToLegacy('handle_chat_msg', handle_chat_msg);
-exposeToLegacy('handle_early_chat_msg', handle_early_chat_msg);
-exposeToLegacy('handle_page_msg', handle_page_msg);
-exposeToLegacy('handle_page_msg_part', handle_page_msg_part);
-
 // Turn/phase
-exposeToLegacy('handle_begin_turn', handle_begin_turn);
-exposeToLegacy('handle_end_turn', handle_end_turn);
-exposeToLegacy('handle_start_phase', handle_start_phase);
-exposeToLegacy('handle_end_phase', handle_end_phase);
-
 // Research
-exposeToLegacy('handle_research_info', handle_research_info);
-
 // Endgame/scenario
-exposeToLegacy('handle_endgame_report', handle_endgame_report);
-exposeToLegacy('handle_scenario_info', handle_scenario_info);
-exposeToLegacy('handle_scenario_description', handle_scenario_description);
-exposeToLegacy('handle_single_want_hack_reply', handle_single_want_hack_reply);
-
 // Vote/edit
-exposeToLegacy('handle_vote_new', handle_vote_new);
-exposeToLegacy('handle_vote_update', handle_vote_update);
-exposeToLegacy('handle_vote_remove', handle_vote_remove);
-exposeToLegacy('handle_vote_resolve', handle_vote_resolve);
-exposeToLegacy('handle_edit_startpos', handle_edit_startpos);
-exposeToLegacy('handle_edit_startpos_full', handle_edit_startpos_full);
-exposeToLegacy('handle_edit_object_created', handle_edit_object_created);
-
 // Goto
-exposeToLegacy('handle_web_goto_path', handle_web_goto_path);
-
 // Action decision helpers
-exposeToLegacy('action_decision_handle', action_decision_handle);
-exposeToLegacy('action_decision_maybe_auto', action_decision_maybe_auto);
-exposeToLegacy('update_client_state', update_client_state);
-exposeToLegacy('recreate_old_tech_req', recreate_old_tech_req);
-
 // Packet dispatch
-exposeToLegacy('packet_hand_table', packet_hand_table);
-exposeToLegacy('client_handle_packet', client_handle_packet);
-exposeToLegacy('register_packet_handler', register_packet_handler);
-
 // Connection management (migrated from connection.js)
 function find_conn_by_id(id: number): any {
   return w.connections[id];
@@ -1651,9 +1489,4 @@ function conn_list_append(connection: any): void {
   w.connections[connection['id']] = connection;
 }
 
-exposeToLegacy('find_conn_by_id', find_conn_by_id);
-exposeToLegacy('client_remove_cli_conn', client_remove_cli_conn);
-exposeToLegacy('conn_list_append', conn_list_append);
-
 // Module-local state exposed for legacy access
-exposeToLegacy('terrain_control', terrain_control);

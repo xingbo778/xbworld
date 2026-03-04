@@ -12,8 +12,6 @@
  *   selected_player — initialised here; mutated by handleNationTableSelect
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
-
 // ---------------------------------------------------------------------------
 // Legacy global references (via window)
 // ---------------------------------------------------------------------------
@@ -597,26 +595,5 @@ function showSendPrivateMessageDialog(): void {
 // ---------------------------------------------------------------------------
 
 // Constants
-exposeToLegacy('MAX_AI_LOVE', MAX_AI_LOVE);
-
 // Data functions
-exposeToLegacy('love_text', loveText);
-exposeToLegacy('get_score_text', getScoreText);
-exposeToLegacy('col_love', colLove);
-
 // UI functions — all previously in nation.js
-exposeToLegacy('update_nation_screen', updateNationScreen);
-exposeToLegacy('handle_nation_table_select', handleNationTableSelect);
-exposeToLegacy('select_a_nation', selectANation);
-exposeToLegacy('select_no_nation', selectNoNation);
-exposeToLegacy('nation_table_select_player', nationTableSelectPlayer);
-exposeToLegacy('cancel_treaty_clicked', cancelTreatyClicked);
-exposeToLegacy('withdraw_vision_clicked', withdrawVisionClicked);
-exposeToLegacy('nation_meet_clicked', nationMeetClicked);
-exposeToLegacy('take_player_clicked', takePlayerClicked);
-exposeToLegacy('toggle_ai_clicked', toggleAiClicked);
-exposeToLegacy('take_player', takePlayer);
-exposeToLegacy('aitoggle_player', aitogglePlayer);
-exposeToLegacy('center_on_player', centerOnPlayer);
-exposeToLegacy('send_private_message', sendPrivateMessage);
-exposeToLegacy('show_send_private_message_dialog', showSendPrivateMessageDialog);

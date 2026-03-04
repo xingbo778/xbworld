@@ -13,8 +13,6 @@
  */
 
 import { FC_WRAP } from '../utils/helpers';
-import { exposeToLegacy } from '../bridge/legacy';
-
 export const enum Direction {
   NORTHWEST = 0,
   NORTH = 1,
@@ -367,35 +365,5 @@ export function clearGotoTiles(): void {
 // ---------------------------------------------------------------------------
 // Expose to legacy JS via window (snake_case names matching old JS API)
 // ---------------------------------------------------------------------------
-exposeToLegacy('topo_has_flag', topoHasFlag);
-exposeToLegacy('wrap_has_flag', wrapHasFlag);
 // Expose map initialisation functions (previously NOT exposed — now fixed)
-exposeToLegacy('map_allocate', mapAllocate);
-exposeToLegacy('tile_init', tileInit);
-exposeToLegacy('map_init_topology', mapInitTopology);
-exposeToLegacy('is_valid_dir', isValidDir);
-exposeToLegacy('is_cardinal_dir', isCardinalDir);
-exposeToLegacy('map_pos_to_tile', mapPosToTile);
-exposeToLegacy('index_to_tile', indexToTile);
-exposeToLegacy('mapstep', mapstep);
-exposeToLegacy('get_direction_for_step', getDirectionForStep);
-exposeToLegacy('NATIVE_TO_MAP_POS', nativeToMapPos);
-exposeToLegacy('NATURAL_TO_MAP_POS', naturalToMapPos);
-exposeToLegacy('MAP_TO_NATIVE_POS', mapToNativePos);
-exposeToLegacy('MAP_TO_NATURAL_POS', mapToNaturalPos);
-exposeToLegacy('map_distance_vector', mapDistanceVector);
-exposeToLegacy('map_vector_to_sq_distance', mapVectorToSqDistance);
-exposeToLegacy('map_vector_to_distance', mapVectorToDistance);
-exposeToLegacy('dir_get_name', dirGetName);
-exposeToLegacy('dir_cw', dirCW);
-exposeToLegacy('dir_ccw', dirCCW);
-exposeToLegacy('clear_goto_tiles', clearGotoTiles);
-
 // Also expose constants
-exposeToLegacy('WRAP_X', WRAP_X);
-exposeToLegacy('WRAP_Y', WRAP_Y);
-exposeToLegacy('TF_ISO', TF_ISO);
-exposeToLegacy('TF_HEX', TF_HEX);
-exposeToLegacy('T_UNKNOWN', T_UNKNOWN);
-exposeToLegacy('DIR_DX', DIR_DX);
-exposeToLegacy('DIR_DY', DIR_DY);

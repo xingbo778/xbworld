@@ -10,8 +10,6 @@
  * and call legacy helpers (current_turn_timeout, is_small_screen, etc.).
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
-
 const win = window as any;
 
 // ---------------------------------------------------------------------------
@@ -111,5 +109,3 @@ export function updateTurnChangeTimer(): void {
 // ---------------------------------------------------------------------------
 // Expose to legacy JS
 // ---------------------------------------------------------------------------
-exposeToLegacy('update_timeout', updateTimeout);
-exposeToLegacy('update_turn_change_timer', updateTurnChangeTimer);

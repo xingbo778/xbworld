@@ -4,8 +4,6 @@
  */
 
 import type { Player, City } from './types';
-import { exposeToLegacy } from '../bridge/legacy';
-
 export const MAX_NUM_PLAYERS = 30;
 export const MAX_AI_LOVE = 1000;
 
@@ -198,24 +196,6 @@ function is_capital(pcity: City): boolean {
 // ---------------------------------------------------------------------------
 // Expose all public functions to legacy JS via window
 // ---------------------------------------------------------------------------
-exposeToLegacy('valid_player_by_number', valid_player_by_number);
-exposeToLegacy('player_by_number', player_by_number);
-exposeToLegacy('player_by_name', player_by_name);
-exposeToLegacy('player_by_full_username', player_by_full_username);
-exposeToLegacy('player_find_unit_by_id', player_find_unit_by_id);
-exposeToLegacy('player_index', player_index);
-exposeToLegacy('player_number', player_number);
-exposeToLegacy('get_diplstate_text', get_diplstate_text);
-exposeToLegacy('get_embassy_text', get_embassy_text);
-exposeToLegacy('get_ai_level_text', get_ai_level_text);
-exposeToLegacy('get_player_connection_status', get_player_connection_status);
-exposeToLegacy('research_get', research_get);
-exposeToLegacy('player_has_wonder', player_has_wonder);
-exposeToLegacy('get_invalid_username_reason', get_invalid_username_reason);
-exposeToLegacy('player_capital', player_capital);
-exposeToLegacy('does_player_own_city', does_player_own_city);
-exposeToLegacy('research_data', research_data);
-
 // Expose constants that legacy JS references as globals
 const w = window as unknown as Record<string, unknown>;
 w['MAX_NUM_PLAYERS'] = MAX_NUM_PLAYERS;

@@ -9,8 +9,6 @@
  * This module defines all outgoing packet IDs and exposes them to window
  * so legacy JS can continue to use them as globals.
  */
-import { exposeToLegacy } from '../bridge/legacy';
-
 // --- Outgoing packet type IDs (client → server) ---
 
 export const packet_server_join_req = 4;

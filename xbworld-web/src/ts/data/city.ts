@@ -6,7 +6,6 @@
  * in legacy city.js until the UI layer migration phase.
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
 import {
   FC_INFINITY,
   VUT_UTYPE,
@@ -646,61 +645,10 @@ function getCitywallsScale(pcity: any): number {
 // ---------------------------------------------------------------------------
 
 // Constants
-exposeToLegacy('CITYO_DISBAND', CITYO_DISBAND);
-exposeToLegacy('CITYO_NEW_EINSTEIN', CITYO_NEW_EINSTEIN);
-exposeToLegacy('CITYO_NEW_TAXMAN', CITYO_NEW_TAXMAN);
-exposeToLegacy('CITYO_LAST', CITYO_LAST);
-exposeToLegacy('FEELING_BASE', FEELING_BASE);
-exposeToLegacy('FEELING_LUXURY', FEELING_LUXURY);
-exposeToLegacy('FEELING_EFFECT', FEELING_EFFECT);
-exposeToLegacy('FEELING_NATIONALITY', FEELING_NATIONALITY);
-exposeToLegacy('FEELING_MARTIAL', FEELING_MARTIAL);
-exposeToLegacy('FEELING_FINAL', FEELING_FINAL);
-exposeToLegacy('MAX_LEN_WORKLIST', MAX_LEN_WORKLIST);
-exposeToLegacy('INCITE_IMPOSSIBLE_COST', INCITE_IMPOSSIBLE_COST);
-
 // Basic queries
-exposeToLegacy('city_tile', cityTile);
-exposeToLegacy('city_owner_player_id', cityOwnerPlayerId);
-exposeToLegacy('city_owner', cityOwner);
-exposeToLegacy('remove_city', removeCity);
-exposeToLegacy('is_city_center', isCityCenter);
-exposeToLegacy('is_free_worked', isFreeWorked);
-exposeToLegacy('is_primary_capital', isPrimaryCapital);
-
 // Production queries
-exposeToLegacy('get_city_production_type_sprite', getCityProductionTypeSprite);
-exposeToLegacy('get_city_production_type', getCityProductionType);
-exposeToLegacy('city_turns_to_build', cityTurnsToBuild);
-exposeToLegacy('get_city_production_time', getCityProductionTime);
-exposeToLegacy('get_production_progress', getProductionProgress);
-exposeToLegacy('generate_production_list', generateProductionList);
-
 // Build capability
-exposeToLegacy('can_city_build_unit_direct', canCityBuildUnitDirect);
-exposeToLegacy('can_city_build_unit_now', canCityBuildUnitNow);
-exposeToLegacy('can_city_build_improvement_now', canCityBuildImprovementNow);
-exposeToLegacy('can_city_build_now', canCityBuildNow);
-exposeToLegacy('city_has_building', cityHasBuilding);
-exposeToLegacy('does_city_have_improvement', doesCityHaveImprovement);
-exposeToLegacy('city_can_buy', cityCanBuy);
-
 // Growth and state
-exposeToLegacy('city_turns_to_growth_text', cityTurnsToGrowthText);
-exposeToLegacy('city_unhappy', cityUnhappy);
-exposeToLegacy('city_population', cityPopulation);
-
 // Tile map
-exposeToLegacy('dxy_to_center_index', dxyToCenterIndex);
-exposeToLegacy('get_city_dxy_to_index', getCityDxyToIndex);
-exposeToLegacy('build_city_tile_map', buildCityTileMap);
-exposeToLegacy('delta_tile_helper', deltaTileHelper);
-exposeToLegacy('build_city_tile_map_with_limits', buildCityTileMapWithLimits);
-exposeToLegacy('get_city_tile_map_for_pos', getCityTileMapForPos);
-
 // Trade routes
-exposeToLegacy('show_city_traderoutes', showCityTraderoutes);
-
 // 3D model helpers
-exposeToLegacy('city_to_3d_model_name', cityTo3dModelName);
-exposeToLegacy('get_citywalls_scale', getCitywallsScale);

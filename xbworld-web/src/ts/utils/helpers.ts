@@ -9,8 +9,6 @@
  * NOTE: is_touch_device is defined in control.js, not utility.js.
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
-
 /** Deep clone a plain object (no circular refs). */
 export function clone<T>(obj: T): T {
   if (obj == null || typeof obj !== 'object') return obj;
@@ -117,22 +115,7 @@ export function isRightMouseSelectionSupported(): boolean {
 // Expose to legacy — function names must match Legacy snake_case names
 // ---------------------------------------------------------------------------
 
-exposeToLegacy('clone', clone);
-exposeToLegacy('DIVIDE', DIVIDE);
-exposeToLegacy('FC_WRAP', FC_WRAP);
-exposeToLegacy('XOR', XOR);
-exposeToLegacy('numberWithCommas', numberWithCommas);
-exposeToLegacy('to_title_case', toTitleCase);
-exposeToLegacy('string_unqualify', stringUnqualify);
-exposeToLegacy('seconds_to_human_time', secondsToHumanTime);
-exposeToLegacy('get_random_int', getRandomInt);
-exposeToLegacy('supports_mp3', supportsMp3);
-exposeToLegacy('is_right_mouse_selection_supported', isRightMouseSelectionSupported);
-exposeToLegacy('get_tileset_file_extention', getTilesetFileExtension);
 // Expose is_small_screen (legacy name) and other utility functions
-exposeToLegacy('is_small_screen', isSmallScreen);
-exposeToLegacy('is_touch_device', isTouchDevice);
-
 // Register $.getUrlVar / $.getUrlVars jQuery plugins (previously in utility.js)
 // These are used extensively by legacy JS (civclient.js, pregame.js, etc.)
 const jq = (window as any).jQuery || (window as any).$;
@@ -172,8 +155,6 @@ function civclient_benchmark(frame: number): void {
     w.swal('Redraw time: ' + time);
   }
 }
-
-exposeToLegacy('civclient_benchmark', civclient_benchmark);
 
 // benchmark_start is read by pregame.js at runtime
 Object.defineProperty(window, 'benchmark_start', {

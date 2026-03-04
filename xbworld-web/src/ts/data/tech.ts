@@ -6,7 +6,6 @@
  * in legacy tech.js until the UI layer migration phase.
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
 import { O_SCIENCE } from './fcTypes';
 
 // ---------------------------------------------------------------------------
@@ -209,27 +208,4 @@ function techIdByName(tname: string): string | null {
 // ---------------------------------------------------------------------------
 
 // Constants
-exposeToLegacy('TECH_UNKNOWN', TECH_UNKNOWN);
-exposeToLegacy('TECH_PREREQS_KNOWN', TECH_PREREQS_KNOWN);
-exposeToLegacy('TECH_KNOWN', TECH_KNOWN);
-exposeToLegacy('AR_ONE', AR_ONE);
-exposeToLegacy('AR_TWO', AR_TWO);
-exposeToLegacy('AR_ROOT', AR_ROOT);
-exposeToLegacy('AR_SIZE', AR_SIZE);
-exposeToLegacy('TF_BONUS_TECH', TF_BONUS_TECH);
-exposeToLegacy('TF_BRIDGE', TF_BRIDGE);
-exposeToLegacy('TF_RAILROAD', TF_RAILROAD);
-exposeToLegacy('TF_POPULATION_POLLUTION_INC', TF_POPULATION_POLLUTION_INC);
-exposeToLegacy('TF_FARMLAND', TF_FARMLAND);
-exposeToLegacy('TF_BUILD_AIRBORNE', TF_BUILD_AIRBORNE);
-exposeToLegacy('TF_LAST', TF_LAST);
-exposeToLegacy('A_NONE', A_NONE);
-exposeToLegacy('A_FIRST', A_FIRST);
-
 // Functions
-exposeToLegacy('player_invention_state', playerInventionState);
-exposeToLegacy('is_tech_req_for_goal', isTechReqForGoal);
-exposeToLegacy('is_tech_req_for_tech', isTechReqForTech);
-exposeToLegacy('get_current_bulbs_output', getCurrentBulbsOutput);
-exposeToLegacy('get_current_bulbs_output_text', getCurrentBulbsOutputText);
-exposeToLegacy('tech_id_by_name', techIdByName);

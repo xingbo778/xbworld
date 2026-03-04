@@ -21,8 +21,6 @@
  *   - motd_init()                   [Phase 6]
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
-
 // ---------------------------------------------------------------------------
 // Helpers — read legacy globals
 // ---------------------------------------------------------------------------
@@ -229,18 +227,4 @@ export function motdInit(): void {
 // ---------------------------------------------------------------------------
 // Expose to legacy JS
 // ---------------------------------------------------------------------------
-exposeToLegacy('is_longturn', isLongturn);
-exposeToLegacy('is_pbem', isPbem);
-exposeToLegacy('is_hotseat', isHotseat);
-exposeToLegacy('is_server', isServer);
-exposeToLegacy('set_phase_start', setPhaseStart);
-exposeToLegacy('request_observe_game', requestObserveGame);
-exposeToLegacy('send_surrender_game', sendSurrenderGame);
-exposeToLegacy('get_invalid_username_reason', getInvalidUsernameReason);
-
 // Phase 6 additions
-exposeToLegacy('validate_username', validateUsername);
-exposeToLegacy('is_username_valid_show', isUsernameValidShow);
-exposeToLegacy('surrender_game', surrenderGame);
-exposeToLegacy('show_fullscreen_window', showFullscreenWindow);
-exposeToLegacy('motd_init', motdInit);

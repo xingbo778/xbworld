@@ -5,7 +5,6 @@
  *   - show_debug_info() — logs version, browser, network stats to console
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
 import { RENDERER_WEBGL } from '../core/constants';
 
 const win = window as any;
@@ -87,4 +86,3 @@ export function showDebugInfo(): void {
 // ---------------------------------------------------------------------------
 // Expose to legacy JS
 // ---------------------------------------------------------------------------
-exposeToLegacy('show_debug_info', showDebugInfo);

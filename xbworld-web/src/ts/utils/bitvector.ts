@@ -8,8 +8,6 @@
  * The TS constructor accepts both number[] and Uint8Array.
  */
 
-import { exposeToLegacy } from '../bridge/legacy';
-
 export class BitVector {
   private readonly data: Uint8Array;
 
@@ -54,4 +52,3 @@ export class BitVector {
 
 // Expose the BitVector constructor so legacy JS can call `new BitVector(raw)`.
 // This replaces bitvector.js which defined it as a plain constructor function.
-exposeToLegacy('BitVector', BitVector);

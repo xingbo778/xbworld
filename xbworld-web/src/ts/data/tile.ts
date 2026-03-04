@@ -4,8 +4,6 @@
  */
 
 import type { Tile, City } from './types';
-import { exposeToLegacy } from '../bridge/legacy';
-
 export const TILE_UNKNOWN = 0;
 export const TILE_KNOWN_UNSEEN = 1;
 export const TILE_KNOWN_SEEN = 2;
@@ -88,17 +86,4 @@ export function tileCity(ptile: Tile | null): City | null {
 // ---------------------------------------------------------------------------
 // Expose to legacy JS via window (snake_case names matching old JS API)
 // ---------------------------------------------------------------------------
-exposeToLegacy('tile_get_known', tileGetKnown);
-exposeToLegacy('tile_has_extra', tileHasExtra);
-exposeToLegacy('tile_resource', tileResource);
-exposeToLegacy('tile_has_territory_claiming_extra', tileHasTerritoryClaimingExtra);
-exposeToLegacy('tile_owner', tileOwner);
-exposeToLegacy('tile_set_owner', tileSetOwner);
-exposeToLegacy('tile_worked', tileWorked);
-exposeToLegacy('tile_set_worked', tileSetWorked);
-exposeToLegacy('tile_city', tileCity);
-
 // Constants
-exposeToLegacy('TILE_UNKNOWN', TILE_UNKNOWN);
-exposeToLegacy('TILE_KNOWN_UNSEEN', TILE_KNOWN_UNSEEN);
-exposeToLegacy('TILE_KNOWN_SEEN', TILE_KNOWN_SEEN);

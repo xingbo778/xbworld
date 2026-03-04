@@ -16,13 +16,11 @@ export default defineConfig({
     sourcemap: true,
     lib: {
       entry: resolve(__dirname, 'src/ts/main.ts'),
-      formats: ['es'],
+      formats: ['iife'],
       fileName: 'main',
+      name: 'XBWorld',
     },
     rollupOptions: {
-      // PixiJS is only used by the new renderer (not yet active in prod);
-      // mark it external so the bundle stays small and doesn't fail if
-      // pixi.js is not installed in the Docker build.
       external: ['pixi.js'],
     },
     target: 'es2022',
