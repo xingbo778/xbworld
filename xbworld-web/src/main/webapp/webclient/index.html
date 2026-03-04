@@ -254,7 +254,7 @@ var DARKNESS_NONE = 0, DARKNESS_ISORECT = 1, DARKNESS_CARD_SINGLE = 2,
     DARKNESS_CARD_FULL = 3, DARKNESS_CORNER = 4;
 </script>
 <!-- Tier 1: Data layer -->
-<script src="/javascript/bitvector.js"></script>
+<!-- bitvector.js REMOVED Phase 7.5 — replaced by ts/utils/bitvector.ts (exposes BitVector to window) -->
 <!-- terrain.js: REMOVED Phase 9 — migrated to src/ts/data/terrain.ts -->
 <!-- tile.js: REMOVED Phase 9 — migrated to src/ts/data/tile.ts -->
 <script src="/javascript/map.js"></script>
@@ -266,11 +266,11 @@ var DARKNESS_NONE = 0, DARKNESS_ISORECT = 1, DARKNESS_CARD_SINGLE = 2,
 <!-- actions.js: REMOVED Phase 10 — migrated to src/ts/data/actions.ts -->
 <!-- extra.js: REMOVED Phase 10 — migrated to src/ts/data/extra.ts -->
 <!-- improvement.js: REMOVED Phase 9 — migrated to src/ts/data/improvement.ts -->
-<script src="/javascript/requirements.js"></script>
+<!-- requirements.js REMOVED Phase 7.5 — replaced by ts/data/requirements.ts (REQ_RANGE_* in fcTypes.ts) -->
 <script src="/javascript/nation.js"></script>
 <script src="/javascript/city.js"></script>
 <script src="/javascript/tech.js"></script>
-<script src="/javascript/government.js"></script>
+<!-- government.js REMOVED Phase 7.5 — all fns in webclient.min.js; data fns in ts/data/government.ts -->
 <!-- Tier 2: Utilities -->
 <!-- utility.js: REMOVED Phase 9 — migrated to src/ts/utils/helpers.ts -->
 <!-- log.js: REMOVED Phase 10 — migrated to src/ts/core/log.ts -->
