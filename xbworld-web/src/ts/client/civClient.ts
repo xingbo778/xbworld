@@ -458,6 +458,21 @@ export function switchRenderer(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Auto-init: register $(document).ready so civClientInit runs on page load.
+//
+// webclient.min.js registers $(document).ready(civclient_init) but that fires
+// before this ts-bundle (type="module", deferred) overrides window.civclient_init.
+// By registering our own handler here we ensure the TS version always runs.
+// The guard prevents double-init if webclient.min.js's old version already ran
+// and set civclient_state > 0.
+// ---------------------------------------------------------------------------
+w.$(function () {
+  if (!w.civclient_state || w.civclient_state === 0) {
+    civClientInit();
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Expose to legacy JS
 // ---------------------------------------------------------------------------
 exposeToLegacy('civclient_init',           civClientInit);

@@ -180,7 +180,7 @@ export const legacy = {
  * where TS behaviour diverges from legacy — no guessing needed.
  */
 export function exposeToLegacy(name: string, value: unknown): void {
-  if (typeof value === 'function') {
+  if (typeof value === 'function' && !value.toString().startsWith('class ')) {
     // Save the legacy version before overwriting (if it exists)
     const legacyVersion = typeof win[name] === 'function'
       ? (win[name] as (...args: unknown[]) => unknown)
