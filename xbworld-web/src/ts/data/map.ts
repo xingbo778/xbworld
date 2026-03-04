@@ -7,10 +7,9 @@
  * with `var` (configurable: false) and cannot be intercepted by
  * Object.defineProperty. See docs/MIGRATION_PITFALLS.md §4.
  *
- * NOTE: `map_allocate`, `tile_init`, and `map_init_topology` are NOT
- * exposed via exposeToLegacy because the legacy versions contain
- * additional side-effects (e.g. calling init_overview()) that the TS
- * versions do not replicate. See MIGRATION_PITFALLS.md §5.
+ * map_allocate, tile_init, and map_init_topology are NOW exposed via
+ * exposeToLegacy (see bottom of file). The TS mapAllocate() replicates
+ * all side-effects of the legacy version including calling init_overview().
  */
 
 import { FC_WRAP } from '../utils/helpers';
@@ -101,9 +100,10 @@ export function tileInit(tile: Record<string, unknown>): Record<string, unknown>
  * Allocate the tile array. Writes directly to window.tiles so that
  * legacy code sees the new tiles immediately.
  *
- * NOT exposed to legacy — the legacy version calls init_overview()
- * and other side-effects that this TS version does not replicate.
- * This function is available for TS-internal use and testing only.
+ * Mirrors the legacy map.js map_allocate() exactly:
+ *   1. Initialise window.tiles with all tiles
+ *   2. Set map.startpos_table = {}
+ *   3. Call init_overview() (still provided by overview.js)
  */
 export function mapAllocate(): void {
   const mi = getMapInfo();
@@ -123,23 +123,28 @@ export function mapAllocate(): void {
       newTiles[index] = tile;
     }
   }
-  // Write to the global tiles object so legacy code sees it.
-  // We cannot reassign `window.tiles` (configurable:false), so we
-  // clear the existing object and copy new entries in.
+
+  // Assign directly to window.tiles.
+  // window.tiles may be undefined (never declared as var in xbworld) or
+  // an empty {} — in both cases we simply replace it.
   /* eslint-disable @typescript-eslint/no-explicit-any */
-  const t = win.tiles as Record<string, unknown>;
-  if (t) {
-    for (const k of Object.keys(t)) delete t[k];
-    Object.assign(t, newTiles);
-  }
+  win.tiles = newTiles;
   /* eslint-enable @typescript-eslint/no-explicit-any */
+
+  // Set startpos_table (required by later server packets)
+  if (win.map) win.map['startpos_table'] = {};
+
+  // init_overview() is still in overview.js (loaded before ts-bundle)
+  if (typeof win.init_overview === 'function') {
+    win.init_overview();
+  }
 }
 
 /**
  * Initialise map topology: valid_dirs and cardinal_dirs arrays.
  * Migrated from map.js map_init_topology().
  *
- * NOT exposed to legacy — kept for TS-internal use only.
+ * Exposed to legacy as window.map_init_topology.
  */
 export function mapInitTopology(_setSizes: boolean): void {
   const m = win.map;
@@ -361,16 +366,13 @@ export function clearGotoTiles(): void {
 
 // ---------------------------------------------------------------------------
 // Expose to legacy JS via window (snake_case names matching old JS API)
-//
-// ONLY pure data-access / query functions are exposed here.
-// Initialization functions (map_allocate, tile_init, map_init_topology)
-// are NOT exposed because the legacy versions contain side-effects
-// (e.g. init_overview, startpos_table) that the TS versions don't replicate.
-// See docs/MIGRATION_PITFALLS.md §5 for details.
 // ---------------------------------------------------------------------------
 exposeToLegacy('topo_has_flag', topoHasFlag);
 exposeToLegacy('wrap_has_flag', wrapHasFlag);
-// NOT exposed: tile_init, map_allocate, map_init_topology
+// Expose map initialisation functions (previously NOT exposed — now fixed)
+exposeToLegacy('map_allocate', mapAllocate);
+exposeToLegacy('tile_init', tileInit);
+exposeToLegacy('map_init_topology', mapInitTopology);
 exposeToLegacy('is_valid_dir', isValidDir);
 exposeToLegacy('is_cardinal_dir', isCardinalDir);
 exposeToLegacy('map_pos_to_tile', mapPosToTile);
