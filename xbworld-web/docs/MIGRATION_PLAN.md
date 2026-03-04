@@ -1,6 +1,6 @@
 # XBWorld JS → TS 迁移计划
 
-> 最后更新：2026-03-04（Phase 5 网络层修复 + Phase 6 civclient.js 迁移完成后更新）
+> 最后更新：2026-03-04（Phase 7 城市/科技/国家数据迁移完成后更新）
 
 ---
 
@@ -16,11 +16,11 @@
 |---|---|
 | Legacy JS 总行数 | ~25,865 |
 | Legacy JS 总函数数 | 809 |
-| 已迁移 TS 行数（激活） | ~4,224 |
+| 已迁移 TS 行数（激活） | ~5,356 |
 | 已迁移 TS 行数（未激活） | ~2,152 |
-| 已覆盖 Legacy 函数数 | 163 (20.1%) |
-| 已覆盖 Legacy 常量数 | 52 |
-| 已完成 Phase | 1, 2, 3, 4 (webclient.min.js 拆分), 5 (网络层+修复), 6 (civclient.js) |
+| 已覆盖 Legacy 函数数 | 205 (25.3%) |
+| 已覆盖 Legacy 常量数 | 82 |
+| 已完成 Phase | 1, 2, 3, 4, 5, 6, 7 (city/tech/nation 数据迁移) |
 
 ### 1.1 已迁移并激活的模块
 
@@ -50,6 +50,9 @@
 | `client/clientCore.ts` | `civclient.js` (纯逻辑部分) | 246 | 13 | 0 |
 | `client/clientTimers.ts` | `civclient.js` (定时器) | 115 | 2 | 0 |
 | `client/clientDebug.ts` | `civclient.js` (调试) | 90 | 1 | 0 |
+| `data/city.ts` | `city.js` (纯数据部分) | 480 | 30 | 13 |
+| `data/tech.ts` | `tech.js` (纯数据部分) | 172 | 6 | 16 |
+| `data/nation.ts` | `nation.js` (纯数据部分) | 100 | 6 | 1 |
 
 ### 1.2 已编写但未激活的模块
 
@@ -208,19 +211,23 @@
 
 ---
 
-### Phase 7：核心引擎 — 城市和科技（下一步）
+### Phase 7：城市/科技/国家数据迁移 ✅ 已完成
 
-**目标**：迁移城市管理和科技树的数据逻辑。
+**目标**：迁移 city.js、tech.js、nation.js 中的纯数据查询函数到 TypeScript。
 
-**预计工作量**：~2,000 行 TS 代码
+**实际完成内容**：
+- `data/city.ts`：30 个纯数据函数 + 13 个常量 — city.js 从 2049 行减少到 1602 行（-22%）
+- `data/tech.ts`：6 个函数 + 16 个常量 — tech.js 从 941 行减少到 774 行（-18%）
+- `data/nation.ts`：6 个函数 + 1 个常量 — nation.js 从 532 行减少到 462 行（-13%）
+- 修复 `fcTypes.ts` 中 VUT_* 常量值（从旧版 Freeciv 顺序枚举改为 XBWorld 字母排序枚举）
+- 移除 `VUT_BASEFLAG`（XBWorld 中不存在）
+- 总计：42 个函数 + 30 个常量迁移，684 行 Legacy 代码删除
 
-| 任务 | Legacy 源 | 行数 | 函数数 | 难度 | 说明 |
-|---|---|---|---|---|---|
-| 7.1 `data/city.ts` (数据部分) | `city.js` | ~800 | ~30 | 高 | `city_tile`, `city_owner`, `is_city_center`, `city_has_building`, `can_city_build_*` 等纯查询函数。UI 函数（`show_city_dialog` 等）留在 Legacy。 |
-| 7.2 `data/tech.ts` (数据部分) | `tech.js` | ~300 | ~10 | 中 | `player_invention_state`, `is_tech_req_for_*`, `tech_id_by_name` 等纯查询函数。UI 函数留在 Legacy。 |
-| 7.3 `data/nation.ts` | `nation.js` (数据部分) | ~100 | ~5 | 低 | 国家数据查询函数。 |
+**踩坑记录**：
+1. `fcTypes.ts` 中的 VUT_* 常量值与 `fc_types.js` 不一致（旧版 Freeciv 使用顺序枚举，XBWorld 使用字母排序枚举），导致 TS 内部使用错误的常量值
+2. `VUT_BASEFLAG` 在旧版 Freeciv 中存在但在 XBWorld 的 `fc_types.js` 中已移除
 
-**验收标准**：城市对话框、科技树界面功能完整，无 NaN/undefined 显示。
+**验收标准**：42/42 函数全部正确注册，VUT 常量全部与 fc_types.js 一致，完整游戏流程测试通过。
 
 ---
 
@@ -294,7 +301,7 @@
 | **M3.5: webclient.min.js 拆分** ✅ | Phase 4 | — | ~45% | Legacy JS 可逐个替换 |
 | **M4: 网络层完整替换** ✅ | Phase 5 | ~500 | ~47% | clinet.js 完全由 TS 替换 |
 | **M5: civclient.js 迁移** ✅ | Phase 6 | ~450 | ~49% | civclient.js 纯逻辑函数迁移完成 |
-| **M6: 城市+科技数据完成** | Phase 7 | ~2,000 | ~55% | 城市和科技的数据逻辑迁移完成 |
+| **M6: 城市+科技数据完成** ✅ | Phase 7 | ~752 | ~55% | 城市、科技、国家的数据逻辑迁移完成 |
 | **M7: 控制层完成** | Phase 8 | ~3,000 | ~70% | 核心游戏控制逻辑迁移完成 |
 | **M8: 渲染层完成** | Phase 9 | ~3,500 | ~85% | 2D Canvas 渲染管线迁移完成 |
 | **M9: UI 层完成** | Phase 10 | ~5,000 | ~100% | 全部迁移完成，可移除 Legacy JS |
