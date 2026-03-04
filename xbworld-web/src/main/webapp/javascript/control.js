@@ -166,6 +166,7 @@ function control_init()
         selector: (renderer == RENDERER_2DCANVAS) ? '#canvas' : '#canvas_div' ,
 	    zIndex: 5000,
         autoHide: true,
+        itemClickEvent: 'click',
         callback: function(key, options) {
           handle_context_menu_callback(key);
         },

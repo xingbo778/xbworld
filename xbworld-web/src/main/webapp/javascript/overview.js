@@ -394,6 +394,7 @@ function overview_clicked (x, y)
 
   var ptile = map_pos_to_tile(x1, y1);
   if (ptile != null) {
+    enable_mapview_slide(ptile);
     center_tile_mapcanvas(ptile);
   }
 

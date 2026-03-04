@@ -72,7 +72,10 @@ export function isSmallScreen(): boolean {
 }
 
 export function isTouchDevice(): boolean {
-  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  return ('ontouchstart' in window
+    || 'onmsgesturechange' in window
+    || ((window as any).DocumentTouch != null && document instanceof (window as any).DocumentTouch))
+    ? true : false;
 }
 
 export function supportsMp3(): boolean {
