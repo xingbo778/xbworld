@@ -1,27 +1,18 @@
 /**
  * XBWorld — fc_types constants (migrated from fc_types.js)
  *
- * This module contains all the game-wide constants used by both TS and
- * Legacy code.  Constants are exposed to `window` via `exposeToLegacy`
- * so they are available to legacy JS as global variables.
- *
- * NOTE: We only expose constants that are actually referenced by TS
- * modules.  Legacy code already has its own definitions in fc_types.js;
- * re-exposing them would be harmless but unnecessary.
+ * This module contains ALL game-wide constants from fc_types.js.
+ * All constants are exported for TS module use and also exposed to
+ * `window` via a bulk expose loop for legacy JS compatibility.
  */
 
 import { exposeToLegacy } from '../bridge/legacy';
 
-// ---------------------------------------------------------------------------
-// Tri-state boolean
-// ---------------------------------------------------------------------------
+export const TRUE = true;
+export const FALSE = false;
 export const TRI_NO = 0;
 export const TRI_YES = 1;
 export const TRI_MAYBE = 2;
-
-// ---------------------------------------------------------------------------
-// Limits
-// ---------------------------------------------------------------------------
 export const MAX_NUM_ITEMS = 200;
 export const MAX_NUM_ADVANCES = 250;
 export const MAX_NUM_UNITS = 250;
@@ -30,10 +21,6 @@ export const MAX_EXTRA_TYPES = 250;
 export const MAX_LEN_NAME = 48;
 export const MAX_LEN_CITYNAME = 50;
 export const FC_INFINITY = 1000 * 1000 * 1000;
-
-// ---------------------------------------------------------------------------
-// Activity types
-// ---------------------------------------------------------------------------
 export const ACTIVITY_IDLE = 0;
 export const ACTIVITY_CULTIVATE = 1;
 export const ACTIVITY_MINE = 2;
@@ -51,10 +38,6 @@ export const ACTIVITY_GEN_ROAD = 13;
 export const ACTIVITY_CONVERT = 14;
 export const ACTIVITY_PLANT = 15;
 export const ACTIVITY_LAST = 16;
-
-// ---------------------------------------------------------------------------
-// Action results (enum action_result)
-// ---------------------------------------------------------------------------
 export const ACTRES_ESTABLISH_EMBASSY = 0;
 export const ACTRES_SPY_INVESTIGATE_CITY = 1;
 export const ACTRES_SPY_POISON = 2;
@@ -101,13 +84,190 @@ export const ACTRES_CONVERT = 42;
 export const ACTRES_BASE = 43;
 export const ACTRES_MINE = 44;
 export const ACTRES_IRRIGATE = 45;
-export const ACTRES_CLEAN = 46;
-export const ACTRES_NONE = 47;
-
-// ---------------------------------------------------------------------------
-// Requirement types (VUT_*)
-// Values MUST match fc_types.js (alphabetical enum order used by XBWorld)
-// ---------------------------------------------------------------------------
+export const ACTRES_UNUSED_1 = 46;
+export const ACTRES_UNUSED_2 = 47;
+export const ACTRES_TRANSPORT_DEBOARD = 48;
+export const ACTRES_TRANSPORT_UNLOAD = 49;
+export const ACTRES_TRANSPORT_DISEMBARK = 50;
+export const ACTRES_TRANSPORT_BOARD = 51;
+export const ACTRES_TRANSPORT_EMBARK = 52;
+export const ACTRES_SPY_SPREAD_PLAGUE = 53;
+export const ACTRES_SPY_ATTACK = 54;
+export const ACTRES_CONQUER_EXTRAS = 55;
+export const ACTRES_HUT_ENTER = 56;
+export const ACTRES_HUT_FRIGHTEN = 57;
+export const ACTRES_UNIT_MOVE = 58;
+export const ACTRES_PARADROP_CONQUER = 59;
+export const ACTRES_HOMELESS = 60;
+export const ACTRES_WIPE_UNITS = 61;
+export const ACTRES_SPY_ESCAPE = 62;
+export const ACTRES_TRANSPORT_LOAD = 63;
+export const ACTRES_CLEAN = 64;
+export const ACTRES_TELEPORT = 65;
+export const ACTRES_ENABLER_CHECK = 66;
+export const ACTRES_NONE = 67;
+export const ACT_SUB_RES_HUT_ENTER = 0;
+export const ACT_SUB_RES_HUT_FRIGHTEN = 1;
+export const ACT_SUB_RES_MAY_EMBARK = 2;
+export const ACT_SUB_RES_NON_LETHAL = 3;
+export const ACT_SUB_RES_COUNT = 4;
+export const IDENTITY_NUMBER_ZERO = 0;
+export const ATK_CITY = 0;
+export const ATK_UNIT = 1;
+export const ATK_UNITS = 2;
+export const ATK_TILE = 3;
+export const ATK_EXTRAS = 4;
+export const ATK_SELF = 5;
+export const ATK_COUNT = 6;
+export const ASTK_NONE = 0;
+export const ASTK_BUILDING = 1;
+export const ASTK_TECH = 2;
+export const ASTK_EXTRA = 3;
+export const ASTK_EXTRA_NOT_THERE = 4;
+export const ASTK_COUNT = 5;
+export const ACTION_ESTABLISH_EMBASSY = 0;
+export const ACTION_ESTABLISH_EMBASSY_STAY = 1;
+export const ACTION_SPY_INVESTIGATE_CITY = 2;
+export const ACTION_INV_CITY_SPEND = 3;
+export const ACTION_SPY_POISON = 4;
+export const ACTION_SPY_POISON_ESC = 5;
+export const ACTION_SPY_STEAL_GOLD = 6;
+export const ACTION_SPY_STEAL_GOLD_ESC = 7;
+export const ACTION_SPY_SABOTAGE_CITY = 8;
+export const ACTION_SPY_SABOTAGE_CITY_ESC = 9;
+export const ACTION_SPY_TARGETED_SABOTAGE_CITY = 10;
+export const ACTION_SPY_TARGETED_SABOTAGE_CITY_ESC = 11;
+export const ACTION_SPY_SABOTAGE_CITY_PRODUCTION = 12;
+export const ACTION_SPY_SABOTAGE_CITY_PRODUCTION_ESC = 13;
+export const ACTION_SPY_STEAL_TECH = 14;
+export const ACTION_SPY_STEAL_TECH_ESC = 15;
+export const ACTION_SPY_TARGETED_STEAL_TECH = 16;
+export const ACTION_SPY_TARGETED_STEAL_TECH_ESC = 17;
+export const ACTION_SPY_INCITE_CITY = 18;
+export const ACTION_SPY_INCITE_CITY_ESC = 19;
+export const ACTION_TRADE_ROUTE = 20;
+export const ACTION_MARKETPLACE = 21;
+export const ACTION_HELP_WONDER = 22;
+export const ACTION_SPY_BRIBE_UNIT = 23;
+export const ACTION_CAPTURE_UNITS = 24;
+export const ACTION_SPY_SABOTAGE_UNIT = 25;
+export const ACTION_SPY_SABOTAGE_UNIT_ESC = 26;
+export const ACTION_FOUND_CITY = 27;
+export const ACTION_JOIN_CITY = 28;
+export const ACTION_STEAL_MAPS = 29;
+export const ACTION_STEAL_MAPS_ESC = 30;
+export const ACTION_SPY_NUKE = 31;
+export const ACTION_SPY_NUKE_ESC = 32;
+export const ACTION_NUKE = 33;
+export const ACTION_NUKE_CITY = 34;
+export const ACTION_NUKE_UNITS = 35;
+export const ACTION_DESTROY_CITY = 36;
+export const ACTION_EXPEL_UNIT = 37;
+export const ACTION_DISBAND_UNIT_RECOVER = 38;
+export const ACTION_DISBAND_UNIT = 39;
+export const ACTION_HOME_CITY = 40;
+export const ACTION_HOMELESS = 41;
+export const ACTION_UPGRADE_UNIT = 42;
+export const ACTION_CONVERT = 43;
+export const ACTION_AIRLIFT = 44;
+export const ACTION_ATTACK = 45;
+export const ACTION_ATTACK2 = 46;
+export const ACTION_SUICIDE_ATTACK = 47;
+export const ACTION_SUICIDE_ATTACK2 = 48;
+export const ACTION_STRIKE_BUILDING = 49;
+export const ACTION_STRIKE_PRODUCTION = 50;
+export const ACTION_CONQUER_CITY = 51;
+export const ACTION_CONQUER_CITY2 = 52;
+export const ACTION_CONQUER_CITY3 = 53;
+export const ACTION_CONQUER_CITY4 = 54;
+export const ACTION_BOMBARD = 55;
+export const ACTION_BOMBARD2 = 56;
+export const ACTION_BOMBARD3 = 57;
+export const ACTION_BOMBARD4 = 58;
+export const ACTION_BOMBARD_LETHAL = 59;
+export const ACTION_BOMBARD_LETHAL2 = 60;
+export const ACTION_ROAD = 61;
+export const ACTION_ROAD2 = 62;
+export const ACTION_IRRIGATE = 63;
+export const ACTION_IRRIGATE2 = 64;
+export const ACTION_MINE = 65;
+export const ACTION_MINE2 = 66;
+export const ACTION_BASE = 67;
+export const ACTION_BASE2 = 68;
+export const ACTION_PILLAGE = 69;
+export const ACTION_PILLAGE2 = 70;
+export const ACTION_TRANSPORT_BOARD = 71;
+export const ACTION_TRANSPORT_BOARD2 = 72;
+export const ACTION_TRANSPORT_BOARD3 = 73;
+export const ACTION_TRANSPORT_DEBOARD = 74;
+export const ACTION_TRANSPORT_EMBARK = 75;
+export const ACTION_TRANSPORT_EMBARK2 = 76;
+export const ACTION_TRANSPORT_EMBARK3 = 77;
+export const ACTION_TRANSPORT_EMBARK4 = 78;
+export const ACTION_TRANSPORT_DISEMBARK1 = 79;
+export const ACTION_TRANSPORT_DISEMBARK2 = 80;
+export const ACTION_TRANSPORT_DISEMBARK3 = 81;
+export const ACTION_TRANSPORT_DISEMBARK4 = 82;
+export const ACTION_TRANSPORT_LOAD = 83;
+export const ACTION_TRANSPORT_LOAD2 = 84;
+export const ACTION_TRANSPORT_LOAD3 = 85;
+export const ACTION_TRANSPORT_UNLOAD = 86;
+export const ACTION_SPY_SPREAD_PLAGUE = 87;
+export const ACTION_SPY_ATTACK = 88;
+export const ACTION_CONQUER_EXTRAS = 89;
+export const ACTION_CONQUER_EXTRAS2 = 90;
+export const ACTION_CONQUER_EXTRAS3 = 91;
+export const ACTION_CONQUER_EXTRAS4 = 92;
+export const ACTION_HUT_ENTER = 93;
+export const ACTION_HUT_ENTER2 = 94;
+export const ACTION_HUT_ENTER3 = 95;
+export const ACTION_HUT_ENTER4 = 96;
+export const ACTION_HUT_FRIGHTEN = 97;
+export const ACTION_HUT_FRIGHTEN2 = 98;
+export const ACTION_HUT_FRIGHTEN3 = 99;
+export const ACTION_HUT_FRIGHTEN4 = 100;
+export const ACTION_HEAL_UNIT = 101;
+export const ACTION_HEAL_UNIT2 = 102;
+export const ACTION_PARADROP = 103;
+export const ACTION_PARADROP_CONQUER = 104;
+export const ACTION_PARADROP_FRIGHTEN = 105;
+export const ACTION_PARADROP_FRIGHTEN_CONQUER = 106;
+export const ACTION_PARADROP_ENTER = 107;
+export const ACTION_PARADROP_ENTER_CONQUER = 108;
+export const ACTION_WIPE_UNITS = 109;
+export const ACTION_SPY_ESCAPE = 110;
+export const ACTION_UNIT_MOVE = 111;
+export const ACTION_UNIT_MOVE2 = 112;
+export const ACTION_UNIT_MOVE3 = 113;
+export const ACTION_TELEPORT = 114;
+export const ACTION_TELEPORT2 = 115;
+export const ACTION_TELEPORT3 = 116;
+export const ACTION_TELEPORT_CONQUER = 117;
+export const ACTION_TELEPORT_FRIGHTEN = 118;
+export const ACTION_TELEPORT_FRIGHTEN_CONQUER = 119;
+export const ACTION_TELEPORT_ENTER = 120;
+export const ACTION_TELEPORT_ENTER_CONQUER = 121;
+export const ACTION_CLEAN = 122;
+export const ACTION_CLEAN2 = 123;
+export const ACTION_COLLECT_RANSOM = 124;
+export const ACTION_FORTIFY = 125;
+export const ACTION_FORTIFY2 = 126;
+export const ACTION_CULTIVATE = 127;
+export const ACTION_CULTIVATE2 = 128;
+export const ACTION_PLANT = 129;
+export const ACTION_PLANT2 = 130;
+export const ACTION_TRANSFORM_TERRAIN = 131;
+export const ACTION_TRANSFORM_TERRAIN2 = 132;
+export const ACTION_GAIN_VETERANCY = 133;
+export const ACTION_ESCAPE = 134;
+export const ACTION_USER_ACTION1 = 135;
+export const ACTION_USER_ACTION2 = 136;
+export const ACTION_USER_ACTION3 = 137;
+export const ACTION_USER_ACTION4 = 138;
+export const ACTION_COUNT = 139;
+export const ACT_DEC_NOTHING = 0;
+export const ACT_DEC_PASSIVE = 1;
+export const ACT_DEC_ACTIVE = 2;
 export const VUT_NONE = 0;
 export const VUT_ACHIEVEMENT = 1;
 export const VUT_ACTION = 2;
@@ -172,9 +332,49 @@ export const VUT_UTFLAG = 60;
 export const VUT_UTYPE = 61;
 export const VUT_WRAP = 62;
 export const VUT_COUNT = 63;
-
+export const GUI_STUB = 0;
+export const GUI_GTK2 = 1;
+export const GUI_GTK3 = 2;
+export const GUI_GTK3_22 = 3;
+export const GUI_QT = 4;
+export const GUI_SDL = 5;
+export const GUI_SDL2 = 6;
+export const GUI_SDL3 = 7;
+export const GUI_WEB = 8;
+export const GUI_GTK4 = 9;
+export const GUI_GTK5 = 10;
+export const RPT_POSSIBLE = 0;
+export const RPT_CERTAIN = 1;
+export const O_FOOD = 0;
+export const O_SHIELD = 1;
+export const O_TRADE = 2;
+export const O_GOLD = 3;
+export const O_LUXURY = 4;
+export const O_SCIENCE = 5;
+export const V_MAIN = 0;
+export const V_INVIS = 1;
+export const V_SUBSURFACE = 2;
+export const V_COUNT = 3;
+export const EC_IRRIGATION = 0;
+export const EC_MINE = 1;
+export const EC_ROAD = 2;
+export const EC_BASE = 3;
+export const EC_POLLUTION = 4;
+export const EC_FALLOUT = 5;
+export const EC_HUT = 6;
+export const EC_APPEARANCE = 7;
+export const EC_RESOURCE = 8;
+export const ERM_PILLAGE = 0;
+export const ERM_CLEAN = 1;
+export const ERM_DISAPPEARANCE = 2;
+export const ERM_ENTER = 3;
+export const NOT_A_BARBARIAN = 0;
+export const LAND_BARBARIAN = 1;
+export const SEA_BARBARIAN = 2;
+export const ANIMAL_BARBARIAN = 3;
+export const LAND_AND_SEA_BARBARIAN = 4;
 // ---------------------------------------------------------------------------
-// Requirement ranges (REQ_RANGE_*)
+// Requirement ranges (REQ_RANGE_*) — XBWorld-specific, not in fc_types.js
 // ---------------------------------------------------------------------------
 export const REQ_RANGE_LOCAL = 0;
 export const REQ_RANGE_TILE = 1;
@@ -190,85 +390,407 @@ export const REQ_RANGE_WORLD = 10;
 export const REQ_RANGE_COUNT = 11;
 
 // ---------------------------------------------------------------------------
-// Requirement probability types
-// ---------------------------------------------------------------------------
-export const RPT_POSSIBLE = 0;
-export const RPT_CERTAIN = 1;
-
-// ---------------------------------------------------------------------------
-// Output types
-// ---------------------------------------------------------------------------
-export const O_FOOD = 0;
-export const O_SHIELD = 1;
-export const O_TRADE = 2;
-export const O_GOLD = 3;
-export const O_LUXURY = 4;
-export const O_SCIENCE = 5;
-
-// ---------------------------------------------------------------------------
-// Vision layers
-// ---------------------------------------------------------------------------
-export const V_MAIN = 0;
-export const V_INVIS = 1;
-export const V_SUBSURFACE = 2;
-export const V_COUNT = 3;
-
-// ---------------------------------------------------------------------------
-// Extra causes
-// ---------------------------------------------------------------------------
-export const EC_IRRIGATION = 0;
-export const EC_MINE = 1;
-export const EC_ROAD = 2;
-export const EC_BASE = 3;
-export const EC_POLLUTION = 4;
-export const EC_FALLOUT = 5;
-export const EC_HUT = 6;
-export const EC_APPEARANCE = 7;
-export const EC_RESOURCE = 8;
-
-// ---------------------------------------------------------------------------
-// Extra removal causes
-// ---------------------------------------------------------------------------
-export const ERM_PILLAGE = 0;
-export const ERM_CLEAN = 1;
-export const ERM_DISAPPEARANCE = 2;
-export const ERM_ENTER = 3;
-
-// ---------------------------------------------------------------------------
-// Barbarian types
-// ---------------------------------------------------------------------------
-export const NOT_A_BARBARIAN = 0;
-export const LAND_BARBARIAN = 1;
-export const SEA_BARBARIAN = 2;
-export const ANIMAL_BARBARIAN = 3;
-export const LAND_AND_SEA_BARBARIAN = 4;
-
-// ---------------------------------------------------------------------------
-// Capital types
-// ---------------------------------------------------------------------------
-export const CAPITAL_NOT = 0;
-export const CAPITAL_SECONDARY = 1;
-export const CAPITAL_PRIMARY = 2;
-
-// ---------------------------------------------------------------------------
-// Tech states
+// Tech states — XBWorld-specific, not in fc_types.js
 // ---------------------------------------------------------------------------
 export const TECH_UNKNOWN = 0;
 export const TECH_PREREQS_KNOWN = 1;
 export const TECH_KNOWN = 2;
 
-// ---------------------------------------------------------------------------
-// Expose only constants that TS modules need and that may not yet be
-// defined when TS loads.  Most constants are already set by fc_types.js
-// which loads before ts-bundle.  We expose them anyway so TS modules
-// can import them with type safety.
-// ---------------------------------------------------------------------------
+export const CAPITAL_NOT = 0;
+export const CAPITAL_SECONDARY = 1;
+export const CAPITAL_PRIMARY = 2;
 
-// We do NOT expose fc_types constants via exposeToLegacy because:
-// 1. Legacy fc_types.js already defines them as window globals
-// 2. Re-defining them is harmless but wasteful
-// 3. TS modules should import them from this file for type safety
-//
-// If a future TS module needs a constant that isn't here, add it above
-// and import it.  Do NOT add exposeToLegacy calls for constants that
-// legacy code already defines.
+// ---------------------------------------------------------------------------
+// Bulk expose ALL constants to window for legacy JS compatibility.
+// This replaces fc_types.js which declared them as global vars.
+// ---------------------------------------------------------------------------
+const _allConstants: Record<string, unknown> = {
+  REQ_RANGE_LOCAL,
+  REQ_RANGE_TILE,
+  REQ_RANGE_CADJACENT,
+  REQ_RANGE_ADJACENT,
+  REQ_RANGE_CITY,
+  REQ_RANGE_TRADEROUTE,
+  REQ_RANGE_CONTINENT,
+  REQ_RANGE_PLAYER,
+  REQ_RANGE_TEAM,
+  REQ_RANGE_ALLIANCE,
+  REQ_RANGE_WORLD,
+  REQ_RANGE_COUNT,
+  RPT_POSSIBLE,
+  RPT_CERTAIN,
+  TECH_UNKNOWN,
+  TECH_PREREQS_KNOWN,
+  TECH_KNOWN,
+  TRUE,
+  FALSE,
+  TRI_NO,
+  TRI_YES,
+  TRI_MAYBE,
+  MAX_NUM_ITEMS,
+  MAX_NUM_ADVANCES,
+  MAX_NUM_UNITS,
+  MAX_NUM_BUILDINGS,
+  MAX_EXTRA_TYPES,
+  MAX_LEN_NAME,
+  MAX_LEN_CITYNAME,
+  FC_INFINITY,
+  ACTIVITY_IDLE,
+  ACTIVITY_CULTIVATE,
+  ACTIVITY_MINE,
+  ACTIVITY_IRRIGATE,
+  ACTIVITY_FORTIFIED,
+  ACTIVITY_SENTRY,
+  ACTIVITY_PILLAGE,
+  ACTIVITY_GOTO,
+  ACTIVITY_EXPLORE,
+  ACTIVITY_TRANSFORM,
+  ACTIVITY_FORTIFYING,
+  ACTIVITY_CLEAN,
+  ACTIVITY_BASE,
+  ACTIVITY_GEN_ROAD,
+  ACTIVITY_CONVERT,
+  ACTIVITY_PLANT,
+  ACTIVITY_LAST,
+  ACTRES_ESTABLISH_EMBASSY,
+  ACTRES_SPY_INVESTIGATE_CITY,
+  ACTRES_SPY_POISON,
+  ACTRES_SPY_STEAL_GOLD,
+  ACTRES_SPY_SABOTAGE_CITY,
+  ACTRES_SPY_TARGETED_SABOTAGE_CITY,
+  ACTRES_SPY_SABOTAGE_CITY_PRODUCTION,
+  ACTRES_SPY_STEAL_TECH,
+  ACTRES_SPY_TARGETED_STEAL_TECH,
+  ACTRES_SPY_INCITE_CITY,
+  ACTRES_TRADE_ROUTE,
+  ACTRES_MARKETPLACE,
+  ACTRES_HELP_WONDER,
+  ACTRES_SPY_BRIBE_UNIT,
+  ACTRES_SPY_SABOTAGE_UNIT,
+  ACTRES_CAPTURE_UNITS,
+  ACTRES_FOUND_CITY,
+  ACTRES_JOIN_CITY,
+  ACTRES_STEAL_MAPS,
+  ACTRES_BOMBARD,
+  ACTRES_SPY_NUKE,
+  ACTRES_NUKE,
+  ACTRES_NUKE_UNITS,
+  ACTRES_DESTROY_CITY,
+  ACTRES_EXPEL_UNIT,
+  ACTRES_RECYCLE_UNIT,
+  ACTRES_DISBAND_UNIT,
+  ACTRES_HOME_CITY,
+  ACTRES_UPGRADE_UNIT,
+  ACTRES_PARADROP,
+  ACTRES_AIRLIFT,
+  ACTRES_ATTACK,
+  ACTRES_STRIKE_BUILDING,
+  ACTRES_STRIKE_PRODUCTION,
+  ACTRES_CONQUER_CITY,
+  ACTRES_HEAL_UNIT,
+  ACTRES_TRANSFORM_TERRAIN,
+  ACTRES_CULTIVATE,
+  ACTRES_PLANT,
+  ACTRES_PILLAGE,
+  ACTRES_FORTIFY,
+  ACTRES_ROAD,
+  ACTRES_CONVERT,
+  ACTRES_BASE,
+  ACTRES_MINE,
+  ACTRES_IRRIGATE,
+  ACTRES_UNUSED_1,
+  ACTRES_UNUSED_2,
+  ACTRES_TRANSPORT_DEBOARD,
+  ACTRES_TRANSPORT_UNLOAD,
+  ACTRES_TRANSPORT_DISEMBARK,
+  ACTRES_TRANSPORT_BOARD,
+  ACTRES_TRANSPORT_EMBARK,
+  ACTRES_SPY_SPREAD_PLAGUE,
+  ACTRES_SPY_ATTACK,
+  ACTRES_CONQUER_EXTRAS,
+  ACTRES_HUT_ENTER,
+  ACTRES_HUT_FRIGHTEN,
+  ACTRES_UNIT_MOVE,
+  ACTRES_PARADROP_CONQUER,
+  ACTRES_HOMELESS,
+  ACTRES_WIPE_UNITS,
+  ACTRES_SPY_ESCAPE,
+  ACTRES_TRANSPORT_LOAD,
+  ACTRES_CLEAN,
+  ACTRES_TELEPORT,
+  ACTRES_ENABLER_CHECK,
+  ACTRES_NONE,
+  ACT_SUB_RES_HUT_ENTER,
+  ACT_SUB_RES_HUT_FRIGHTEN,
+  ACT_SUB_RES_MAY_EMBARK,
+  ACT_SUB_RES_NON_LETHAL,
+  ACT_SUB_RES_COUNT,
+  IDENTITY_NUMBER_ZERO,
+  ATK_CITY,
+  ATK_UNIT,
+  ATK_UNITS,
+  ATK_TILE,
+  ATK_EXTRAS,
+  ATK_SELF,
+  ATK_COUNT,
+  ASTK_NONE,
+  ASTK_BUILDING,
+  ASTK_TECH,
+  ASTK_EXTRA,
+  ASTK_EXTRA_NOT_THERE,
+  ASTK_COUNT,
+  ACTION_ESTABLISH_EMBASSY,
+  ACTION_ESTABLISH_EMBASSY_STAY,
+  ACTION_SPY_INVESTIGATE_CITY,
+  ACTION_INV_CITY_SPEND,
+  ACTION_SPY_POISON,
+  ACTION_SPY_POISON_ESC,
+  ACTION_SPY_STEAL_GOLD,
+  ACTION_SPY_STEAL_GOLD_ESC,
+  ACTION_SPY_SABOTAGE_CITY,
+  ACTION_SPY_SABOTAGE_CITY_ESC,
+  ACTION_SPY_TARGETED_SABOTAGE_CITY,
+  ACTION_SPY_TARGETED_SABOTAGE_CITY_ESC,
+  ACTION_SPY_SABOTAGE_CITY_PRODUCTION,
+  ACTION_SPY_SABOTAGE_CITY_PRODUCTION_ESC,
+  ACTION_SPY_STEAL_TECH,
+  ACTION_SPY_STEAL_TECH_ESC,
+  ACTION_SPY_TARGETED_STEAL_TECH,
+  ACTION_SPY_TARGETED_STEAL_TECH_ESC,
+  ACTION_SPY_INCITE_CITY,
+  ACTION_SPY_INCITE_CITY_ESC,
+  ACTION_TRADE_ROUTE,
+  ACTION_MARKETPLACE,
+  ACTION_HELP_WONDER,
+  ACTION_SPY_BRIBE_UNIT,
+  ACTION_CAPTURE_UNITS,
+  ACTION_SPY_SABOTAGE_UNIT,
+  ACTION_SPY_SABOTAGE_UNIT_ESC,
+  ACTION_FOUND_CITY,
+  ACTION_JOIN_CITY,
+  ACTION_STEAL_MAPS,
+  ACTION_STEAL_MAPS_ESC,
+  ACTION_SPY_NUKE,
+  ACTION_SPY_NUKE_ESC,
+  ACTION_NUKE,
+  ACTION_NUKE_CITY,
+  ACTION_NUKE_UNITS,
+  ACTION_DESTROY_CITY,
+  ACTION_EXPEL_UNIT,
+  ACTION_DISBAND_UNIT_RECOVER,
+  ACTION_DISBAND_UNIT,
+  ACTION_HOME_CITY,
+  ACTION_HOMELESS,
+  ACTION_UPGRADE_UNIT,
+  ACTION_CONVERT,
+  ACTION_AIRLIFT,
+  ACTION_ATTACK,
+  ACTION_ATTACK2,
+  ACTION_SUICIDE_ATTACK,
+  ACTION_SUICIDE_ATTACK2,
+  ACTION_STRIKE_BUILDING,
+  ACTION_STRIKE_PRODUCTION,
+  ACTION_CONQUER_CITY,
+  ACTION_CONQUER_CITY2,
+  ACTION_CONQUER_CITY3,
+  ACTION_CONQUER_CITY4,
+  ACTION_BOMBARD,
+  ACTION_BOMBARD2,
+  ACTION_BOMBARD3,
+  ACTION_BOMBARD4,
+  ACTION_BOMBARD_LETHAL,
+  ACTION_BOMBARD_LETHAL2,
+  ACTION_ROAD,
+  ACTION_ROAD2,
+  ACTION_IRRIGATE,
+  ACTION_IRRIGATE2,
+  ACTION_MINE,
+  ACTION_MINE2,
+  ACTION_BASE,
+  ACTION_BASE2,
+  ACTION_PILLAGE,
+  ACTION_PILLAGE2,
+  ACTION_TRANSPORT_BOARD,
+  ACTION_TRANSPORT_BOARD2,
+  ACTION_TRANSPORT_BOARD3,
+  ACTION_TRANSPORT_DEBOARD,
+  ACTION_TRANSPORT_EMBARK,
+  ACTION_TRANSPORT_EMBARK2,
+  ACTION_TRANSPORT_EMBARK3,
+  ACTION_TRANSPORT_EMBARK4,
+  ACTION_TRANSPORT_DISEMBARK1,
+  ACTION_TRANSPORT_DISEMBARK2,
+  ACTION_TRANSPORT_DISEMBARK3,
+  ACTION_TRANSPORT_DISEMBARK4,
+  ACTION_TRANSPORT_LOAD,
+  ACTION_TRANSPORT_LOAD2,
+  ACTION_TRANSPORT_LOAD3,
+  ACTION_TRANSPORT_UNLOAD,
+  ACTION_SPY_SPREAD_PLAGUE,
+  ACTION_SPY_ATTACK,
+  ACTION_CONQUER_EXTRAS,
+  ACTION_CONQUER_EXTRAS2,
+  ACTION_CONQUER_EXTRAS3,
+  ACTION_CONQUER_EXTRAS4,
+  ACTION_HUT_ENTER,
+  ACTION_HUT_ENTER2,
+  ACTION_HUT_ENTER3,
+  ACTION_HUT_ENTER4,
+  ACTION_HUT_FRIGHTEN,
+  ACTION_HUT_FRIGHTEN2,
+  ACTION_HUT_FRIGHTEN3,
+  ACTION_HUT_FRIGHTEN4,
+  ACTION_HEAL_UNIT,
+  ACTION_HEAL_UNIT2,
+  ACTION_PARADROP,
+  ACTION_PARADROP_CONQUER,
+  ACTION_PARADROP_FRIGHTEN,
+  ACTION_PARADROP_FRIGHTEN_CONQUER,
+  ACTION_PARADROP_ENTER,
+  ACTION_PARADROP_ENTER_CONQUER,
+  ACTION_WIPE_UNITS,
+  ACTION_SPY_ESCAPE,
+  ACTION_UNIT_MOVE,
+  ACTION_UNIT_MOVE2,
+  ACTION_UNIT_MOVE3,
+  ACTION_TELEPORT,
+  ACTION_TELEPORT2,
+  ACTION_TELEPORT3,
+  ACTION_TELEPORT_CONQUER,
+  ACTION_TELEPORT_FRIGHTEN,
+  ACTION_TELEPORT_FRIGHTEN_CONQUER,
+  ACTION_TELEPORT_ENTER,
+  ACTION_TELEPORT_ENTER_CONQUER,
+  ACTION_CLEAN,
+  ACTION_CLEAN2,
+  ACTION_COLLECT_RANSOM,
+  ACTION_FORTIFY,
+  ACTION_FORTIFY2,
+  ACTION_CULTIVATE,
+  ACTION_CULTIVATE2,
+  ACTION_PLANT,
+  ACTION_PLANT2,
+  ACTION_TRANSFORM_TERRAIN,
+  ACTION_TRANSFORM_TERRAIN2,
+  ACTION_GAIN_VETERANCY,
+  ACTION_ESCAPE,
+  ACTION_USER_ACTION1,
+  ACTION_USER_ACTION2,
+  ACTION_USER_ACTION3,
+  ACTION_USER_ACTION4,
+  ACTION_COUNT,
+  ACT_DEC_NOTHING,
+  ACT_DEC_PASSIVE,
+  ACT_DEC_ACTIVE,
+  VUT_NONE,
+  VUT_ACHIEVEMENT,
+  VUT_ACTION,
+  VUT_ACTIVITY,
+  VUT_ADVANCE,
+  VUT_AGE,
+  VUT_AI_LEVEL,
+  VUT_CITYSTATUS,
+  VUT_CITYTILE,
+  VUT_COUNTER,
+  VUT_DIPLREL,
+  VUT_DIPLREL_TILE,
+  VUT_DIPLREL_TILE_O,
+  VUT_DIPLREL_UNITANY,
+  VUT_DIPLREL_UNITANY_O,
+  VUT_EXTRA,
+  VUT_EXTRAFLAG,
+  VUT_FORM_AGE,
+  VUT_GOOD,
+  VUT_GOVERNMENT,
+  VUT_IMPROVEMENT,
+  VUT_IMPR_FLAG,
+  VUT_IMPR_GENUS,
+  VUT_MAXLATITUDE,
+  VUT_MAXTILEUNITS,
+  VUT_MAX_DISTANCE_SQ,
+  VUT_MAX_REGION_TILES,
+  VUT_MINCALFRAG,
+  VUT_MINCITIES,
+  VUT_MINCULTURE,
+  VUT_MINFOREIGNPCT,
+  VUT_MINHP,
+  VUT_MINLATITUDE,
+  VUT_MINMOVES,
+  VUT_MINSIZE,
+  VUT_MINTECHS,
+  VUT_MINVETERAN,
+  VUT_MINYEAR,
+  VUT_NATION,
+  VUT_NATIONALITY,
+  VUT_NATIONGROUP,
+  VUT_ORIGINAL_OWNER,
+  VUT_OTYPE,
+  VUT_PLAYER_FLAG,
+  VUT_PLAYER_STATE,
+  VUT_ROADFLAG,
+  VUT_SERVERSETTING,
+  VUT_SITE,
+  VUT_SPECIALIST,
+  VUT_STYLE,
+  VUT_TECHFLAG,
+  VUT_TERRAIN,
+  VUT_TERRAINALTER,
+  VUT_TERRAINCLASS,
+  VUT_TERRFLAG,
+  VUT_TILE_REL,
+  VUT_TOPO,
+  VUT_UCFLAG,
+  VUT_UCLASS,
+  VUT_UNITSTATE,
+  VUT_UTFLAG,
+  VUT_UTYPE,
+  VUT_WRAP,
+  VUT_COUNT,
+  GUI_STUB,
+  GUI_GTK2,
+  GUI_GTK3,
+  GUI_GTK3_22,
+  GUI_QT,
+  GUI_SDL,
+  GUI_SDL2,
+  GUI_SDL3,
+  GUI_WEB,
+  GUI_GTK4,
+  GUI_GTK5,
+  O_FOOD,
+  O_SHIELD,
+  O_TRADE,
+  O_GOLD,
+  O_LUXURY,
+  O_SCIENCE,
+  V_MAIN,
+  V_INVIS,
+  V_SUBSURFACE,
+  V_COUNT,
+  EC_IRRIGATION,
+  EC_MINE,
+  EC_ROAD,
+  EC_BASE,
+  EC_POLLUTION,
+  EC_FALLOUT,
+  EC_HUT,
+  EC_APPEARANCE,
+  EC_RESOURCE,
+  ERM_PILLAGE,
+  ERM_CLEAN,
+  ERM_DISAPPEARANCE,
+  ERM_ENTER,
+  NOT_A_BARBARIAN,
+  LAND_BARBARIAN,
+  SEA_BARBARIAN,
+  ANIMAL_BARBARIAN,
+  LAND_AND_SEA_BARBARIAN,
+  CAPITAL_NOT,
+  CAPITAL_SECONDARY,
+  CAPITAL_PRIMARY,
+};
+
+for (const [key, val] of Object.entries(_allConstants)) {
+  exposeToLegacy(key, val);
+}
+

@@ -385,14 +385,14 @@ function handle_server_join_reply(packet: any): void {
 }
 
 function handle_conn_info(packet: any): void {
-  let pconn = w.find_conn_by_id(packet['id']);
+  let pconn = find_conn_by_id(packet['id']);
 
   if (packet['used'] === false) {
     if (pconn == null) {
       w.freelog(w.LOG_VERBOSE, 'Server removed unknown connection ' + packet['id']);
       return;
     }
-    w.client_remove_cli_conn(pconn);
+    client_remove_cli_conn(pconn);
     pconn = null;
   } else {
     const pplayer = w.valid_player_by_number(packet['player_num']);
@@ -405,7 +405,7 @@ function handle_conn_info(packet: any): void {
       }
       w.client.conn = packet;
     }
-    w.conn_list_append(packet);
+    conn_list_append(packet);
   }
 
   if (packet['id'] === w.client.conn.id) {
@@ -1626,6 +1626,23 @@ exposeToLegacy('recreate_old_tech_req', recreate_old_tech_req);
 exposeToLegacy('packet_hand_table', packet_hand_table);
 exposeToLegacy('client_handle_packet', client_handle_packet);
 exposeToLegacy('register_packet_handler', register_packet_handler);
+
+// Connection management (migrated from connection.js)
+function find_conn_by_id(id: number): any {
+  return w.connections[id];
+}
+
+function client_remove_cli_conn(connection: any): void {
+  delete w.connections[connection['id']];
+}
+
+function conn_list_append(connection: any): void {
+  w.connections[connection['id']] = connection;
+}
+
+exposeToLegacy('find_conn_by_id', find_conn_by_id);
+exposeToLegacy('client_remove_cli_conn', client_remove_cli_conn);
+exposeToLegacy('conn_list_append', conn_list_append);
 
 // Module-local state exposed for legacy access
 exposeToLegacy('terrain_control', terrain_control);

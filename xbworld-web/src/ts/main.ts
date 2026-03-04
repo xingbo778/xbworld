@@ -45,6 +45,15 @@ if (win['requested_gov'] === undefined) win['requested_gov'] = -1;
 if (!win['connections']) win['connections'] = {};
 if (!win['conn_ping_info']) win['conn_ping_info'] = {};
 if (!win['debug_ping_list']) win['debug_ping_list'] = [];
+// Previously declared in actions.js
+if (!win['actions']) win['actions'] = {};
+// Previously declared in extra.js
+if (!win['extras']) win['extras'] = {};
+if (!win['roads']) win['roads'] = [];
+if (!win['bases']) win['bases'] = [];
+// Previously declared in unittype.js
+if (!win['unit_types']) win['unit_types'] = {};
+if (!win['unit_classes']) win['unit_classes'] = {};
 
 if (typeof win['update_unit_position'] !== 'function') {
   win['update_unit_position'] = function (_ptile: unknown): void {

@@ -539,3 +539,307 @@ const apiProxy = {
 
 1. **Vite proxy 配置应该一次性测试完整** — 每次启动 dev server 都要重新排查 proxy 问题，浪费时间
 2. **应该建立自动化的端到端测试脚本** — 目前每次都手动在浏览器中输入用户名、点击按钮、检查控制台，应该用 Playwright 自动化
+
+
+---
+
+## 坑 10：删除 Legacy JS 文件前必须检查「变量声明」而非仅检查「函数覆盖」
+
+### 现象
+
+Phase 8+9 删除 `player.js` 后，Legacy 代码中引用 `DS_WAR`、`DS_PEACE`、`PLRF_AI` 等常量的函数在运行时报 `ReferenceError`。
+
+### 根因
+
+删除前的覆盖率检查只关注了**函数**是否在 TS 中有对应的 `exposeToLegacy`，但忽略了 Legacy JS 文件中的 **`var` 声明的常量和全局变量**。例如 `player.js` 中：
+
+```javascript
+var DS_WAR = 0;
+var DS_ARMISTICE = 1;
+var DS_CEASEFIRE = 2;
+var DS_PEACE = 3;
+var DS_ALLIANCE = 4;
+var PLRF_AI = 1;
+var MAX_NUM_PLAYERS = 30;
+```
+
+TS 的 `player.ts` 中这些值定义在 `const enum DiplState` 中，编译后会被**内联为数字**，不会暴露到 `window`。Legacy 代码中有 20+ 处引用 `DS_WAR` 等常量（如 `diplomacy.js`、`nation.js`），删除 `player.js` 后这些引用全部变成 `undefined`。
+
+### 解决方案
+
+在 `player.ts` 末尾添加显式的 `window` 暴露：
+
+```typescript
+// Expose DiplState enum values as globals for legacy JS
+const w = window as any;
+w.DS_WAR = DiplState.DS_WAR;           // 0
+w.DS_ARMISTICE = DiplState.DS_ARMISTICE; // 1
+// ... etc
+w.PLRF_AI = 1;
+w.MAX_NUM_PLAYERS = 30;
+w.MAX_NUM_BARBARIANS = 10;
+```
+
+### 教训
+
+**删除 Legacy JS 文件的检查清单必须包含三项**：
+
+| 检查项 | 方法 |
+|---|---|
+| 函数是否全部被 TS `exposeToLegacy` 覆盖 | `grep "function " xxx.js` 对比 `grep "exposeToLegacy" xxx.ts` |
+| `var` 声明的常量是否暴露到 `window` | `grep "^var " xxx.js`，然后在浏览器中逐一检查 `typeof window.XXX` |
+| `var` 声明的全局变量（如 `players = {}`）是否在 `main.ts` 或 `sync.ts` 中初始化 | 检查 `main.ts` 的初始化代码和 `sync.ts` 的 `syncProp` 调用 |
+
+**特别注意 `const enum`**：TypeScript 的 `const enum` 在编译后会被内联，不会产生运行时对象。如果 Legacy 代码引用这些常量名，必须手动暴露到 `window`。
+
+---
+
+## 坑 11：jQuery 插件（`$.getUrlVar`）随 `utility.js` 一起被删除
+
+### 现象
+
+删除 `utility.js` 后，游戏启动页面的 Welcome 对话框不显示，控制台报 `$.getUrlVar is not a function`。
+
+### 根因
+
+`utility.js` 中不仅有普通函数，还有一个 **jQuery 插件扩展**：
+
+```javascript
+$.extend({
+  getUrlVars: function() { /* 解析 URL 参数 */ },
+  getUrlVar: function(name) { return $.getUrlVars()[name]; }
+});
+```
+
+TS 的 `helpers.ts` 迁移了 `utility.js` 中的所有普通函数（`generate_textlist_string`、`benchmark_start` 等），但遗漏了这个 jQuery 插件。`civclient.js` 的 `document.ready` 中调用 `$.getUrlVar('action')` 来判断游戏模式，这是页面初始化的第一步。
+
+### 解决方案
+
+在 `helpers.ts` 中添加 jQuery 插件注册：
+
+```typescript
+const jq = (window as any).$ as any;
+if (jq && jq.extend) {
+  jq.extend({
+    getUrlVars: function () {
+      const vars: Record<string, string> = {};
+      window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, (_m, key, value) => {
+        vars[key] = value;
+        return '';
+      });
+      return vars;
+    },
+    getUrlVar: function (name: string) {
+      return jq.getUrlVars()[name];
+    },
+  });
+}
+```
+
+### 教训
+
+**删除 Legacy JS 文件前，必须搜索以下模式**：
+
+```bash
+# 检查是否有 jQuery 插件扩展
+grep -n "\\$.extend\|\\$.fn\." xxx.js
+
+# 检查是否有 prototype 扩展
+grep -n "prototype\." xxx.js
+
+# 检查是否有全局事件绑定
+grep -n "addEventListener\|\\$(document)\|\\$(window)" xxx.js
+```
+
+这些**副作用代码**不是函数定义，不会出现在 `grep "function "` 的结果中，但删除后会导致功能缺失。
+
+---
+
+## 坑 12：`fc_types.js` 的 368 个常量需要批量暴露策略
+
+### 现象
+
+`fc_types.js` 有 368 个 `var` 声明的常量，被 Legacy 代码广泛引用（几乎每个 JS 文件都用到）。逐一手动暴露不现实。
+
+### 根因
+
+`fcTypes.ts` 最初只定义了约 170 个常量（从 Phase 1 迁移），且使用 `const enum`（编译时内联，不暴露到 `window`）。`fc_types.js` 中还有约 195 个常量未在 TS 中定义。
+
+### 解决方案
+
+使用 Python 脚本从 `fc_types.js` 自动提取所有 `var` 声明，生成 `export const` 语句和批量暴露代码：
+
+```python
+# 1. 提取所有 var 声明
+grep "^var " fc_types.js | sed 's/var /export const /' > constants.txt
+
+# 2. 生成批量暴露代码
+const _allConstants = { VAR1, VAR2, ... };
+for (const [k, v] of Object.entries(_allConstants)) {
+  (window as any)[k] = v;
+}
+```
+
+**关键注意事项**：
+
+1. **去重**：旧版 `fcTypes.ts` 中已有的常量不能重复声明（如 `RPT_POSSIBLE`、`RPT_CERTAIN`）
+2. **值冲突**：旧版 `fcTypes.ts` 中的值可能与 `fc_types.js` 不同（如 `ACTRES_NONE` 在旧 TS 中是 47，在 JS 中是 67），以 JS 为准
+3. **XBWorld 自定义常量**：旧版 `fcTypes.ts` 中有 15 个不在 `fc_types.js` 中的常量（如 `REQ_RANGE_PLAYER`、`VUT_UTYPE`），这些是 XBWorld 项目自定义的，必须保留
+
+### 教训
+
+**大文件迁移应使用脚本自动化**，而非手动逐行迁移。自动化脚本应包含：
+
+1. 从 Legacy JS 提取所有声明
+2. 与现有 TS 文件做 diff，找出缺失项
+3. 生成代码并检查重复/冲突
+4. 编译验证
+
+---
+
+## 坑 13：`type="module"` 脚本的加载时序与 Legacy JS 不同
+
+### 现象
+
+删除 Legacy JS 文件后，担心 TS bundle（`type="module"`）在 Legacy JS 之后加载，导致 Legacy JS 在加载时引用的全局变量不存在。
+
+### 根因分析
+
+`index.html` 中的加载顺序：
+
+```html
+<!-- 1. jQuery 和第三方库 -->
+<script src="/javascript/libs/jquery.min.js"></script>
+
+<!-- 2. Legacy JS 文件（普通 script） -->
+<script src="/javascript/civclient.js"></script>
+<script src="/javascript/control.js"></script>
+<!-- ... -->
+
+<!-- 3. TS bundle（type="module"） -->
+<script type="module" src="/javascript/ts-bundle/main.js"></script>
+```
+
+`type="module"` 脚本是**延迟执行**的（类似 `defer`），在 DOM 解析完成后、`DOMContentLoaded` 事件前执行。Legacy JS 是**同步执行**的，在加载时立即运行。
+
+**关键发现**：Legacy JS 文件中的全局变量引用（如 `terrains`、`players`、`DS_WAR`）几乎全部出现在**函数定义内部**，而非全局作用域的立即执行代码。函数只在被调用时才解析变量引用，而函数调用发生在 `document.ready` 之后（此时 TS module 已加载完毕）。
+
+### 安全删除的条件
+
+一个 Legacy JS 文件可以安全删除，当且仅当：
+
+1. 其所有函数和常量已在 TS 中通过 `exposeToLegacy` 或 `window[xxx] = yyy` 暴露
+2. 其声明的全局变量已在 `main.ts` 或 `sync.ts` 中初始化
+3. **没有在全局作用域立即使用其他 Legacy 文件的变量**（如 `var x = someOtherGlobal + 1`）
+
+### 验证方法
+
+```bash
+# 检查文件中是否有全局作用域的立即执行代码（非函数定义内）
+# 如果只有 var 声明和 function 定义，则安全
+grep -n "^[^/]" xxx.js | grep -v "^[0-9]*:var \|^[0-9]*:function \|^[0-9]*:}\|^[0-9]*:$\|^[0-9]*://\|^[0-9]*:/\*"
+```
+
+---
+
+## 坑 14：`connection.js` 的函数被 TS `packhandlers.ts` 通过 `window` 调用但未定义
+
+### 现象
+
+分析 `connection.js` 时发现其 3 个函数（`find_conn_by_id`、`client_remove_cli_conn`、`conn_list_append`）在 TS 的 `packhandlers.ts` 中通过 `w.find_conn_by_id()` 调用，但从未在 TS 中定义。
+
+### 根因
+
+Phase 5 迁移 packet handlers 时，这些函数被视为"Legacy 辅助函数"，通过 `window` 调用以避免导入。但如果删除 `connection.js`，这些 `window` 调用就会失败。
+
+### 解决方案
+
+将这 3 个函数直接实现在 `packhandlers.ts` 中，并将 `w.find_conn_by_id()` 等调用替换为直接函数调用：
+
+```typescript
+// 在 packhandlers.ts 中添加
+function find_conn_by_id(id: number) { /* ... */ }
+function client_remove_cli_conn(pconn: any) { /* ... */ }
+function conn_list_append(pconn: any) { /* ... */ }
+
+// 同时暴露给 Legacy
+exposeToLegacy('find_conn_by_id', find_conn_by_id);
+```
+
+### 教训
+
+**TS 代码中通过 `window.xxx()` 调用的函数，必须在删除对应 Legacy 文件前迁移到 TS 内部**。搜索方法：
+
+```bash
+# 查找 TS 中所有通过 window 调用的 Legacy 函数
+grep -n "w\.\|window\." src/ts/**/*.ts | grep -v "window.location\|window.document\|window.setTimeout"
+```
+
+---
+
+## Phase 8-10 效率总结
+
+### 做得好的
+
+1. **系统性的删除前检查**：对每个待删除文件做了函数覆盖、变量声明、jQuery 插件三项检查，避免了大规模回退。
+2. **Python 脚本自动化**：用脚本从 `fc_types.js` 自动生成 368 个常量的 TS 代码，避免手动逐行迁移。
+3. **发现并修复了 `$.getUrlVar` 遗漏**：在测试中快速定位到 jQuery 插件缺失的问题。
+
+### 需要改进的
+
+1. **Vite dev server 配置反复折腾**：`allowedHosts`、`root` 目录、端口占用等问题消耗了大量时间。**应该建立一个稳定的 `vite.config.dev.ts`** 专门用于本地测试，与生产 `vite.config.ts` 分离，且在文档中记录启动命令。
+
+2. **黑色地图问题的排查效率低**：花了大量时间在浏览器控制台中逐步排查渲染管线，最终发现是 `mark_all_dirty()` 时序问题（可能是预先存在的 bug）。**应该建立一个标准的地图渲染诊断脚本**：
+
+```javascript
+// 标准地图渲染诊断（保存为 bookmark 或 snippet）
+(function() {
+  var d = {};
+  d.tileset_loaded = typeof tileset !== 'undefined' && Object.keys(tileset).length > 0;
+  d.sprites_count = typeof sprites !== 'undefined' ? Object.keys(sprites).length : 0;
+  d.map_exists = typeof map !== 'undefined' && map.xsize > 0;
+  d.known_tiles = Object.values(tiles).filter(t => t.known >= 2).length;
+  d.dirty_all = typeof dirty_all !== 'undefined' ? dirty_all : 'N/A';
+  d.dirty_count = typeof dirty_count !== 'undefined' ? dirty_count : 'N/A';
+  d.mapview_origin = typeof mapview !== 'undefined' ? {x: mapview.gui_x0, y: mapview.gui_y0} : 'N/A';
+  d.canvas_size = {w: mapview_canvas.width, h: mapview_canvas.height};
+  console.table(d);
+  // 尝试修复
+  if (d.known_tiles > 0 && d.dirty_all === false) {
+    center_tile_mapcanvas(Object.values(tiles).find(t => t.known >= 2));
+    update_map_canvas_full();
+    console.log('Forced map redraw');
+  }
+})();
+```
+
+3. **后端服务器依赖问题**：测试依赖后端服务器（端口 8002），但后端可能随时停止。**应该建立一个 mock server** 或使用录制的 WebSocket 消息进行离线测试。
+
+4. **删除文件的检查流程应该脚本化**：每次删除文件前的三项检查（函数、变量、副作用）应该写成一个自动化脚本，输入 JS 文件名，输出缺失的暴露项。
+
+### 迁移原则（Phase 8-10 更新）
+
+13. **删除 Legacy JS 的三项检查**：函数覆盖 + 变量暴露 + 副作用代码（jQuery 插件、prototype 扩展、事件绑定）。
+14. **`const enum` 不等于全局暴露**：TypeScript 的 `const enum` 编译后被内联，必须手动暴露到 `window`。
+15. **大文件用脚本自动化迁移**：超过 50 个声明的文件，用 Python/Node 脚本提取和生成代码。
+16. **TS 中的 `window.xxx()` 调用是隐式依赖**：删除 Legacy 文件前，必须搜索 TS 代码中通过 `window` 调用的函数。
+17. **建立稳定的本地测试环境**：`vite.config.dev.ts` + 标准诊断脚本 + mock server，避免每次测试都重新配置。
+
+---
+
+## 当前迁移进度（Phase 10 完成后）
+
+| 阶段 | 删除的 Legacy JS 文件数 | 剩余 Legacy JS 文件数 | 累计减少代码行数 |
+|---|---|---|---|
+| Phase 1-7 | 2 (packhand.js, webclient.min.js 拆分) | 58 | ~3,000 |
+| Phase 8+9 | 11 | 47 | ~6,352 |
+| Phase 10 | 8 | 39 | ~7,567 |
+
+**剩余 39 个 Legacy JS 文件中的分类**：
+
+| 分类 | 文件数 | 代表文件 | 迁移难度 |
+|---|---|---|---|
+| 纯 UI 渲染（DOM/jQuery 操作） | ~15 | control.js, pregame.js, diplomacy.js | 高（大量 jQuery UI 依赖） |
+| 2D Canvas 渲染 | ~8 | 2dcanvas/mapview.js, tilespec.js | 高（渲染管线复杂） |
+| 数据+UI 混合 | ~10 | government.js, nation.js, city.js | 中（需拆分数据和 UI） |
+| 核心逻辑 | ~6 | civclient.js, client_main.js, map.js | 中（有大量初始化副作用） |
