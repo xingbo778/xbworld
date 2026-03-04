@@ -130,10 +130,11 @@ export function get_year_string(): string {
 }
 
 export function current_turn_timeout(): number {
-  if (game_info!['turn'] === 1 && game_info!['first_timeout'] !== -1) {
-    return game_info!['first_timeout'];
+  if (!game_info) return 0; // P2 fix: game_info is null before game starts
+  if (game_info['turn'] === 1 && game_info['first_timeout'] !== -1) {
+    return game_info['first_timeout'];
   } else {
-    return game_info!['timeout'];
+    return game_info['timeout'];
   }
 }
 

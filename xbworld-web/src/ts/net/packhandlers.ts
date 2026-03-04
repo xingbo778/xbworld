@@ -557,6 +557,17 @@ function handle_player_info(packet: any): void {
     packet
   );
 
+  // Convert bitfield arrays to BitVector so legacy JS can call .isSet().
+  // The server sends these as plain arrays; without conversion, nation.js
+  // (and control.js / hotseat.js) crash with "flags.isSet is not a function".
+  const p = w.players[packet['playerno']];
+  if (p['flags'] != null && !(p['flags'] instanceof w.BitVector)) {
+    p['flags'] = new w.BitVector(p['flags']);
+  }
+  if (p['gives_shared_vision'] != null && !(p['gives_shared_vision'] instanceof w.BitVector)) {
+    p['gives_shared_vision'] = new w.BitVector(p['gives_shared_vision']);
+  }
+
   if (w.client.conn.playing != null
       && packet['playerno'] === w.client.conn.playing['playerno']) {
     w.client.conn.playing = w.players[packet['playerno']];
