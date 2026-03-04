@@ -121,6 +121,7 @@ import './net/connection';
 import './client/clientState';
 import './client/clientCore';
 import './client/clientMain';
+import './client/civClient';
 import './client/clientTimers';
 import './client/clientDebug';
 
