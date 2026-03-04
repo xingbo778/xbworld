@@ -827,6 +827,54 @@ grep -n "w\.\|window\." src/ts/**/*.ts | grep -v "window.location\|window.docume
 
 ---
 
+## 坑 16：删除 Legacy JS 后，其中的 `var` 全局变量声明也随之消失
+
+### 现象
+
+`nation.js` 被删除后，`diplstates`、`selected_player`、`nation_groups` 三个全局变量在运行时为 `undefined`，导致 `packhandlers.ts` 中的 `w.diplstates[id] = ...` 赋值操作报 `TypeError: Cannot set properties of undefined`。
+
+### 根因
+
+`nation.js` 顶部有三个 `var` 声明：
+
+```javascript
+var diplstates = {};
+var selected_player = -1;
+var nation_groups = [];
+```
+
+这些变量不是函数，不会出现在 `grep "function "` 的结果中，也不是常量（不在坑 10 的检查范围内），而是**运行时状态变量**。删除 `nation.js` 后，这些变量在 `window` 上不再存在，但 `packhandlers.ts` 仍然通过 `w.diplstates[id] = ...` 写入它们。
+
+### 解决方案
+
+在 `nation.ts` 的模块加载时（`exposeToLegacy` 调用之前）显式初始化这些变量：
+
+```typescript
+// Initialize global state variables that were previously declared in nation.js
+const w = window as any;
+if (w.diplstates === undefined) w.diplstates = {};
+if (w.selected_player === undefined) w.selected_player = -1;
+if (w.nation_groups === undefined) w.nation_groups = [];
+```
+
+使用 `=== undefined` 而非直接赋值，避免在模块重新加载时覆盖已有数据。
+
+### 教训
+
+**删除 Legacy JS 文件的检查清单更新为五项**：
+
+| 检查项 | 方法 |
+|---|---|
+| 1. 函数覆盖 | `grep "function " xxx.js` 对比 TS `exposeToLegacy` |
+| 2. 常量暴露 | `grep "^var [A-Z_]" xxx.js`，检查 `window.XXX` 是否存在 |
+| 3. 副作用代码 | `grep "$.extend\|prototype\.\|addEventListener" xxx.js` |
+| 4. 全局作用域立即引用 | 检查其他 Legacy 文件中 `var x = DELETED_CONSTANT` 的模式 |
+| 5. **运行时状态变量** | `grep "^var [a-z]" xxx.js`，这些是小写的全局状态变量，需要在对应 TS 模块中初始化 |
+
+**小写 `var` 声明 ≠ 常量**：常量通常是大写（`DS_WAR`、`PLRF_AI`），而运行时状态变量通常是小写（`diplstates`、`selected_player`）。两者都需要在删除 Legacy 文件时迁移，但处理方式不同：常量通过 `window[NAME] = VALUE` 暴露，状态变量通过 `if (w.xxx === undefined) w.xxx = initialValue` 初始化。
+
+---
+
 ## 当前迁移进度（Phase 10 完成后）
 
 | 阶段 | 删除的 Legacy JS 文件数 | 剩余 Legacy JS 文件数 | 累计减少代码行数 |

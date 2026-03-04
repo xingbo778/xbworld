@@ -1,7 +1,7 @@
 # XBWorld JS → TS 迁移执行计划（修订版）
 
 > 更新日期：2026-03-04
-> 基于 `webclient.min.js` 分析报告修订，当前进度：Phase 7.5 已完成
+> 基于 `webclient.min.js` 分析报告修订，当前进度：Phase 9（nation.js 完整迁移）已完成
 
 ---
 
@@ -213,11 +213,13 @@ Legacy JS (35 files)   →   Legacy JS (< 10 files)  →   纯 TS + Vite bundle
 |-------|------|-----------------|---------|
 | Phase 1-7 | ✅ 已完成 | ~6,154 行 | 2026-03-04 前 |
 | Phase 7.5 | ✅ 已完成 | -471 行 | 2026-03-04 |
-| Phase 8 | 🔜 下一步 | 预计 -3,339 行 | — |
-| Phase 9 | 📋 计划中 | 预计 -1,360 行 | — |
+| Phase 8 | ✅ 已完成 | -3,339 行（map.js/unit.js/tech.js/city.js） | 2026-03-04 |
+| Phase 9 | ✅ 已完成 | -462 行（nation.js 完整迁移到 nation.ts） | 2026-03-04 |
 | Phase 10 | 📋 计划中 | 预计 -3,503 行 | — |
 | Phase 11 | 📋 计划中 | 预计 -3,675 行 | — |
 | Phase 12 | 📋 计划中 | 预计 -8,000 行 | — |
 | Phase 13 | 📋 计划中 | -2,665 行（webclient.min.js）| — |
 
-**完成 Phase 8 后**：Legacy JS 从 19,711 行降至约 16,372 行，整体清理进度约 **37%**。
+**当前状态（Phase 9 完成后）**：Legacy JS 从 19,711 行降至约 19,585 行（含 webclient.min.js），剩余 31 个根目录 JS + 6 个 2dcanvas JS 文件。已迁移到 TS 的行数约 **10,000+ 行**，整体清理进度约 **40%**。
+
+> **下一步**：Phase 9.2 — 补全并删除 `client_main.js`（418 行），然后继续 Phase 10 前置扫描 `control.js` 依赖。
