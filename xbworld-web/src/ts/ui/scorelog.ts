@@ -81,7 +81,7 @@ export function handle_scorelog(scorelog: string): void {
   const scoreplayers: {[key: string]: string} = {};
   const playerslist: string[] = [];
   const playernames: string[] = [];
-  const scoretags: {[key: string]: string} = {};
+  let scoretags: {[key: string]: string} = {};
   const resultdata: {[key: string]: any[]} = {};
   const scorecolors: string[] = [];
   for (let i = 0; i < scoreitems.length; i++) {

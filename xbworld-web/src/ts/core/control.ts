@@ -1,30 +1,106 @@
 import { store } from '../data/store';
-import { find_city_by_number, city_owner_player_id, city_tile, city_has_building } from '../data/city';
-import { find_unit_by_number, unit_type, unit_list_size, unit_list_without, game_find_unit_by_number } from '../data/unit';
+import { cityOwnerPlayerId as city_owner_player_id, cityTile as city_tile, cityHasBuilding as city_has_building } from '../data/city';
+import { unit_type, unit_list_size, unit_list_without, get_what_can_unit_pillage_from } from '../data/unit';
+import { game_find_city_by_number as find_city_by_number, game_find_unit_by_number as find_unit_by_number } from '../data/game';
 import { utype_can_do_action, utype_can_do_action_result, can_player_build_unit_direct } from '../data/unittype';
-import { players, nations, diplstates } from '../data/player';
-import { map_pos_to_tile, city_tile as map_city_tile, index_to_tile, tile_city, tile_units, tile_terrain, tile_has_extra } from '../data/map';
-import { tile_units as tile_units_func, tile_terrain as tile_terrain_func } from '../data/tile';
-import { terrain_control } from '../data/terrain';
-import { player_invention_state, tech_id_by_name } from '../data/tech';
-import { game_info, is_longturn, client_is_observer } from '../data/game';
-import { improvement_id_by_name } from '../data/improvement';
-import { get_what_can_unit_pillage_from } from '../data/requirements';
-import { FC_ACTION_COUNT, FC_EXTRA_NONE, FC_ACTIVITY_IDLE, FC_SSA_NONE, FC_ACT_DEC_ACTIVE, FC_ACT_DEC_PASSIVE, FC_ACT_DEC_NOTHING, FC_IDENTITY_NUMBER_ZERO, FC_ORDER_PERFORM_ACTION, FC_ORDER_MOVE, FC_ORDER_ACTION_MOVE, FC_EXTRA_ROAD, FC_EXTRA_RIVER, FC_EXTRA_RAIL, FC_EXTRA_MAGLEV, FC_EXTRA_MINE, FC_EXTRA_POLLUTION, FC_EXTRA_FALLOUT, FC_DS_ALLIANCE, FC_PLRF_AI, FC_TECH_UNKNOWN, FC_TECH_KNOWN, FC_B_AIRPORT_NAME } from '../data/fcTypes';
-import { actions, action_by_number, action_has_result } from '../data/actions';
+import { DiplState, PlayerFlag } from '../data/player';
+import { mapPosToTile as map_pos_to_tile, indexToTile as index_to_tile } from '../data/map';
+import { tileCity as tile_city, tileHasExtra as tile_has_extra } from '../data/tile';
+import { tile_units } from '../data/unit';
+import { tileTerrain as tile_terrain } from '../data/terrain';
+import { playerInventionState as player_invention_state, techIdByName as tech_id_by_name, TECH_UNKNOWN, TECH_KNOWN } from '../data/tech';
+import { isLongturn as is_longturn } from '../client/clientCore';
+import { clientIsObserver as client_is_observer } from '../client/clientState';
+import { improvement_id_by_name, B_AIRPORT_NAME } from '../data/improvement';
+import { ACTIVITY_IDLE, ACT_DEC_ACTIVE, ACT_DEC_PASSIVE, ACT_DEC_NOTHING } from '../data/fcTypes';
+import { EXTRA_NONE } from '../data/extra';
+import { ACTION_COUNT, IDENTITY_NUMBER_ZERO } from '../core/constants';
+import { Order, ServerSideAgent, UnitSSDataType } from '../data/unit';
+import { actionByNumber as action_by_number, actionHasResult as action_has_result } from '../data/actions';
 import { E_LOG_ERROR, E_BEGINNER_HELP } from '../data/eventConstants';
-import { sendRequest, sendMessage, network_stop } from '../net/connection';
-import { packet_unit_get_actions, packet_unit_sscs_set, packet_type_t, REQEST_PLAYER_INITIATED, USSDT_UNQUEUE, USSDT_QUEUE } from '../net/packetConstants';
-import { client_state, C_S_RUNNING } from '../client/clientState';
-import { update_active_units_dialog, update_nation_screen, update_city_screen, update_tech_screen, init_civ_dialog, init_options_dialog, show_help, show_load_game_dialog, pregame_start_game, pregame_settings, pick_nation, show_send_private_message_dialog, show_intelligence_report_dialog, nation_meet_clicked, center_on_player, cancel_treaty_clicked, withdraw_vision_clicked, take_player_clicked, toggle_ai_clicked, view_game_scores, handle_nation_table_select, close_city_dialog } from '../client/civClient';
+import { send_request, send_message, network_stop } from '../net/connection';
+import { packet_unit_get_actions, packet_unit_sscs_set } from '../net/packetConstants';
+import { clientState as client_state, C_S_RUNNING } from '../client/clientState';
+import { update_city_screen, close_city_dialog } from '../ui/cityDialog';
+import { update_tech_screen } from '../ui/techDialog';
+import { init_civ_dialog } from '../ui/governmentDialog';
+import { init_options_dialog } from '../ui/options';
+import { show_help } from '../ui/helpdata';
+import { show_load_game_dialog } from '../utils/savegame';
+import { pregame_start_game, pregame_settings, pick_nation } from '../core/pregame';
+import { show_intelligence_report_dialog } from '../ui/intelDialog';
+import { view_game_scores } from '../ui/scorelog';
+import { updateNationScreen as update_nation_screen, showSendPrivateMessageDialog as show_send_private_message_dialog, nationMeetClicked as nation_meet_clicked, centerOnPlayer as center_on_player, cancelTreatyClicked as cancel_treaty_clicked, withdrawVisionClicked as withdraw_vision_clicked, takePlayerClicked as take_player_clicked, toggleAiClicked as toggle_ai_clicked, handleNationTableSelect as handle_nation_table_select } from '../data/nation';
 import { globalEvents } from '../core/events';
 import { logNormal, logError } from '../core/log';
-import { max_chat_message_length } from '../core/constants';
-import { is_touch_device, is_small_screen, string_unqualify } from '../utils/helpers';
-import { message_log } from '../ui/chat';
+import { message_log, max_chat_message_length } from '../core/messages';
+import { isTouchDevice as is_touch_device, isSmallScreen as is_small_screen, stringUnqualify as string_unqualify } from '../utils/helpers';
 import { overview_clicked } from '../core/overview';
-import { mapview_slide, mapview, mapview_canvas, canvas_pos_to_tile, center_tile_mapcanvas, update_unit_position, mapview_window_resized, orientation_changed, update_tech_dialog_cursor, tech_dialog_active, tech_mapview_mouse_click } from '../renderer/mapview';
-import { RENDERER_2DCANVAS, RENDERER_WEBGL, webgl_canvas_pos_to_map_pos, webgl_canvas_pos_to_tile, camera_look_at, camera_current_x, camera_current_y, camera_current_z, webgl_clear_unit_focus, init_webgl_mapctrl, mapctrl_init_2d } from '../renderer/mapviewCommon';
+
+// Aliases for FC_ prefixed constants used throughout this file
+const FC_ACTION_COUNT = ACTION_COUNT;
+const FC_EXTRA_NONE = EXTRA_NONE;
+const FC_ACTIVITY_IDLE = ACTIVITY_IDLE;
+const FC_SSA_NONE = ServerSideAgent.NONE;
+const FC_ACT_DEC_ACTIVE = ACT_DEC_ACTIVE;
+const FC_ACT_DEC_PASSIVE = ACT_DEC_PASSIVE;
+const FC_ACT_DEC_NOTHING = ACT_DEC_NOTHING;
+const FC_IDENTITY_NUMBER_ZERO = IDENTITY_NUMBER_ZERO;
+const FC_ORDER_PERFORM_ACTION = Order.PERFORM_ACTION;
+const FC_ORDER_MOVE = Order.MOVE;
+const FC_ORDER_ACTION_MOVE = Order.ACTION_MOVE;
+const FC_DS_ALLIANCE = DiplState.DS_ALLIANCE;
+const FC_PLRF_AI = PlayerFlag.PLRF_AI;
+const FC_TECH_UNKNOWN = TECH_UNKNOWN;
+const FC_TECH_KNOWN = TECH_KNOWN;
+const FC_B_AIRPORT_NAME = B_AIRPORT_NAME;
+const REQEST_PLAYER_INITIATED = 0;
+const sendRequest = send_request;
+const sendMessage = send_message;
+
+// Declare globals for runtime variables
+declare const game_info: any;
+declare const players: any;
+declare const nations: any;
+declare const diplstates: any;
+declare const actions: any;
+declare const terrain_control: any;
+declare const EXTRA_ROAD: number;
+declare const EXTRA_RIVER: number;
+declare const EXTRA_RAIL: number;
+declare const EXTRA_MAGLEV: number;
+declare const EXTRA_MINE: number;
+declare const EXTRA_POLLUTION: number;
+declare const EXTRA_FALLOUT: number;
+const FC_EXTRA_ROAD = typeof EXTRA_ROAD !== 'undefined' ? EXTRA_ROAD : 0;
+const FC_EXTRA_RIVER = typeof EXTRA_RIVER !== 'undefined' ? EXTRA_RIVER : 1;
+const FC_EXTRA_RAIL = typeof EXTRA_RAIL !== 'undefined' ? EXTRA_RAIL : 2;
+const FC_EXTRA_MAGLEV = typeof EXTRA_MAGLEV !== 'undefined' ? EXTRA_MAGLEV : 3;
+const FC_EXTRA_MINE = typeof EXTRA_MINE !== 'undefined' ? EXTRA_MINE : 4;
+const FC_EXTRA_POLLUTION = typeof EXTRA_POLLUTION !== 'undefined' ? EXTRA_POLLUTION : 5;
+const FC_EXTRA_FALLOUT = typeof EXTRA_FALLOUT !== 'undefined' ? EXTRA_FALLOUT : 6;
+
+type packet_type_t = Record<string, any>;
+const USSDT_UNQUEUE = UnitSSDataType.UNQUEUE;
+const USSDT_QUEUE = UnitSSDataType.QUEUE;
+import { mapview_slide, canvas_pos_to_tile } from '../renderer/mapviewCommon';
+import { mapview_window_resized } from '../renderer/mapview';
+import { orientation_changed } from '../utils/mobile';
+import { update_tech_dialog_cursor, tech_dialog_active, tech_mapview_mouse_click } from '../ui/techDialog';
+declare const mapview: any;
+declare const mapview_canvas: any;
+declare const center_tile_mapcanvas: any;
+declare const update_unit_position: any;
+import { RENDERER_2DCANVAS, RENDERER_WEBGL } from '../core/constants';
+import { mapctrl_init_2d } from '../renderer/mapctrl';
+declare const webgl_canvas_pos_to_map_pos: any;
+declare const webgl_canvas_pos_to_tile: any;
+declare const camera_look_at: any;
+declare let camera_current_x: number;
+declare let camera_current_y: number;
+declare let camera_current_z: number;
+declare const webgl_clear_unit_focus: any;
+declare const init_webgl_mapctrl: any;
 import { request_new_unit_activity, request_unit_do_action } from '../renderer/mapctrl';
 
 declare const $: any;
@@ -97,6 +173,7 @@ export let end_turn_info_message_shown: boolean = false;
  */
 export let action_selection_in_progress_for: number = FC_IDENTITY_NUMBER_ZERO;
 export let is_more_user_input_needed: boolean = false;
+export function set_is_more_user_input_needed(val: boolean): void { is_more_user_input_needed = val; }
 
 /****************************************************************************
 ...
@@ -1689,48 +1766,7 @@ declare let touch_start_x: number;
 declare let touch_start_y: number;
 
 // === Part 2 ===
-
-import { store } from '../data/store';
-import { find_city_by_number, city_tile } from '../data/city';
-import { find_unit_by_number, unit_type } from '../data/unit';
-import { tile_units, tile_city, index_to_tile, tile_get_known, tile_has_extra, tile_has_territory_claiming_extra } from '../data/tile';
-import { map_pos_to_tile, mapstep } from '../data/map';
-import { sendRequest } from '../net/connection';
-import { client_state, set_client_state, C_S_RUNNING } from '../client/clientState';
-import { civclient_benchmark, client_is_observer, show_city_dialog, get_unit_homecity_name, get_unit_moves_left, unit_move_sound_play, show_debug_info, quicksave, is_pbem, pbem_end_phase, is_longturn } from '../client/civClient';
-import { logNormal, logError } from '../core/log';
-import { isTouchDevice } from '../utils/helpers';
-import { show_dialog_message } from '../ui/dialogs';
-import { message_log } from '../ui/chat';
-import {
-  current_focus, goto_active, paradrop_active, airlift_active, action_tgt_sel_active,
-  goto_request_map, goto_turns_request_map, goto_last_order, goto_last_action,
-  has_movesleft_warning_been_shown, keyboard_input, renderer, RENDERER_2DCANVAS, RENDERER_WEBGL,
-  camera_dx, camera_dy, camera_dz, camera_current_x, camera_current_y, camera_current_z,
-  show_citybar, context_menu_active, map_select_active, map_select_check, mapview_mouse_movement,
-  mouse_x, mouse_y, prev_mouse_x, prev_mouse_y, intro_click_description, unitpanel_active,
-  normal_tile_height, game_unit_panel_state, mouse_touch_started_on_unit,
-  waiting_units_list, bases, roads,
-  set_unit_focus_and_redraw, update_unit_focus, activate_goto_last, clear_goto_tiles,
-  request_unit_do_action, get_units_in_focus, advance_unit_focus, find_visible_unit,
-  get_unit_image_sprite, set_unit_focus, auto_center_on_focus_unit, update_unit_order_commands,
-  popup_pillage_selection_dialog, get_what_can_unit_pillage_from, action_decision_clear_want,
-  set_unit_focus_and_activate, canvas_pos_to_tile, webgl_canvas_pos_to_tile, camera_look_at,
-  center_tile_mapcanvas_2d, center_tile_mapcanvas_3d, update_mouse_cursor, update_turn_change_timer,
-  packet_unit_orders, packet_web_goto_path_req, packet_unit_change_activity, packet_unit_server_side_agent_set,
-  packet_city_name_suggestion_req, packet_unit_sscs_set, packet_player_phase_done,
-  ORDER_LAST, ORDER_FULL_MP, ORDER_MOVE, ORDER_ACTION_MOVE, ACTIVITY_LAST, ACTION_COUNT,
-  ACTIVITY_IDLE, EXTRA_NONE, SSA_AUTOEXPLORE, SSA_AUTOWORKER, BASE_GUI_FORTRESS, BASE_GUI_AIRBASE,
-  ACTIVITY_BASE, ACTIVITY_IRRIGATE, ACTIVITY_CULTIVATE, ACTIVITY_CLEAN, ACTION_NUKE,
-  ACTION_UPGRADE_UNIT, ACTIVITY_TRANSFORM, ACTION_PILLAGE, ACTIVITY_MINE, ACTIVITY_PLANT,
-  ACTIVITY_GEN_ROAD, ACTION_HOME_CITY, USSDT_QUEUE, ACTION_TRANSPORT_BOARD, ACTION_TRANSPORT_DEBOARD,
-  ACTION_TRANSPORT_UNLOAD, ACTIVITY_SENTRY, ACTIVITY_FORTIFYING, ACTION_AIRLIFT, ACTION_JOIN_CITY,
-  ACTION_DISBAND_UNIT_RECOVER, ACTION_DISBAND_UNIT, DIR8_SOUTH, DIR8_SOUTHEAST, DIR8_EAST,
-  DIR8_SOUTHWEST, DIR8_NORTHEAST, DIR8_WEST, DIR8_NORTHWEST, DIR8_NORTH, E_BAD_COMMAND, E_BEGINNER_HELP,
-  EXTRA_HUT
-} from './control'; // Assuming these are defined in the first part of control.ts
-
-declare const $: any;
+// Part 2 continues - variables and functions are in the same module scope
 
 export function do_map_click(ptile: any, qtype: any, first_time_called: boolean) {
   let punit: any;
@@ -3426,7 +3462,7 @@ export function update_active_units_dialog() {
 
   if (current_focus.length > 0) {
     /* reposition and resize unit dialog. */
-    const newwidth = 32 + punits.length * (width + 10);
+    let newwidth = 32 + punits.length * (width + 10);
     if (newwidth < 140) newwidth = 140;
     const newheight = 75 + normal_tile_height;
     $("#game_unit_panel").parent().show();
@@ -3480,33 +3516,3 @@ export function check_mouse_drag_unit(ptile: any) {
     update_active_units_dialog();
   }
 }
-
-// Dummy function for order_wants_direction, assuming it's defined elsewhere or will be.
-function order_wants_direction(order: any, action: any, tile: any): boolean {
-  // Placeholder implementation
-  return false;
-}
-
-// Dummy function for do_unit_paradrop_to, assuming it's defined elsewhere or will be.
-function do_unit_paradrop_to(unit: any, tile: any): void {
-  // Placeholder implementation
-}
-
-// Dummy function for webgl_clear_unit_focus, assuming it's defined elsewhere or will be.
-function webgl_clear_unit_focus(): void {
-  // Placeholder implementation
-}
-
-// Dummy function for webgl_render_goto_line, assuming it's defined elsewhere or will be.
-function webgl_render_goto_line(tile: any, directions: any[]): void {
-  // Placeholder implementation
-}
-
-// Dummy constant for TILE_UNKNOWN, assuming it's defined elsewhere or will be.
-const TILE_UNKNOWN = 0;
-
-// Dummy constant for packet_web_info_text_req, assuming it's defined elsewhere or will be.
-const packet_web_info_text_req = 0;
-
-// Dummy constant for ORDER_PERFORM_ACTION, assuming it's defined elsewhere or will be.
-const ORDER_PERFORM_ACTION = 0;

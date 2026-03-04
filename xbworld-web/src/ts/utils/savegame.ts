@@ -32,8 +32,7 @@ declare const E_SCRIPT: any;
 declare const E_LOG_ERROR: any;
 declare const client_state: () => any;
 declare const C_S_RUNNING: any;
-declare const $.blockUI: () => void;
-declare const $.unblockUI: () => void;
+// $.blockUI and $.unblockUI are jQuery plugins, accessed via ($ as any).blockUI()
 declare const wait_for_text: (text: string, callback: () => void) => void;
 declare const players: any[];
 declare const metamessage_changed: boolean;
@@ -41,7 +40,7 @@ declare const loaded_game_type: string;
 declare const hotseat_enabled: boolean;
 declare const show_map_from_image_dialog: () => void;
 declare const $id: (id: string) => any;
-declare const $.getUrlVar: (name: string) => string | undefined;
+// $.getUrlVar is a jQuery plugin, accessed via ($ as any).getUrlVar()
 
 export let saved_this_turn: boolean = false;
 export let game_loaded: boolean = false;

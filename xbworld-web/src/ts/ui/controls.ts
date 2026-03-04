@@ -5,7 +5,7 @@
 
 import { globalEvents } from '../core/events';
 import { store } from '../data/store';
-import { sendRequest, sendMessage } from '../net/connection';
+import { send_request as sendRequest, send_message as sendMessage } from '../net/connection';
 import { $id, on } from '../utils/dom';
 
 let gotoActive = false;

@@ -1,12 +1,22 @@
 import { store } from '../data/store';
-import { find_city_by_number, get_city_production_type, get_city_flag_sprite, get_city_occupied_sprite, city_owner } from '../data/city';
-import { tileset_unit_type_graphic_tag } from '../data/unittype';
-import { tileset_ruleset_entity_tag_str_or_alt } from '../data/tile';
-import { is_small_screen, setup_window_size, orientation_changed, map_to_gui_pos } from './clientCore'; // Assuming these are in clientCore based on usage
-import { webgl_preload } from './webgl'; // Assuming webgl_preload is in webgl.ts
-import { mark_all_dirty, update_map_canvas_full, update_map_canvas } from './map'; // Assuming these are in map.ts
-import { tileset_tile_width, tileset_tile_height, normal_tile_width } from './constants'; // Assuming these are in constants.ts
-import { DIR8_NORTH, DIR8_EAST, DIR8_SOUTH, DIR8_WEST } from '../core/constants'; // Assuming these are in core/constants.ts
+import { cityOwner as city_owner, getCityProductionType as get_city_production_type } from '../data/city';
+import { game_find_city_by_number as find_city_by_number } from '../data/game';
+import { tileset_unit_type_graphic_tag } from '../renderer/tilespec';
+import { tileset_ruleset_entity_tag_str_or_alt, get_city_flag_sprite, get_city_occupied_sprite } from '../renderer/tilespec';
+import { orientation_changed } from '../utils/mobile';
+import { mark_all_dirty, update_map_canvas_full, update_map_canvas, map_to_gui_pos } from './mapviewCommon';
+import { tileset_tile_width, tileset_tile_height, normal_tile_width } from './tilesetConfig';
+
+// DIR8 constants - defined locally since they're simple enums
+const DIR8_NORTH = 0;
+const DIR8_EAST = 2;
+const DIR8_SOUTH = 4;
+const DIR8_WEST = 6;
+
+// webgl_preload is loaded from a separate WebGL module at runtime
+declare function webgl_preload(): void;
+// setup_window_size is a global function
+declare function setup_window_size(): void;
 
 declare const $: any; // jQuery
 declare const swal: any; // SweetAlert

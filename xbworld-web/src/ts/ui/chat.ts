@@ -5,7 +5,13 @@
 
 import { $id, on } from '../utils/dom';
 import { globalEvents, ThrottledEmitter } from '../core/events';
-import { sendMessage } from '../net/connection';
+// sendMessage is a global function (not exported from connection.ts)
+declare function sendMessage(msg: string): void;
+declare function send_message(msg: string): void;
+const _sendMessage = (msg: string) => {
+  if (typeof sendMessage === 'function') sendMessage(msg);
+  else if (typeof send_message === 'function') send_message(msg);
+};
 
 interface ChatMessage {
   event?: number;

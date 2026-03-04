@@ -16,7 +16,7 @@
  * Returns the max tax rate for a given government.
  * FIXME: This shouldn't be hardcoded, but instead fetched from effects.
  */
-function governmentMaxRate(govtId: number): number {
+export function governmentMaxRate(govtId: number): number {
   switch (govtId) {
     case 0: // Anarchy
       return 100;
@@ -39,7 +39,7 @@ function governmentMaxRate(govtId: number): number {
  * Returns true iff the player can get the specified government.
  * Uses the JavaScript implementation of the requirement system.
  */
-function canPlayerGetGov(govtId: number): boolean {
+export function canPlayerGetGov(govtId: number): boolean {
   const client = (window as any).client;
   const governments = (window as any).governments as Record<number, any>;
   const playerHasWonder = (window as any).player_has_wonder as

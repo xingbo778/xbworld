@@ -1,24 +1,28 @@
 import { store } from '../data/store';
-import { find_city_by_number, city_owner, does_city_have_improvement } from '../data/city';
-import { player_invention_state } from '../data/tech';
-import { game_info, is_longturn } from '../data/game';
-import { sendRequest } from '../net/connection';
+import { game_find_city_by_number as find_city_by_number } from '../data/game';
+import { cityOwnerPlayerId as city_owner } from '../data/city';
+declare const does_city_have_improvement: any;
+import { playerInventionState as player_invention_state } from '../data/tech';
+declare const game_info: any;
+import { isLongturn as is_longturn } from '../client/clientCore';
+import { send_request as sendRequest } from '../net/connection';
 import {
   packet_diplomacy_init_meeting_req,
   packet_diplomacy_accept_treaty_req,
-  packet_diplomacy_cancel_meeting_req,
+
   packet_diplomacy_create_clause_req,
   packet_diplomacy_remove_clause_req,
   packet_diplomacy_cancel_pact,
 } from '../net/packetConstants';
-import { client_state } from '../client/clientState';
-import { update_nation_screen } from '../client/civClient'; // Assuming this is in civClient.ts
-import { is_small_screen } from '../utils/helpers'; // Assuming this is in helpers.ts
-import { get_tileset_file_extention } from '../utils/helpers'; // Assuming this is in helpers.ts
-import { get_treaty_agree_thumb_up, get_treaty_disagree_thumb_down } from './statusPanel'; // Assuming these are in statusPanel.ts
+import { clientState as client_state } from '../client/clientState';
+declare const update_nation_screen: any;
+import { isSmallScreen as is_small_screen } from '../utils/helpers'; // Assuming this is in helpers.ts
+declare const get_tileset_file_extention: any;
+import { get_treaty_agree_thumb_up, get_treaty_disagree_thumb_down } from '../renderer/tilespec';
 
 declare const $: any;
 declare const Handlebars: any;
+declare const packet_diplomacy_cancel_meeting_req: number;
 declare const client: any; // TODO: Type client
 declare const players: any; // TODO: Type players
 declare const nations: any; // TODO: Type nations

@@ -19,24 +19,40 @@
 
 declare const $: any;
 
-import { map } from './map'; // TODO: adjust import if needed
-import { map_pos_to_tile } from './map';
-import { tile_city, tile_get_known, tile_terrain } from './tile';
-import { find_visible_unit } from './unit';
-import { city_owner_player_id } from './city';
-import { client } from '../client/clientCore'; // TODO: adjust import if needed
-import { TILE_UNKNOWN } from '../data/fcTypes';
-import { base_canvas_to_map_pos, webgl_canvas_pos_to_tile } from './map'; // TODO: adjust import if needed
-import { renderer, RENDERER_2DCANVAS } from './constants'; // TODO: adjust import if needed
-import { center_tile_mapcanvas } from './map'; // TODO: adjust import if needed
-import { wrap_has_flag, WRAP_X, WRAP_Y } from './map'; // TODO: adjust import if needed
-import { color_rbg_to_list } from '../utils/helpers'; // TODO: adjust import if needed
-import { players } from '../data/player'; // TODO: adjust import if needed
-import { nations } from '../data/nation'; // TODO: adjust import if needed
-import { terrains } from '../data/terrain'; // TODO: adjust import if needed
-import { client_state, C_S_RUNNING, C_S_OVER } from '../client/clientState'; // TODO: adjust import if needed
-import { mapview, mapview_slide, height_offset } from './map'; // TODO: adjust import if needed
-import { bmp_lib } from './bmp_lib'; // TODO: adjust import if needed
+// Globals from window (declared in global.d.ts)
+declare const map: any;
+declare const client: any;
+declare const renderer: number;
+declare const players: any;
+declare const nations: any;
+declare const terrains: any;
+declare const bmp_lib: any;
+declare const height_offset: number;
+
+// Proper module imports
+import { mapPosToTile } from '../data/map';
+import { wrapHasFlag, WRAP_X, WRAP_Y } from '../data/map';
+import { tileCity, tileGetKnown } from '../data/tile';
+import { TILE_UNKNOWN } from '../data/tile';
+import { tileTerrain } from '../data/terrain';
+import { find_visible_unit } from './control';
+import { cityOwnerPlayerId } from '../data/city';
+import { center_tile_mapcanvas } from './control';
+import { base_canvas_to_map_pos, canvas_pos_to_tile, mapview, mapview_slide } from '../renderer/mapviewCommon';
+import { RENDERER_2DCANVAS } from './constants';
+import { color_rbg_to_list } from '../renderer/tilespec';
+import { clientState as client_state, C_S_RUNNING, C_S_OVER } from '../client/clientState';
+
+// Alias snake_case names to camelCase imports
+const map_pos_to_tile = mapPosToTile;
+const tile_city = tileCity;
+const tile_get_known = tileGetKnown;
+const tile_terrain = tileTerrain;
+const city_owner_player_id = cityOwnerPlayerId;
+const wrap_has_flag = wrapHasFlag;
+
+// webgl_canvas_pos_to_tile is only used in WebGL mode; declare as global fallback
+declare function webgl_canvas_pos_to_tile(x: number, y: number): any;
 
 export let OVERVIEW_TILE_SIZE: number = 1;
 export let overviewTimerId: number = -1;

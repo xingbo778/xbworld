@@ -52,24 +52,24 @@ let cityTileMap: {
 // ---------------------------------------------------------------------------
 
 /** Returns the tile object for a city. */
-function cityTile(pcity: any): any {
+export function cityTile(pcity: any): any {
   if (pcity == null) return null;
   return w.index_to_tile(pcity['tile']);
 }
 
 /** Returns the player id (owner) of a city. */
-function cityOwnerPlayerId(pcity: any): number | null {
+export function cityOwnerPlayerId(pcity: any): number | null {
   if (pcity == null) return null;
   return pcity['owner'];
 }
 
 /** Returns the player object that owns the city. */
-function cityOwner(pcity: any): any {
+export function cityOwner(pcity: any): any {
   return w.players[cityOwnerPlayerId(pcity)!];
 }
 
 /** Removes a city from the game. */
-function removeCity(pcityId: number): void {
+export function removeCity(pcityId: number): void {
   if (pcityId == null || w.client?.conn?.playing == null) return;
   const pcity = w.cities[pcityId];
   if (pcity == null) return;
@@ -89,17 +89,17 @@ function removeCity(pcityId: number): void {
 }
 
 /** Returns true if the tile is the city center. */
-function isCityCenter(city: any, tile: any): boolean {
+export function isCityCenter(city: any, tile: any): boolean {
   return city['tile'] === tile['index'];
 }
 
 /** Returns true if the tile is free-worked (same as city center). */
-function isFreeWorked(city: any, tile: any): boolean {
+export function isFreeWorked(city: any, tile: any): boolean {
   return city['tile'] === tile['index'];
 }
 
 /** Returns true if the city is the primary capital. */
-function isPrimaryCapital(city: any): boolean {
+export function isPrimaryCapital(city: any): boolean {
   return city['capital'] === CAPITAL_PRIMARY;
 }
 
@@ -108,7 +108,7 @@ function isPrimaryCapital(city: any): boolean {
 // ---------------------------------------------------------------------------
 
 /** Returns the sprite and type info for the city's current production. */
-function getCityProductionTypeSprite(pcity: any): any {
+export function getCityProductionTypeSprite(pcity: any): any {
   if (pcity == null) return null;
   if (pcity['production_kind'] === VUT_UTYPE) {
     const punitType = w.unit_types[pcity['production_value']];
@@ -128,7 +128,7 @@ function getCityProductionTypeSprite(pcity: any): any {
 }
 
 /** Returns the type object (unit type or improvement) being produced. */
-function getCityProductionType(pcity: any): any {
+export function getCityProductionType(pcity: any): any {
   if (pcity == null) return null;
   if (pcity['production_kind'] === VUT_UTYPE) {
     return w.unit_types[pcity['production_value']];
@@ -143,7 +143,7 @@ function getCityProductionType(pcity: any): any {
  * Calculates the turns needed to build the requested item in the city.
  * GUI Independent.
  */
-function cityTurnsToBuild(
+export function cityTurnsToBuild(
   pcity: any,
   target: any,
   includeShieldStock: boolean,
@@ -162,7 +162,7 @@ function cityTurnsToBuild(
 }
 
 /** Returns the number of turns to complete current city production. */
-function getCityProductionTime(pcity: any): number {
+export function getCityProductionTime(pcity: any): number {
   if (pcity == null) return FC_INFINITY;
 
   if (pcity['production_kind'] === VUT_UTYPE) {
@@ -182,7 +182,7 @@ function getCityProductionTime(pcity: any): number {
 }
 
 /** Returns city production progress string, e.g. "5/30". */
-function getProductionProgress(pcity: any): string {
+export function getProductionProgress(pcity: any): string {
   if (pcity == null) return ' ';
 
   if (pcity['production_kind'] === VUT_UTYPE) {
@@ -210,7 +210,7 @@ function getProductionProgress(pcity: any): string {
 }
 
 /** Generates the full production list (units + improvements). */
-function generateProductionList(): any[] {
+export function generateProductionList(): any[] {
   const productionList: any[] = [];
 
   for (const unitTypeId in w.unit_types) {
@@ -262,13 +262,13 @@ function generateProductionList(): any[] {
 // ---------------------------------------------------------------------------
 
 /** Return whether given city can build given unit, ignoring obsolete. */
-function canCityBuildUnitDirect(_pcity: any, _punittype: any): boolean {
+export function canCityBuildUnitDirect(_pcity: any, _punittype: any): boolean {
   // TODO: implement
   return true;
 }
 
 /** Return whether given city can build given unit now. */
-function canCityBuildUnitNow(pcity: any, punittypeId: number): boolean {
+export function canCityBuildUnitNow(pcity: any, punittypeId: number): boolean {
   return (
     pcity != null &&
     typeof pcity['can_build_unit'] !== 'undefined' &&
@@ -277,7 +277,7 @@ function canCityBuildUnitNow(pcity: any, punittypeId: number): boolean {
 }
 
 /** Return whether given city can build given improvement now. */
-function canCityBuildImprovementNow(
+export function canCityBuildImprovementNow(
   pcity: any,
   pimproveId: number,
 ): boolean {
@@ -289,7 +289,7 @@ function canCityBuildImprovementNow(
 }
 
 /** Return whether given city can build given item. */
-function canCityBuildNow(
+export function canCityBuildNow(
   pcity: any,
   kind: number | null,
   value: number | null,
@@ -304,7 +304,7 @@ function canCityBuildNow(
 }
 
 /** Return TRUE iff the city has this building in it. */
-function cityHasBuilding(pcity: any, improvementId: number): boolean {
+export function cityHasBuilding(pcity: any, improvementId: number): boolean {
   return (
     0 <= improvementId &&
     improvementId < w.ruleset_control.num_impr_types &&
@@ -314,7 +314,7 @@ function cityHasBuilding(pcity: any, improvementId: number): boolean {
 }
 
 /** Return TRUE iff the city has this improvement (by name). */
-function doesCityHaveImprovement(
+export function doesCityHaveImprovement(
   pcity: any,
   improvementName: string,
 ): boolean {
@@ -334,7 +334,7 @@ function doesCityHaveImprovement(
 }
 
 /** Simplified check: can the city buy its current production? */
-function cityCanBuy(pcity: any): boolean {
+export function cityCanBuy(pcity: any): boolean {
   const improvement = w.improvements[pcity['production_value']];
   return (
     !pcity['did_buy'] &&
@@ -348,7 +348,7 @@ function cityCanBuy(pcity: any): boolean {
 // ---------------------------------------------------------------------------
 
 /** Create text describing city growth. */
-function cityTurnsToGrowthText(pcity: any): string {
+export function cityTurnsToGrowthText(pcity: any): string {
   const turns = pcity['granary_turns'];
   if (turns === 0) {
     return 'blocked';
@@ -362,7 +362,7 @@ function cityTurnsToGrowthText(pcity: any): string {
 }
 
 /** Return TRUE iff the city is unhappy. */
-function cityUnhappy(pcity: any): boolean {
+export function cityUnhappy(pcity: any): boolean {
   return (
     pcity['ppl_happy'][FEELING_FINAL] <
     pcity['ppl_unhappy'][FEELING_FINAL] +
@@ -371,7 +371,7 @@ function cityUnhappy(pcity: any): boolean {
 }
 
 /** Returns how many thousand citizens live in this city. */
-function cityPopulation(pcity: any): number {
+export function cityPopulation(pcity: any): number {
   return pcity['size'] * (pcity['size'] + 1) * 5;
 }
 
@@ -383,12 +383,12 @@ function cityPopulation(pcity: any): number {
  * Returns an index for a flat array containing x,y data.
  * dx,dy are displacements from the center, r is the "radius".
  */
-function dxyToCenterIndex(dx: number, dy: number, r: number): number {
+export function dxyToCenterIndex(dx: number, dy: number, r: number): number {
   return (dx + r) * (2 * r + 1) + dy + r;
 }
 
 /** Converts from coordinate offset from city center to index. */
-function getCityDxyToIndex(dx: number, dy: number, pcity: any): number {
+export function getCityDxyToIndex(dx: number, dy: number, pcity: any): number {
   buildCityTileMap(pcity.city_radius_sq);
   const cityTileMapIndex = dxyToCenterIndex(dx, dy, cityTileMap!.radius);
   const ctile = cityTile(w.active_city);
@@ -396,7 +396,7 @@ function getCityDxyToIndex(dx: number, dy: number, pcity: any): number {
 }
 
 /** Builds city_tile_map info for a given squared city radius. */
-function buildCityTileMap(radiusSq: number): void {
+export function buildCityTileMap(radiusSq: number): void {
   if (cityTileMap == null || cityTileMap.radius_sq < radiusSq) {
     const r = Math.floor(Math.sqrt(radiusSq));
     const vectors: number[][] = [];
@@ -439,7 +439,7 @@ function buildCityTileMap(radiusSq: number): void {
  * Helper for get_city_tile_map_for_pos.
  * From position, radius and size, returns [delta_min, delta_max, clipped_index].
  */
-function deltaTileHelper(
+export function deltaTileHelper(
   pos: number,
   r: number,
   size: number,
@@ -456,7 +456,7 @@ function deltaTileHelper(
 }
 
 /** Builds the city_tile_map with the given delta limits. */
-function buildCityTileMapWithLimits(
+export function buildCityTileMapWithLimits(
   dxMin: number,
   dxMax: number,
   dyMin: number,
@@ -485,7 +485,7 @@ function buildCityTileMapWithLimits(
  * Returns the mapping of position from city center to index in city_info.
  * Uses self-replacing function pattern based on map wrap flags.
  */
-function getCityTileMapForPos(x: number, y: number): number[] {
+export function getCityTileMapForPos(x: number, y: number): number[] {
   if (w.wrap_has_flag(w.WRAP_X)) {
     if (w.wrap_has_flag(w.WRAP_Y)) {
       // Torus
@@ -540,7 +540,7 @@ function getCityTileMapForPos(x: number, y: number): number[] {
 // ---------------------------------------------------------------------------
 
 /** Shows traderoutes of active city (returns HTML string). */
-function showCityTraderoutes(): string {
+export function showCityTraderoutes(): string {
   let msg: string;
 
   if (w.active_city == null) {
@@ -595,7 +595,7 @@ function showCityTraderoutes(): string {
 // ---------------------------------------------------------------------------
 
 /** Returns the 3d model name for the given city. */
-function cityTo3dModelName(pcity: any): string {
+export function cityTo3dModelName(pcity: any): string {
   let size = 0;
   if (pcity['size'] >= 3 && pcity['size'] <= 6) {
     size = 1;
@@ -626,7 +626,7 @@ function cityTo3dModelName(pcity: any): string {
 }
 
 /** Returns the city walls scale for the given city. */
-function getCitywallsScale(pcity: any): number {
+export function getCitywallsScale(pcity: any): number {
   let scale = 8;
   if (pcity['size'] >= 3 && pcity['size'] <= 6) {
     scale = 9;

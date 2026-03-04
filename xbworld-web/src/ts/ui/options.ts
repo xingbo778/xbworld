@@ -44,8 +44,8 @@ export let server_settings: any = {};
 
 export let default_user_name: string = "";
 export let default_server_host: string = "localhost";
-//export let default_server_port = DEFAULT_SOCK_PORT;
-//export let default_metaserver = META_URL;
+export let default_server_port = DEFAULT_SOCK_PORT;
+export let default_metaserver = META_URL;
 export let default_theme_name: string = "human";
 export let default_tileset_name: string = "";
 export let default_sound_set_name: string = "stdsounds";

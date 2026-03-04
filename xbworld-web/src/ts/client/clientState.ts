@@ -81,3 +81,14 @@ export function clientIsObserver(): boolean {
 // These are already declared as `var` in client_main.js, so we don't
 // override them — they remain as globals. But we export them for TS usage.
 export { ClientState };
+
+// Legacy-compatible constants
+export const C_S_INITIAL = ClientState.INITIAL;
+export const C_S_PREPARING = ClientState.PREPARING;
+export const C_S_RUNNING = ClientState.RUNNING;
+export const C_S_OVER = ClientState.OVER;
+
+/** Set the client state. */
+export function set_client_state(newState: number): void {
+  (window as any).civclient_state = newState;
+}

@@ -20,7 +20,7 @@ export const BASE_GUI_AIRBASE = 1;
 /**
  * Return extras type of given id.
  */
-function extraByNumber(id: number): any {
+export function extraByNumber(id: number): any {
   if (id === EXTRA_NONE) {
     return null;
   }
@@ -37,7 +37,7 @@ function extraByNumber(id: number): any {
 /**
  * Who owns extras on tile.
  */
-function extraOwner(ptile: any): any {
+export function extraOwner(ptile: any): any {
   const playerByNumber = (window as any).player_by_number as (n: number) => any;
   return playerByNumber(ptile['extras_owner']);
 }
@@ -45,21 +45,21 @@ function extraOwner(ptile: any): any {
 /**
  * Is given cause one of the causes for the given extra?
  */
-function isExtraCausedBy(pextra: any, cause: number): boolean {
+export function isExtraCausedBy(pextra: any, cause: number): boolean {
   return pextra.causes.isSet(cause);
 }
 
 /**
  * Is given cause one of the removal causes for the given extra?
  */
-function isExtraRemovedBy(pextra: any, rmcause: number): boolean {
+export function isExtraRemovedBy(pextra: any, rmcause: number): boolean {
   return pextra.rmcauses.isSet(rmcause);
 }
 
 /**
  * Does this extra type claim territory?
  */
-function territoryClaimingExtra(pextra: any): boolean {
+export function territoryClaimingExtra(pextra: any): boolean {
   return pextra['base'] && pextra['base']['border_sq'] > -1;
 }
 

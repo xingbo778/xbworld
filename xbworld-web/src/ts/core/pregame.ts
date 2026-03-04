@@ -1,13 +1,17 @@
-import { sendRequest, sendMessage, network_init } from '../net/connection';
+import { send_request as sendRequest, send_message as sendMessage, network_init } from '../net/connection';
 import { packet_player_ready, packet_nation_select_req, packet_authentication_reply } from '../net/packetConstants';
-import { client_state, C_S_PREPARING, C_S_RUNNING, set_client_state } from '../client/clientState';
+import { clientState as client_state, C_S_PREPARING, C_S_RUNNING, set_client_state } from '../client/clientState';
 import { globalEvents } from '../core/events';
 import { logNormal, logError } from '../core/log';
-import { isTouchDevice, clone, is_small_screen, supports_mp3, validateEmail } from '../utils/helpers';
+import { isTouchDevice, clone, isSmallScreen as is_small_screen } from '../utils/helpers';
+declare const supports_mp3: any;
+declare const validateEmail: any;
 import { $id, on } from '../utils/dom';
-import { setup_window_size, blur_input_on_touchdevice, show_dialog_message } from '../ui/dialogs';
+import { setupWindowSize as setup_window_size } from '../client/clientMain';
+import { blur_input_on_touchdevice } from '../utils/helpers';
+declare const show_dialog_message: any;
 import { store } from '../data/store';
-import { PLRF_AI } from '../data/player'; // Assuming PLRF_AI is defined here
+declare const PLRF_AI: number;
 
 declare const $: any;
 declare const client: any;
@@ -1456,10 +1460,276 @@ export function show_new_user_account_dialog(gametype?: string): void
 export function create_new_freeciv_user_account_request(action_type: string): boolean
 {
   username = sanitize_username($("#username").val()).toLowerCase();
-  const password = $("#password").val().trim();
-  const confirm_password = $("#confirm_password").val().trim();
-  const email = $("#email").val().trim();
+  const password = ($("#password").val() as string).trim();
+  const confirm_password = ($("#confirm_password").val() as string).trim();
+  const email = ($("#email").val() as string).trim();
   const captcha = $("#g-recaptcha-response").val();
 
   $("#username_validation_result").show();
-  if (!is_username_valid_show(
+  if (!is_username_valid_show(username)) {
+    return false;
+  }
+  if (!validateEmail(email)) {
+    $("#username_validation_result").html("Invalid email address.");
+    return false;
+  } else if (password == null || password.length <= 2) {
+    $("#username_validation_result").html("Your password is too short.");
+    return false;
+  } else if (password != confirm_password) {
+    $("#username_validation_result").html("The passwords do not match.");
+    return false;
+  } else if (captcha_site_key != '' && captcha == null) {
+    $("#username_validation_result").html("Please fill in the captcha. You might have to disable some plugins to see the captcha.");
+    return false;
+  }
+
+  $("#username_validation_result").html("");
+  $("#username_validation_result").hide();
+  $("#dialog").parent().hide();
+
+  const shaObj = new (window as any).jsSHA("SHA-512", "TEXT");
+  shaObj.update(password);
+  const sha_password = encodeURIComponent(shaObj.getHash("HEX"));
+
+  $.ajax({
+   type: 'POST',
+   url: "/create_pbem_user?username=" + encodeURIComponent(username) + "&email=" + encodeURIComponent(email)
+            + "&password=" + sha_password + "&captcha=" + encodeURIComponent(captcha as string),
+   success: function(data: any, textStatus: string, request: any) {
+       (window as any).simpleStorage.set("username", username);
+       (window as any).simpleStorage.set("password", password);
+       if (action_type == "pbem") {
+         challenge_pbem_player_dialog("New account created. Your username is: " + username + ". You can now start a new PBEM game or wait for an invitation for another player.");
+       } else {
+         $("#dialog").dialog('close');
+         network_init();
+         logged_in_with_password = true;
+       }
+      },
+   error: function(request: any, textStatus: string, errorThrown: string) {
+     $("#dialog").parent().show();
+     (window as any).swal("Creating new user failed.");
+   }
+  });
+  return true;
+}
+
+/**************************************************************************
+  Customize nation: choose nation name and upload new flag.
+**************************************************************************/
+export function show_customize_nation_dialog(player_id: number): void {
+  const w = window as any;
+  if (chosen_nation == -1 || w.client.conn['player_num'] == null
+      || choosing_player == null || choosing_player < 0) return;
+
+  const pnation = w.nations[chosen_nation];
+
+  $("#dialog").remove();
+  $("<div id='dialog'></div>").appendTo("div#game_page");
+
+  const message = "<br>New nation name: <input id='new_nation_adjective' type='text' size='30' value='" + pnation['adjective'] + "'><br><br>"
+       + "Upload new flag: <input type='file' id='newFlagFileInput'><br><br>"
+       + "For best results scale the image to 29 x 20 pixels before uploading. <br><br>"
+       + "(Note: the customized nation and flag will only be active during the current game session and will not be visible to other players.)";
+
+  $("#dialog").html(message);
+  $("#dialog").attr("title", "Customize nation: " + pnation['adjective']);
+  ($("#dialog") as any).dialog({
+    bgiframe: true,
+    modal: true,
+    width: is_small_screen() ? "90%" : "50%",
+    buttons: {
+      "Cancel": function() {
+        ($("#dialog") as any).dialog('close');
+        pick_nation(player_id);
+      },
+      "OK": function() {
+        handle_customized_nation(player_id);
+      }
+    }
+  });
+  ($("#dialog") as any).dialog('open');
+}
+
+/**************************************************************************
+  Handle customized nation flag upload.
+**************************************************************************/
+export function handle_customized_nation(player_id: number): void {
+  const w = window as any;
+  const new_nation_name = $("#new_nation_adjective").val();
+  w.nations[chosen_nation]['adjective'] = new_nation_name;
+
+  const fileInput = document.getElementById('newFlagFileInput') as HTMLInputElement;
+  const file = fileInput.files?.[0];
+
+  if (file == null) {
+    w.swal("Please upload a image file!");
+    return;
+  }
+
+  if (!(window.FileReader)) {
+    w.swal("Uploading files not supported");
+    return;
+  }
+
+  const extension = file.name.substring(file.name.lastIndexOf('.'));
+  console.log("New flag: " + file.type + " with extention " + extension);
+
+  if (extension == '.png' || extension == '.bmp' || extension == '.jpg' || extension == '.jpeg' || extension == '.JPG') {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      handle_new_flag(reader.result as string, player_id);
+    };
+    reader.readAsDataURL(file);
+  } else {
+    $.unblockUI();
+    w.swal("Image file " + file.name + "  not supported: " + file.type);
+  }
+}
+
+/**************************************************************************
+  Update flag sprites based on user uploaded flags.
+**************************************************************************/
+export function handle_new_flag(image_data: string, player_id: number): void {
+  const w = window as any;
+  const pnation = w.nations[chosen_nation];
+  const flag_tag = "f." + pnation['graphic_str'];
+  const shield_tag = "f.shield." + pnation['graphic_str'];
+
+  const new_flag_canvas = document.createElement('canvas');
+  new_flag_canvas.width = w.sprites[flag_tag].width;
+  new_flag_canvas.height = w.sprites[flag_tag].height;
+  w.sprites[flag_tag] = new_flag_canvas;
+  const ctx_flag = new_flag_canvas.getContext("2d")!;
+
+  const new_shield_canvas = document.createElement('canvas');
+  new_shield_canvas.width = w.sprites[shield_tag].width;
+  new_shield_canvas.height = w.sprites[shield_tag].height;
+  w.sprites[shield_tag] = new_shield_canvas;
+  const ctx_shield = new_shield_canvas.getContext("2d")!;
+
+  const img = new Image();
+  img.onload = function(this: HTMLImageElement) {
+    ctx_flag.drawImage(img, 0, 0, this.width, this.height, 0, 0, new_flag_canvas.width, new_flag_canvas.height);
+    ctx_shield.drawImage(img, 0, 0, this.width, this.height, 0, 0, new_shield_canvas.width, new_shield_canvas.height);
+    ($("#dialog") as any).dialog('close');
+    pick_nation(player_id);
+  };
+  img.src = image_data;
+  w.nations[chosen_nation]['customized'] = true;
+}
+
+/**************************************************************************
+  Recaptcha callback.
+**************************************************************************/
+export function onloadCallback(): void {
+  // Recaptcha is ready and loaded.
+}
+
+/**************************************************************************
+  Reset the password for the user.
+**************************************************************************/
+export function forgot_pbem_password(): void {
+  const w = window as any;
+  let password_reset_count = 0;
+
+  const title = "Forgot your password?";
+  const message = "Please enter your e-mail address to reset your password. Also complete the captcha. The new password will be sent to you by e-mail.<br><br>"
+                + "<table><tr><td>E-mail address:</td><td><input id='email_reset' type='text' size='25'></td></tr>"
+                + "</table><br><br>"
+                + "<div id='captcha_element'></div>"
+                + "<br><br>";
+
+  $("#pwd_dialog").remove();
+  $("<div id='pwd_dialog'></div>").appendTo("div#game_page");
+  $("#pwd_dialog").html(message);
+  $("#pwd_dialog").attr("title", title);
+  ($("#pwd_dialog") as any).dialog({
+    bgiframe: true,
+    modal: true,
+    width: is_small_screen() ? "80%" : "40%",
+    buttons: {
+      "Cancel": function() {
+        $("#pwd_dialog").remove();
+      },
+      "Send password": function() {
+        password_reset_count++;
+        if (password_reset_count > 3) {
+          w.swal("Unable to reset password.");
+          return;
+        }
+        const reset_email = $("#email_reset").val();
+        const captcha = $("#g-recaptcha-response").val();
+        if (reset_email == null || (reset_email as string).length == 0) {
+          w.swal("Please fill in e-mail.");
+          return;
+        }
+        if (w.captcha_site_key != '' && (captcha == null || (captcha as string).length == 0)) {
+          w.swal("Please fill complete the captcha.");
+          return;
+        }
+        $.ajax({
+          type: 'POST',
+          url: "/reset_password?email=" + reset_email + "&captcha=" + encodeURIComponent(captcha as string),
+          success: function(data: any, textStatus: string, request: any) {
+            w.swal("Password reset. Please check your email.");
+            $("#pwd_dialog").remove();
+          },
+          error: function(request: any, textStatus: string, errorThrown: string) {
+            w.swal("Error, password was not reset.");
+          }
+        });
+      }
+    }
+  });
+  ($("#pwd_dialog") as any).dialog('open');
+
+  if (w.captcha_site_key != '') {
+    if (w.grecaptcha !== undefined && w.grecaptcha != null) {
+      $('#captcha_element').html('');
+      w.grecaptcha.render('captcha_element', {
+        'sitekey': w.captcha_site_key
+      });
+    } else {
+      w.swal("Captcha not available. This could be caused by a browser plugin.");
+    }
+  }
+}
+
+/**************************************************************************
+  User signed in with Google account.
+**************************************************************************/
+export function google_signin_on_success(googleUser: any): void {
+  const w = window as any;
+  const id_token = googleUser.getAuthResponse().id_token;
+
+  if (!validate_username()) {
+    return;
+  }
+  const uname = sanitize_username($("#username_req").val()).toLowerCase();
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/token_signin');
+  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  xhr.onload = function() {
+    if (xhr.responseText == "OK") {
+      w.google_user_token = id_token;
+      w.simpleStorage.set("username", uname);
+      ($("#dialog") as any).dialog('close');
+    } else if (xhr.responseText == "Email not verified") {
+      w.swal("Login failed. E-mail not verified.");
+    } else {
+      w.swal("Login failed.");
+    }
+  };
+  xhr.send('idtoken=' + id_token + "&username=" + uname);
+}
+
+/**************************************************************************
+  Handle Google signin problems.
+**************************************************************************/
+export function google_signin_on_failure(error: any): void {
+  if (error['error'] == "popup_closed_by_user") return;
+  (window as any).swal("Unable to sign in with Google: " + JSON.stringify(error));
+  console.error("Unable to sign in with Google: " + JSON.stringify(error));
+}

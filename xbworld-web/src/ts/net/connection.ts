@@ -16,7 +16,7 @@ const w = window as any;
 let error_shown = false;
 let syncTimerId = -1;
 let clinet_last_send = 0;
-let debug_client_speed_list: number[] = [];
+export let debug_client_speed_list: number[] = [];
 const freeciv_version = '+Freeciv.Web.Devel-3.3';
 let ws: WebSocket | null = null;
 let civserverport: string | null = null;
@@ -27,7 +27,7 @@ let ping_timer: ReturnType<typeof setInterval> | null = null;
 /**
  * Initialize the network communication with the server manually.
  */
-function network_init_manual_hack(
+export function network_init_manual_hack(
   civserverport_manual: string,
   username_manual: string,
   savegame?: string
@@ -48,7 +48,7 @@ function network_init_manual_hack(
  * Includes the Railway CDN patch: reads port from JSON body first,
  * falls back to response headers.
  */
-function network_init(): void {
+export function network_init(): void {
   if (!('WebSocket' in window)) {
     w.swal('WebSockets not supported', '', 'error');
     return;
@@ -108,7 +108,7 @@ function network_init(): void {
  * Initialize the WebSocket connection.
  * Includes the proxy patch: handles both single-packet and array-wrapped packets.
  */
-function websocket_init(): void {
+export function websocket_init(): void {
   w.$.blockUI({ message: '<h2>Please wait while connecting to the server.</h2>' });
   const proxyport = 1000 + parseFloat(civserverport!);
   const ws_protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
@@ -171,7 +171,7 @@ function websocket_init(): void {
  * When the WebSocket connection is open and ready to communicate, then
  * send the first login message to the server.
  */
-function check_websocket_ready(): void {
+export function check_websocket_ready(): void {
   if (ws != null && ws.readyState === 1) {
     let sha_password: string | null = null;
     const stored_password = w.simpleStorage.get('password', '');
@@ -216,7 +216,7 @@ function check_websocket_ready(): void {
 /**
  * Stops network sync.
  */
-function network_stop(): void {
+export function network_stop(): void {
   if (ws != null) ws.close();
   ws = null;
 }
@@ -224,7 +224,7 @@ function network_stop(): void {
 /**
  * Sends a request to the server, with a JSON packet.
  */
-function send_request(packet_payload: string): void {
+export function send_request(packet_payload: string): void {
   if (ws != null) {
     ws.send(packet_payload);
   }
@@ -236,7 +236,7 @@ function send_request(packet_payload: string): void {
 /**
  * Debug timing collection.
  */
-function clinet_debug_collect(): void {
+export function clinet_debug_collect(): void {
   const time_elapsed = new Date().getTime() - clinet_last_send;
   debug_client_speed_list.push(time_elapsed);
   clinet_last_send = new Date().getTime();
@@ -246,7 +246,7 @@ function clinet_debug_collect(): void {
  * Detect server disconnections, by checking the time since the last
  * ping packet from the server.
  */
-function ping_check(): void {
+export function ping_check(): void {
   const time_since_last_ping = new Date().getTime() - ping_last;
   if (time_since_last_ping > pingtime_check) {
     console.log(
@@ -258,14 +258,14 @@ function ping_check(): void {
 /**
  * Send the chat message to the server after a delay.
  */
-function send_message_delayed(message: string, delay: number): void {
+export function send_message_delayed(message: string, delay: number): void {
   setTimeout(function () { send_message(message); }, delay);
 }
 
 /**
  * Sends a chat message to the server.
  */
-function send_message(message: string): void {
+export function send_message(message: string): void {
   if (w.is_longturn() && message != null) {
     if (
       message.indexOf(encodeURIComponent('/')) !== 0

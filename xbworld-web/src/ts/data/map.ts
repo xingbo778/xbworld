@@ -48,7 +48,7 @@ export const DIR_DY = [-1, -1, -1, 0, 0, 1, 1, 1] as const;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const win = window as any;
 
-function getMapInfo(): {
+export function getMapInfo(): {
   xsize: number;
   ysize: number;
   topology_id: number;
@@ -59,7 +59,7 @@ function getMapInfo(): {
   return null;
 }
 
-function getTiles(): Record<number, any> {
+export function getTiles(): Record<number, any> {
   return win.tiles || {};
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */

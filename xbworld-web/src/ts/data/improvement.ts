@@ -13,8 +13,8 @@ const w = window as any;
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-const B_AIRPORT_NAME = 'Airport';
-const B_LAST = MAX_NUM_BUILDINGS;
+export const B_AIRPORT_NAME = 'Airport';
+export const B_LAST = MAX_NUM_BUILDINGS;
 
 // Ensure global improvements object exists before any handler runs
 if (!w.improvements) w.improvements = {};
@@ -29,7 +29,7 @@ const improvements_name_index: Record<string, number> = {};
 /**
  * Prepare improvements for use, resetting state from any previous ruleset.
  */
-function improvements_init(): void {
+export function improvements_init(): void {
   const improvements = w.improvements;
   Object.keys(improvements).forEach((k) => delete improvements[k]);
   Object.keys(improvements_name_index).forEach(
@@ -40,7 +40,7 @@ function improvements_init(): void {
 /**
  * Add a new improvement definition.
  */
-function improvements_add_building(improvement: any): void {
+export function improvements_add_building(improvement: any): void {
   w.improvements[improvement.id] = improvement;
   improvements_name_index[improvement.name] = improvement.id;
 }
@@ -52,7 +52,7 @@ function improvements_add_building(improvement: any): void {
 /**
  * Returns list of improvements that require the given tech.
  */
-function get_improvements_from_tech(techId: number): any[] {
+export function get_improvements_from_tech(techId: number): any[] {
   const improvements = w.improvements as Record<string, any>;
   const result: any[] = [];
   for (const improvementId in improvements) {
@@ -71,14 +71,14 @@ function get_improvements_from_tech(techId: number): any[] {
  * Returns true if the improvement is a wonder.
  * Wonders have a soundtag starting with 'w'.
  */
-function is_wonder(improvement: any): boolean {
+export function is_wonder(improvement: any): boolean {
   return improvement['soundtag'][0] === 'w';
 }
 
 /**
  * Returns list of tech ids which are a requirement for the given improvement.
  */
-function get_improvement_requirements(improvementId: number): number[] {
+export function get_improvement_requirements(improvementId: number): number[] {
   const improvements = w.improvements as Record<number, any>;
   const result: number[] = [];
   const improvement = improvements[improvementId];
@@ -99,7 +99,7 @@ function get_improvement_requirements(improvementId: number): number[] {
  * Finds improvement id by exact name, or -1 if not found.
  * Uses the module-local name→id cache for O(1) lookup.
  */
-function improvement_id_by_name(name: string): number {
+export function improvement_id_by_name(name: string): number {
   return improvements_name_index.hasOwnProperty(name)
     ? improvements_name_index[name]
     : -1;

@@ -18,29 +18,23 @@
 ***********************************************************************/
 
 declare const $: any;
-declare const window: any;
+declare const client: any;
+declare const map: any;
 
-import { canvas_pos_to_tile } from '../data/map';
-import { tile_units } from '../data/tile';
-import { map_pos_to_tile } from '../data/map';
-import { find_visible_unit } from '../data/unit';
-import { player_by_full_username } from '../data/player';
-import { get_player_connection_status } from '../data/player';
-import { client_is_observer } from '../client/clientCore';
-import { can_client_change_view } from '../client/clientCore';
-import { current_focus, set_unit_focus, action_selection_next_in_focus, update_active_units_dialog } from './controls'; // TODO: verify exact exports
-import { goto_active, goto_preview_active, goto_request_map, request_goto_path } from './controls'; // TODO: verify exact exports
-import { mapview } from './mapview'; // TODO: verify exact exports
-import { client } from '../net/connection'; // TODO: verify exact exports
-import { context_menu_active } from './controls'; // TODO: verify exact exports
-import { is_touch_device } from '../utils/helpers';
-import { popit } from './dialogs'; // TODO: verify exact exports
-import { is_right_mouse_selection_supported } from './controls'; // TODO: verify exact exports
-import { show_dialog_message } from './dialogs'; // TODO: verify exact exports
-import { do_map_click, do_city_map_click } from './actions'; // TODO: verify exact exports
+import { canvas_pos_to_tile, mapview } from './mapviewCommon';
+import { mapPosToTile } from '../data/map';
+const map_pos_to_tile = mapPosToTile;
+import { tile_units } from '../data/unit';
+import { find_visible_unit, set_unit_focus, action_selection_next_in_focus, update_active_units_dialog } from '../core/control';
+import { current_focus, goto_active, goto_request_map, request_goto_path, context_menu_active, keyboard_input as keyboard_input_ref, mapview_mouse_movement as mapview_mouse_movement_ref, SELECT_POPUP, popit, do_map_click, update_mouse_cursor, set_mouse_touch_started_on_unit, check_mouse_drag_unit } from '../core/control';
+import { player_by_full_username, get_player_connection_status } from '../data/player';
+import { clientIsObserver as client_is_observer, canClientChangeView as can_client_change_view } from '../client/clientState';
+import { isTouchDevice as is_touch_device, isRightMouseSelectionSupported as is_right_mouse_selection_supported } from '../utils/helpers';
+import { showDialogMessage as show_dialog_message } from '../client/civClient';
+import { do_city_map_click } from '../ui/cityDialog';
 import { IDENTITY_NUMBER_ZERO } from '../core/constants';
-import { map } from '../data/map';
-import { city_action_button_pressed as city_action_button_pressed_internal } from './city'; // TODO: verify exact exports
+import { enable_mapview_slide } from './mapview';
+import { center_tile_mapcanvas } from '../core/control';
 
 export let mouse_x: number;
 export let mouse_y: number;
@@ -89,10 +83,10 @@ export function mapview_mouse_click(e: any): void {
   if (rightclick) {
     /* right click to recenter. */
     if (!map_select_active || !map_select_setting_enabled) {
-      context_menu_active = true;
+      (window as any).context_menu_active = true;
       recenter_button_pressed(mouse_x, mouse_y);
     } else {
-      context_menu_active = false;
+      (window as any).context_menu_active = false;
       map_select_units(mouse_x, mouse_y);
     }
     map_select_active = false;
@@ -101,10 +95,10 @@ export function mapview_mouse_click(e: any): void {
   } else if (!middleclick) {
     /* Left mouse button*/
     action_button_pressed(mouse_x, mouse_y, SELECT_POPUP);
-    mapview_mouse_movement = false;
+    (window as any).mapview_mouse_movement = false;
     update_mouse_cursor();
   }
-  keyboard_input = true;
+  (window as any).keyboard_input = true;
 }
 
 /****************************************************************************
@@ -143,7 +137,7 @@ export function mapview_mouse_down(e: any): boolean | void {
 
     /* The context menu blocks the right click mouse up event on some
      * browsers. */
-    context_menu_active = false;
+    (window as any).context_menu_active = false;
   }
 }
 
@@ -191,7 +185,8 @@ export function mapview_touch_move(e: any): void {
   if (client.conn.playing == null) return;
 
   /* Request preview goto path */
-  goto_preview_active = true;
+  // goto_preview_active is only used locally, just set a local flag
+  let _goto_preview_active = true;
   if (goto_active && current_focus.length > 0) {
     const ptile = canvas_pos_to_tile(mouse_x, mouse_y);
     if (ptile != null) {
@@ -289,7 +284,7 @@ export function map_select_units(canvas_x: number, canvas_y: number): void {
     }
   }
 
-  current_focus = selected_units;
+  (window as any).current_focus = selected_units;
   action_selection_next_in_focus(IDENTITY_NUMBER_ZERO);
   update_active_units_dialog();
 }
@@ -380,16 +375,5 @@ export function handle_web_info_text_message(packet: any): void {
   show_dialog_message("Tile Information", message);
 }
 
-// The following variables and functions are referenced but not defined in this file.
-// They should be imported or declared elsewhere in the project:
-
-declare let mapview_mouse_movement: boolean;
-declare function update_mouse_cursor(): void;
-declare let keyboard_input: boolean;
-declare function set_mouse_touch_started_on_unit(ptile: any): void;
-declare function check_mouse_drag_unit(ptile: any): void;
-declare const SELECT_POPUP: any;
-declare function city_action_button_pressed(canvas_x: number, canvas_y: number): void;
-declare function enable_mapview_slide(ptile: any): void;
-declare function center_tile_mapcanvas(ptile: any): void;
+// nation_table_select_player is called via onclick in HTML strings, so it's on window
 declare function nation_table_select_player(playerno: number): void;

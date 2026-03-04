@@ -18,7 +18,7 @@ const w = window as any;
 // ============================================================================
 // Module-local state (was var in packhand.js)
 // ============================================================================
-let terrain_control: any = {};
+export let terrain_control: any = {};
 let roads: any[] = [];
 let bases: any[] = [];
 let page_msg: any = {};
@@ -37,30 +37,30 @@ const REQEST_BACKGROUND_FAST_AUTO_ATTACK = 2;
 // Batch 1: Freeze/thaw handlers
 // ============================================================================
 
-function handle_processing_started(_packet: any): void {
+export function handle_processing_started(_packet: any): void {
   w.client_frozen = true;
 }
 
-function handle_processing_finished(_packet: any): void {
+export function handle_processing_finished(_packet: any): void {
   w.client_frozen = false;
 }
 
-function handle_investigate_started(_packet: any): void { /* no-op */ }
-function handle_investigate_finished(_packet: any): void { /* no-op */ }
+export function handle_investigate_started(_packet: any): void { /* no-op */ }
+export function handle_investigate_finished(_packet: any): void { /* no-op */ }
 
-function handle_freeze_hint(_packet: any): void {
+export function handle_freeze_hint(_packet: any): void {
   w.client_frozen = true;
 }
 
-function handle_thaw_hint(_packet: any): void {
+export function handle_thaw_hint(_packet: any): void {
   w.client_frozen = false;
 }
 
-function handle_freeze_client(_packet: any): void {
+export function handle_freeze_client(_packet: any): void {
   w.client_frozen = true;
 }
 
-function handle_thaw_client(_packet: any): void {
+export function handle_thaw_client(_packet: any): void {
   w.client_frozen = false;
 }
 
@@ -68,45 +68,45 @@ function handle_thaw_client(_packet: any): void {
 // Batch 2: Pure data assignment — ruleset handlers
 // ============================================================================
 
-function handle_ruleset_terrain(packet: any): void {
+export function handle_ruleset_terrain(packet: any): void {
   if (packet['name'] === 'Lake') packet['graphic_str'] = packet['graphic_alt'];
   if (packet['name'] === 'Glacier') packet['graphic_str'] = 'tundra';
   w.terrains[packet['id']] = packet;
 }
 
-function handle_ruleset_resource(packet: any): void {
+export function handle_ruleset_resource(packet: any): void {
   w.resources[packet['id']] = packet;
 }
 
-function handle_ruleset_game(packet: any): void {
+export function handle_ruleset_game(packet: any): void {
   w.game_rules = packet;
 }
 
-function handle_ruleset_specialist(packet: any): void {
+export function handle_ruleset_specialist(packet: any): void {
   w.specialists[packet['id']] = packet;
 }
 
-function handle_ruleset_nation_groups(packet: any): void {
+export function handle_ruleset_nation_groups(packet: any): void {
   w.nation_groups = packet['groups'];
 }
 
-function handle_ruleset_nation(packet: any): void {
+export function handle_ruleset_nation(packet: any): void {
   w.nations[packet['id']] = packet;
 }
 
-function handle_ruleset_city(packet: any): void {
+export function handle_ruleset_city(packet: any): void {
   w.city_rules[packet['style_id']] = packet;
 }
 
-function handle_ruleset_government(packet: any): void {
+export function handle_ruleset_government(packet: any): void {
   w.governments[packet['id']] = packet;
 }
 
-function handle_ruleset_summary(packet: any): void {
+export function handle_ruleset_summary(packet: any): void {
   w.ruleset_summary = packet['text'];
 }
 
-function handle_ruleset_description_part(packet: any): void {
+export function handle_ruleset_description_part(packet: any): void {
   if (w.ruleset_description == null) {
     w.ruleset_description = packet['text'];
   } else {
@@ -114,62 +114,62 @@ function handle_ruleset_description_part(packet: any): void {
   }
 }
 
-function handle_ruleset_action(packet: any): void {
+export function handle_ruleset_action(packet: any): void {
   w.actions[packet['id']] = packet;
   packet['enablers'] = [];
 }
 
-function handle_ruleset_goods(packet: any): void {
+export function handle_ruleset_goods(packet: any): void {
   w.goods[packet['id']] = packet;
 }
 
-function handle_ruleset_clause(packet: any): void {
+export function handle_ruleset_clause(packet: any): void {
   w.clause_infos[packet['type']] = packet;
 }
 
-function handle_game_info(packet: any): void {
+export function handle_game_info(packet: any): void {
   w.game_info = packet;
 }
 
-function handle_calendar_info(packet: any): void {
+export function handle_calendar_info(packet: any): void {
   w.calendar_info = packet;
 }
 
-function handle_spaceship_info(packet: any): void {
+export function handle_spaceship_info(packet: any): void {
   w.spaceship_info[packet['player_num']] = packet;
 }
 
-function handle_ruleset_effect(packet: any): void {
+export function handle_ruleset_effect(packet: any): void {
   if (w.effects[packet['effect_type']] == null) {
     w.effects[packet['effect_type']] = [];
   }
   w.effects[packet['effect_type']].push(packet);
 }
 
-function handle_new_year(packet: any): void {
+export function handle_new_year(packet: any): void {
   w.game_info['year'] = packet['year'];
   w.game_info['fragments'] = packet['fragments'];
   w.game_info['turn'] = packet['turn'];
 }
 
-function handle_timeout_info(packet: any): void {
+export function handle_timeout_info(packet: any): void {
   w.last_turn_change_time = Math.ceil(packet['last_turn_change_time']);
   w.seconds_to_phasedone = Math.floor(packet['seconds_to_phasedone']);
   w.seconds_to_phasedone_sync = new Date().getTime();
 }
 
-function handle_trade_route_info(packet: any): void {
+export function handle_trade_route_info(packet: any): void {
   if (w.city_trade_routes[packet['city']] == null) {
     w.city_trade_routes[packet['city']] = {};
   }
   w.city_trade_routes[packet['city']][packet['index']] = packet;
 }
 
-function handle_endgame_player(packet: any): void {
+export function handle_endgame_player(packet: any): void {
   w.endgame_player_info.push(packet);
 }
 
-function handle_unknown_research(packet: any): void {
+export function handle_unknown_research(packet: any): void {
   delete w.research_data[packet['id']];
 }
 
@@ -177,7 +177,7 @@ function handle_unknown_research(packet: any): void {
 // Batch 3: Ruleset handlers with logic
 // ============================================================================
 
-function handle_ruleset_unit(packet: any): void {
+export function handle_ruleset_unit(packet: any): void {
   if (packet['name'] != null && packet['name'].indexOf('?unit:') === 0) {
     packet['name'] = packet['name'].replace('?unit:', '');
   }
@@ -185,7 +185,7 @@ function handle_ruleset_unit(packet: any): void {
   w.unit_types[packet['id']] = packet;
 }
 
-function handle_web_ruleset_unit_addition(packet: any): void {
+export function handle_web_ruleset_unit_addition(packet: any): void {
   // Convert utype_actions array to BitVector (matches legacy webclient.min.js behaviour)
   if (packet['utype_actions'] != null) {
     packet['utype_actions'] = new w.BitVector(packet['utype_actions']);
@@ -199,7 +199,7 @@ function handle_web_ruleset_unit_addition(packet: any): void {
  * Recreate the old req[] field of ruleset_tech packets.
  * This makes it possible to delay research_reqs support.
  */
-function recreate_old_tech_req(packet: any): void {
+export function recreate_old_tech_req(packet: any): void {
   packet['req'] = [];
   if (packet['research_reqs']) {
     for (let i = 0; i < packet['research_reqs'].length; i++) {
@@ -217,7 +217,7 @@ function recreate_old_tech_req(packet: any): void {
   }
 }
 
-function handle_ruleset_tech(packet: any): void {
+export function handle_ruleset_tech(packet: any): void {
   if (packet['name'] != null && packet['name'].indexOf('?tech:') === 0) {
     packet['name'] = packet['name'].replace('?tech:', '');
   }
@@ -225,37 +225,37 @@ function handle_ruleset_tech(packet: any): void {
   recreate_old_tech_req(packet);
 }
 
-function handle_ruleset_tech_class(_packet: any): void { /* TODO */ }
-function handle_ruleset_tech_flag(_packet: any): void { /* TODO */ }
+export function handle_ruleset_tech_class(_packet: any): void { /* TODO */ }
+export function handle_ruleset_tech_flag(_packet: any): void { /* TODO */ }
 
-function handle_ruleset_terrain_control(packet: any): void {
+export function handle_ruleset_terrain_control(packet: any): void {
   terrain_control = packet;
   w.terrain_control = packet;
   w.SINGLE_MOVE = packet['move_fragments'];
 }
 
-function handle_ruleset_building(packet: any): void {
+export function handle_ruleset_building(packet: any): void {
   w.improvements[packet['id']] = packet;
 }
 
-function handle_ruleset_unit_class(packet: any): void {
+export function handle_ruleset_unit_class(packet: any): void {
   packet['flags'] = new w.BitVector(packet['flags']);
   w.unit_classes[packet['id']] = packet;
 }
 
-function handle_ruleset_disaster(_packet: any): void { /* TODO */ }
-function handle_ruleset_trade(_packet: any): void { /* TODO */ }
-function handle_rulesets_ready(_packet: any): void { /* TODO */ }
-function handle_ruleset_choices(_packet: any): void { /* TODO */ }
-function handle_game_load(_packet: any): void { /* TODO */ }
-function handle_ruleset_unit_flag(_packet: any): void { /* TODO */ }
-function handle_ruleset_unit_class_flag(_packet: any): void { /* TODO */ }
-function handle_ruleset_unit_bonus(_packet: any): void { /* TODO */ }
-function handle_ruleset_terrain_flag(_packet: any): void { /* TODO */ }
-function handle_ruleset_impr_flag(_packet: any): void { /* TODO */ }
-function handle_ruleset_government_ruler_title(_packet: any): void { /* TODO */ }
+export function handle_ruleset_disaster(_packet: any): void { /* TODO */ }
+export function handle_ruleset_trade(_packet: any): void { /* TODO */ }
+export function handle_rulesets_ready(_packet: any): void { /* TODO */ }
+export function handle_ruleset_choices(_packet: any): void { /* TODO */ }
+export function handle_game_load(_packet: any): void { /* TODO */ }
+export function handle_ruleset_unit_flag(_packet: any): void { /* TODO */ }
+export function handle_ruleset_unit_class_flag(_packet: any): void { /* TODO */ }
+export function handle_ruleset_unit_bonus(_packet: any): void { /* TODO */ }
+export function handle_ruleset_terrain_flag(_packet: any): void { /* TODO */ }
+export function handle_ruleset_impr_flag(_packet: any): void { /* TODO */ }
+export function handle_ruleset_government_ruler_title(_packet: any): void { /* TODO */ }
 
-function handle_ruleset_base(packet: any): void {
+export function handle_ruleset_base(packet: any): void {
   for (let i = 0; i < w.ruleset_control['num_extra_types']; i++) {
     if (w.is_extra_caused_by(w.extras[i], w.EC_BASE)
         && w.extras[i]['base'] == null) {
@@ -268,7 +268,7 @@ function handle_ruleset_base(packet: any): void {
   console.log(packet);
 }
 
-function handle_ruleset_road(packet: any): void {
+export function handle_ruleset_road(packet: any): void {
   for (let i = 0; i < w.ruleset_control['num_extra_types']; i++) {
     if (w.is_extra_caused_by(w.extras[i], w.EC_ROAD)
         && w.extras[i]['road'] == null) {
@@ -281,7 +281,7 @@ function handle_ruleset_road(packet: any): void {
   console.log(packet);
 }
 
-function handle_ruleset_action_enabler(packet: any): void {
+export function handle_ruleset_action_enabler(packet: any): void {
   const paction = w.actions[packet.enabled_action];
   if (paction === undefined) {
     console.log("Unknown action " + packet.action + " for enabler ");
@@ -291,7 +291,7 @@ function handle_ruleset_action_enabler(packet: any): void {
   paction.enablers.push(packet);
 }
 
-function handle_ruleset_extra(packet: any): void {
+export function handle_ruleset_extra(packet: any): void {
   packet['causes'] = new w.BitVector(packet['causes']);
   packet['rmcauses'] = new w.BitVector(packet['rmcauses']);
   packet['name'] = w.string_unqualify(packet['name']);
@@ -310,26 +310,26 @@ function handle_ruleset_extra(packet: any): void {
   else w['EXTRA_' + packet['rule_name'].toUpperCase()] = packet['id'];
 }
 
-function handle_ruleset_counter(_packet: any): void { /* TODO */ }
-function handle_ruleset_extra_flag(_packet: any): void { /* TODO */ }
-function handle_ruleset_nation_sets(_packet: any): void { /* TODO */ }
-function handle_ruleset_style(_packet: any): void { /* TODO */ }
-function handle_nation_availability(_packet: any): void { /* TODO */ }
-function handle_ruleset_music(_packet: any): void { /* TODO */ }
-function handle_ruleset_multiplier(_packet: any): void { /* TODO */ }
-function handle_ruleset_action_auto(_packet: any): void { /* TODO */ }
-function handle_ruleset_achievement(_packet: any): void { /* TODO */ }
-function handle_achievement_info(_packet: any): void { /* TODO */ }
-function handle_team_name_info(_packet: any): void { /* TODO */ }
-function handle_popup_image(_packet: any): void { /* TODO */ }
-function handle_worker_task(_packet: any): void { /* TODO */ }
-function handle_play_music(_packet: any): void { /* TODO */ }
+export function handle_ruleset_counter(_packet: any): void { /* TODO */ }
+export function handle_ruleset_extra_flag(_packet: any): void { /* TODO */ }
+export function handle_ruleset_nation_sets(_packet: any): void { /* TODO */ }
+export function handle_ruleset_style(_packet: any): void { /* TODO */ }
+export function handle_nation_availability(_packet: any): void { /* TODO */ }
+export function handle_ruleset_music(_packet: any): void { /* TODO */ }
+export function handle_ruleset_multiplier(_packet: any): void { /* TODO */ }
+export function handle_ruleset_action_auto(_packet: any): void { /* TODO */ }
+export function handle_ruleset_achievement(_packet: any): void { /* TODO */ }
+export function handle_achievement_info(_packet: any): void { /* TODO */ }
+export function handle_team_name_info(_packet: any): void { /* TODO */ }
+export function handle_popup_image(_packet: any): void { /* TODO */ }
+export function handle_worker_task(_packet: any): void { /* TODO */ }
+export function handle_play_music(_packet: any): void { /* TODO */ }
 
 // ============================================================================
 // Batch 4: Handlers with UI calls (call legacy UI functions via window)
 // ============================================================================
 
-function handle_server_join_reply(packet: any): void {
+export function handle_server_join_reply(packet: any): void {
   if (packet['you_can_join']) {
     w.client.conn.established = true;
     w.client.conn.id = packet['conn_id'];
@@ -380,7 +380,7 @@ function handle_server_join_reply(packet: any): void {
   }
 }
 
-function handle_conn_info(packet: any): void {
+export function handle_conn_info(packet: any): void {
   let pconn = find_conn_by_id(packet['id']);
 
   if (packet['used'] === false) {
@@ -411,7 +411,7 @@ function handle_conn_info(packet: any): void {
   }
 }
 
-function handle_tile_info(packet: any): void {
+export function handle_tile_info(packet: any): void {
   if (w.tiles != null) {
     packet['extras'] = new w.BitVector(packet['extras']);
 
@@ -429,7 +429,7 @@ function handle_tile_info(packet: any): void {
   }
 }
 
-function handle_chat_msg(packet: any): void {
+export function handle_chat_msg(packet: any): void {
   let message = packet['message'];
   const conn_id = packet['conn_id'];
   const event = packet['event'];
@@ -466,11 +466,11 @@ function handle_chat_msg(packet: any): void {
   w.add_chatbox_text(packet);
 }
 
-function handle_early_chat_msg(packet: any): void {
+export function handle_early_chat_msg(packet: any): void {
   handle_chat_msg(packet);
 }
 
-function handle_city_info(packet: any): void {
+export function handle_city_info(packet: any): void {
   if (typeof w.mark_tile_dirty === 'function' && packet['tile'] != null) {
     w.mark_tile_dirty(packet['tile']);
   }
@@ -497,19 +497,19 @@ function handle_city_info(packet: any): void {
   pcity['production_changed'] = false;
 }
 
-function handle_city_nationalities(packet: any): void {
+export function handle_city_nationalities(packet: any): void {
   if (w.cities[packet['id']] != null) {
     Object.assign(w.cities[packet['id']], packet);
   }
 }
 
-function handle_city_rally_point(packet: any): void {
+export function handle_city_rally_point(packet: any): void {
   if (w.cities[packet['id']] != null) {
     Object.assign(w.cities[packet['id']], packet);
   }
 }
 
-function handle_web_city_info_addition(packet: any): void {
+export function handle_web_city_info_addition(packet: any): void {
   if (w.cities[packet['id']] != null) {
     Object.assign(w.cities[packet['id']], packet);
   }
@@ -519,7 +519,7 @@ function handle_web_city_info_addition(packet: any): void {
   }
 }
 
-function handle_city_short_info(packet: any): void {
+export function handle_city_short_info(packet: any): void {
   if (typeof w.mark_tile_dirty === 'function' && packet['tile'] != null) {
     w.mark_tile_dirty(packet['tile']);
   }
@@ -534,15 +534,15 @@ function handle_city_short_info(packet: any): void {
   }
 }
 
-function handle_city_update_counters(packet: any): void {
+export function handle_city_update_counters(packet: any): void {
   if (w.cities[packet['id']] != null) {
     w.cities[packet['id']]['counters'] = packet['counters'];
   }
 }
 
-function handle_city_update_counter(_packet: any): void { /* TODO */ }
+export function handle_city_update_counter(_packet: any): void { /* TODO */ }
 
-function handle_player_info(packet: any): void {
+export function handle_player_info(packet: any): void {
   // Decode the nation name
   if (packet['name'] != null) {
     packet['name'] = decodeURIComponent(packet['name']);
@@ -570,7 +570,7 @@ function handle_player_info(packet: any): void {
   }
 }
 
-function handle_web_player_info_addition(packet: any): void {
+export function handle_web_player_info_addition(packet: any): void {
   Object.assign(w.players[packet['playerno']], packet);
 
   if (w.client.conn.playing != null) {
@@ -587,20 +587,20 @@ function handle_web_player_info_addition(packet: any): void {
   w.assign_nation_color(w.players[packet['playerno']]['nation']);
 }
 
-function handle_player_remove(packet: any): void {
+export function handle_player_remove(packet: any): void {
   delete w.players[packet['playerno']];
   w.update_player_info_pregame();
 }
 
-function handle_conn_ping(packet: any): void {
+export function handle_conn_ping(packet: any): void {
   w.ping_last = new Date().getTime();
   const pong_packet = { 'pid': w.packet_conn_pong };
   w.send_request(JSON.stringify(pong_packet));
 }
 
-function handle_set_topology(_packet: any): void { /* TODO */ }
+export function handle_set_topology(_packet: any): void { /* TODO */ }
 
-function handle_map_info(packet: any): void {
+export function handle_map_info(packet: any): void {
   w.map = packet;
   w.map_init_topology(false);
   w.map_allocate();
@@ -612,13 +612,13 @@ function handle_map_info(packet: any): void {
   }
 }
 
-function handle_authentication_req(packet: any): void {
+export function handle_authentication_req(packet: any): void {
   w.show_auth_dialog(packet);
 }
 
-function handle_server_shutdown(_packet: any): void { /* TODO */ }
+export function handle_server_shutdown(_packet: any): void { /* TODO */ }
 
-function handle_nuke_tile_info(packet: any): void {
+export function handle_nuke_tile_info(packet: any): void {
   const ptile = w.index_to_tile(packet['tile']);
   if (w.renderer === w.RENDERER_WEBGL) {
     w.render_nuclear_explosion(ptile);
@@ -628,15 +628,15 @@ function handle_nuke_tile_info(packet: any): void {
   w.play_sound('LrgExpl.ogg');
 }
 
-function handle_city_remove(packet: any): void {
+export function handle_city_remove(packet: any): void {
   w.remove_city(packet['city_id']);
 }
 
-function handle_connect_msg(packet: any): void {
+export function handle_connect_msg(packet: any): void {
   w.add_chatbox_text(packet);
 }
 
-function handle_server_info(packet: any): void {
+export function handle_server_info(packet: any): void {
   if (packet['emerg_version'] > 0) {
     console.log('Server has version %d.%d.%d.%d%s',
       packet.major_version, packet.minor_version, packet.patch_version,
@@ -648,12 +648,12 @@ function handle_server_info(packet: any): void {
   }
 }
 
-function handle_city_name_suggestion_info(packet: any): void {
+export function handle_city_name_suggestion_info(packet: any): void {
   packet['name'] = decodeURIComponent(packet['name']);
   w.city_name_dialog(packet['name'], packet['unit_id']);
 }
 
-function handle_city_sabotage_list(packet: any): void {
+export function handle_city_sabotage_list(packet: any): void {
   if (packet['request_kind'] !== REQEST_PLAYER_INITIATED) {
     console.log('handle_city_sabotage_list(): was asked to not disturb the player. Unimplemented.');
   }
@@ -665,9 +665,9 @@ function handle_city_sabotage_list(packet: any): void {
   );
 }
 
-function handle_player_attribute_chunk(_packet: any): void { /* no-op */ }
+export function handle_player_attribute_chunk(_packet: any): void { /* no-op */ }
 
-function handle_unit_remove(packet: any): void {
+export function handle_unit_remove(packet: any): void {
   const punit = w.game_find_unit_by_number(packet['unit_id']);
   if (punit == null) return;
 
@@ -688,7 +688,7 @@ function handle_unit_remove(packet: any): void {
   }
 }
 
-function handle_unit_info(packet: any): void {
+export function handle_unit_info(packet: any): void {
   if (typeof w.mark_tile_dirty === 'function' && packet['tile'] != null) {
     w.mark_tile_dirty(packet['tile']);
     const old_unit = w.units[packet['id']];
@@ -699,7 +699,7 @@ function handle_unit_info(packet: any): void {
   handle_unit_packet_common(packet);
 }
 
-function handle_unit_short_info(packet: any): void {
+export function handle_unit_short_info(packet: any): void {
   if (typeof w.mark_tile_dirty === 'function' && packet['tile'] != null) {
     w.mark_tile_dirty(packet['tile']);
     const old_unit = w.units[packet['id']];
@@ -714,7 +714,7 @@ function handle_unit_short_info(packet: any): void {
  * Handle action decision for a unit — check auto-attack actions first,
  * then fall back to requesting player decision.
  */
-function action_decision_handle(punit: any): void {
+export function action_decision_handle(punit: any): void {
   for (let a = 0; a < auto_attack_actions.length; a++) {
     const action = auto_attack_actions[a];
     if (w.utype_can_do_action(w.unit_type(punit), action) && w.auto_attack) {
@@ -737,7 +737,7 @@ function action_decision_handle(punit: any): void {
  * Do an auto action or request that the player makes a decision
  * for the specified unit.
  */
-function action_decision_maybe_auto(
+export function action_decision_maybe_auto(
   actor_unit: any, action_probabilities: any,
   target_tile: any, target_extra: any,
   target_unit: any, _target_city: any
@@ -761,11 +761,11 @@ function action_decision_maybe_auto(
 /**
  * Simple wrapper: update_client_state -> set_client_state.
  */
-function update_client_state(value: any): void {
+export function update_client_state(value: any): void {
   w.set_client_state(value);
 }
 
-function handle_unit_packet_common(packet_unit: any): void {
+export function handle_unit_packet_common(packet_unit: any): void {
   const punit = w.player_find_unit_by_id(
     w.unit_owner(packet_unit), packet_unit['id']
   );
@@ -830,7 +830,7 @@ function handle_unit_packet_common(packet_unit: any): void {
   }
 }
 
-function handle_unit_combat_info(packet: any): void {
+export function handle_unit_combat_info(packet: any): void {
   const attacker = w.units[packet['attacker_unit_id']];
   const defender = w.units[packet['defender_unit_id']];
   const attacker_hp = packet['attacker_hp'];
@@ -849,7 +849,7 @@ function handle_unit_combat_info(packet: any): void {
   }
 }
 
-function handle_unit_action_answer(packet: any): void {
+export function handle_unit_action_answer(packet: any): void {
   const diplomat_id = packet['actor_id'];
   const target_id = packet['target_id'];
   const cost = packet['cost'];
@@ -902,7 +902,7 @@ function handle_unit_action_answer(packet: any): void {
   w.act_sel_queue_done(diplomat_id);
 }
 
-function handle_unit_actions(packet: any): void {
+export function handle_unit_actions(packet: any): void {
   const actor_unit_id = packet['actor_unit_id'];
   const target_unit_id = packet['target_unit_id'];
   const target_city_id = packet['target_city_id'];
@@ -955,18 +955,18 @@ function handle_unit_actions(packet: any): void {
   }
 }
 
-function handle_diplomacy_init_meeting(packet: any): void {
+export function handle_diplomacy_init_meeting(packet: any): void {
   if (w.is_hotseat() && packet['initiated_from'] !== w.client.conn.playing['playerno']) return;
   w.diplomacy_clause_map[packet['counterpart']] = [];
   w.show_diplomacy_dialog(packet['counterpart']);
   w.show_diplomacy_clauses(packet['counterpart']);
 }
 
-function handle_diplomacy_cancel_meeting(packet: any): void {
+export function handle_diplomacy_cancel_meeting(packet: any): void {
   w.cancel_meeting(packet['counterpart']);
 }
 
-function handle_diplomacy_create_clause(packet: any): void {
+export function handle_diplomacy_create_clause(packet: any): void {
   const counterpart_id = packet['counterpart'];
   if (w.diplomacy_clause_map[counterpart_id] == null) {
     w.diplomacy_clause_map[counterpart_id] = [];
@@ -975,17 +975,17 @@ function handle_diplomacy_create_clause(packet: any): void {
   w.show_diplomacy_clauses(counterpart_id);
 }
 
-function handle_diplomacy_remove_clause(packet: any): void {
+export function handle_diplomacy_remove_clause(packet: any): void {
   w.remove_clause(packet);
 }
 
-function handle_diplomacy_accept_treaty(packet: any): void {
+export function handle_diplomacy_accept_treaty(packet: any): void {
   w.accept_treaty(packet['counterpart'],
                   packet['I_accepted'],
                   packet['other_accepted']);
 }
 
-function handle_page_msg(packet: any): void {
+export function handle_page_msg(packet: any): void {
   page_msg['headline'] = packet['headline'];
   page_msg['caption'] = packet['caption'];
   page_msg['event'] = packet['event'];
@@ -993,7 +993,7 @@ function handle_page_msg(packet: any): void {
   page_msg['message'] = '';
 }
 
-function handle_page_msg_part(packet: any): void {
+export function handle_page_msg_part(packet: any): void {
   page_msg['message'] = page_msg['message'] + packet['lines'];
   page_msg['missing_parts']--;
 
@@ -1005,14 +1005,14 @@ function handle_page_msg_part(packet: any): void {
   }
 }
 
-function handle_conn_ping_info(packet: any): void {
+export function handle_conn_ping_info(packet: any): void {
   if (w.debug_active) {
     w.conn_ping_info = packet;
     w.debug_ping_list.push(packet['ping_time'][0] * 1000);
   }
 }
 
-function handle_end_phase(_packet: any): void {
+export function handle_end_phase(_packet: any): void {
   w.chatbox_clip_messages();
   if (w.is_pbem()) {
     w.pbem_end_phase();
@@ -1022,14 +1022,14 @@ function handle_end_phase(_packet: any): void {
   }
 }
 
-function handle_start_phase(_packet: any): void {
+export function handle_start_phase(_packet: any): void {
   w.set_client_state(w.C_S_RUNNING);
   w.set_phase_start();
   w.saved_this_turn = false;
   w.add_replay_frame();
 }
 
-function handle_ruleset_control(packet: any): void {
+export function handle_ruleset_control(packet: any): void {
   w.ruleset_control = packet;
   w.set_client_state(w.C_S_PREPARING);
 
@@ -1068,61 +1068,61 @@ function handle_ruleset_control(packet: any): void {
   w.clause_infos = {};
 }
 
-function handle_endgame_report(_packet: any): void {
+export function handle_endgame_report(_packet: any): void {
   w.set_client_state(w.C_S_OVER);
 }
 
-function handle_scenario_info(packet: any): void {
+export function handle_scenario_info(packet: any): void {
   w.scenario_info = packet;
 }
 
-function handle_scenario_description(packet: any): void {
+export function handle_scenario_description(packet: any): void {
   w.scenario_info['description'] = packet['description'];
   w.update_game_info_pregame();
 }
 
-function handle_single_want_hack_reply(packet: any): void {
+export function handle_single_want_hack_reply(packet: any): void {
   if (typeof w.handle_single_want_hack_reply_orig === 'function') {
     w.handle_single_want_hack_reply_orig(packet);
   }
 }
 
-function handle_vote_new(_packet: any): void { /* TODO */ }
-function handle_vote_update(_packet: any): void { /* TODO */ }
-function handle_vote_remove(_packet: any): void { /* TODO */ }
-function handle_vote_resolve(_packet: any): void { /* TODO */ }
-function handle_edit_startpos(_packet: any): void { /* no-op */ }
-function handle_edit_startpos_full(_packet: any): void { /* no-op */ }
-function handle_edit_object_created(_packet: any): void { /* no-op */ }
+export function handle_vote_new(_packet: any): void { /* TODO */ }
+export function handle_vote_update(_packet: any): void { /* TODO */ }
+export function handle_vote_remove(_packet: any): void { /* TODO */ }
+export function handle_vote_resolve(_packet: any): void { /* TODO */ }
+export function handle_edit_startpos(_packet: any): void { /* no-op */ }
+export function handle_edit_startpos_full(_packet: any): void { /* no-op */ }
+export function handle_edit_object_created(_packet: any): void { /* no-op */ }
 
-function handle_server_setting_const(packet: any): void {
+export function handle_server_setting_const(packet: any): void {
   w.server_settings[packet['id']] = packet;
   w.server_settings[packet['name']] = packet;
 }
 
-function handle_server_setting_int(packet: any): void {
+export function handle_server_setting_int(packet: any): void {
   Object.assign(w.server_settings[packet['id']], packet);
 }
 
-function handle_server_setting_enum(packet: any): void {
+export function handle_server_setting_enum(packet: any): void {
   Object.assign(w.server_settings[packet['id']], packet);
 }
 
-function handle_server_setting_bitwise(packet: any): void {
+export function handle_server_setting_bitwise(packet: any): void {
   Object.assign(w.server_settings[packet['id']], packet);
 }
 
-function handle_server_setting_bool(packet: any): void {
+export function handle_server_setting_bool(packet: any): void {
   Object.assign(w.server_settings[packet['id']], packet);
 }
 
-function handle_server_setting_str(packet: any): void {
+export function handle_server_setting_str(packet: any): void {
   Object.assign(w.server_settings[packet['id']], packet);
 }
 
-function handle_server_setting_control(_packet: any): void { /* TODO */ }
+export function handle_server_setting_control(_packet: any): void { /* TODO */ }
 
-function handle_player_diplstate(packet: any): void {
+export function handle_player_diplstate(packet: any): void {
   let need_players_dialog_update = false;
 
   if (w.client == null || w.client.conn.playing == null) return;
@@ -1185,13 +1185,13 @@ function handle_player_diplstate(packet: any): void {
   }
 }
 
-function handle_web_goto_path(packet: any): void {
+export function handle_web_goto_path(packet: any): void {
   if (w.goto_active) {
     w.update_goto_path(packet);
   }
 }
 
-function handle_research_info(packet: any): void {
+export function handle_research_info(packet: any): void {
   let old_inventions: any = null;
   if (w.research_data[packet['id']] != null) {
     old_inventions = w.research_data[packet['id']]['inventions'];
@@ -1233,7 +1233,7 @@ function handle_research_info(packet: any): void {
 // Batch 5: jQuery handlers — replaced with native DOM
 // ============================================================================
 
-function handle_begin_turn(_packet: any): void {
+export function handle_begin_turn(_packet: any): void {
   if (typeof w.mark_all_dirty === 'function') w.mark_all_dirty();
 
   if (!w.observing) {
@@ -1259,7 +1259,7 @@ function handle_begin_turn(_packet: any): void {
   if (w.is_tech_tree_init && w.tech_dialog_active) w.update_tech_screen();
 }
 
-function handle_end_turn(_packet: any): void {
+export function handle_end_turn(_packet: any): void {
   w.reset_unit_anim_list();
   if (!w.observing) {
     const btn = document.getElementById('turn_done_button') as HTMLButtonElement | null;
@@ -1281,7 +1281,7 @@ function handle_end_turn(_packet: any): void {
  * Maps server packet IDs to their handler functions.
  * This replaces the packet_hand_table from packhand_glue.js.
  */
-const packet_hand_table: Record<number, (packet: any) => void> = {
+export const packet_hand_table: Record<number, (packet: any) => void> = {
   0:   handle_processing_started,
   1:   handle_processing_finished,
   21:  handle_investigate_started,
@@ -1425,7 +1425,7 @@ if (typeof w.handle_web_info_text_message === 'function') {
  * Main packet dispatch function.
  * Called by the WebSocket onmessage handler.
  */
-function client_handle_packet(packets: any[]): void {
+export function client_handle_packet(packets: any[]): void {
   if (packets == null) return;
   try {
     for (let i = 0; i < packets.length; i++) {
@@ -1451,7 +1451,7 @@ function client_handle_packet(packets: any[]): void {
  * Register an additional handler at runtime.
  * Used by 2dcanvas/mapctrl.js to register handle_web_info_text_message.
  */
-function register_packet_handler(pid: number, handler: (packet: any) => void): void {
+export function register_packet_handler(pid: number, handler: (packet: any) => void): void {
   packet_hand_table[pid] = handler;
 }
 
@@ -1477,15 +1477,15 @@ function register_packet_handler(pid: number, handler: (packet: any) => void): v
 // Action decision helpers
 // Packet dispatch
 // Connection management (migrated from connection.js)
-function find_conn_by_id(id: number): any {
+export function find_conn_by_id(id: number): any {
   return w.connections[id];
 }
 
-function client_remove_cli_conn(connection: any): void {
+export function client_remove_cli_conn(connection: any): void {
   delete w.connections[connection['id']];
 }
 
-function conn_list_append(connection: any): void {
+export function conn_list_append(connection: any): void {
   w.connections[connection['id']] = connection;
 }
 

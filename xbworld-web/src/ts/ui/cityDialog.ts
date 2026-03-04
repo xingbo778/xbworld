@@ -1,17 +1,27 @@
 import { store } from '../data/store';
-import { cityTile, cityOwner, canCityBuildNow, generateProductionList, city_population, city_turns_to_growth_text, get_city_production_type_sprite, get_city_production_time, get_production_progress, get_city_production_type, get_supported_units } from '../data/city';
-import { get_unit_image_sprite, get_unit_city_info, unit_types, game_find_unit_by_number } from '../data/unit';
+import { cityTile, cityOwner, canCityBuildNow, generateProductionList, cityPopulation as city_population, cityTurnsToGrowthText as city_turns_to_growth_text, getCityProductionTypeSprite as get_city_production_type_sprite, getCityProductionTime as get_city_production_time, getProductionProgress as get_production_progress, getCityProductionType as get_city_production_type } from '../data/city';
+import { get_supported_units } from '../data/unit';
+import { get_unit_city_info } from '../data/unit';
+import { get_unit_image_sprite } from '../renderer/tilespec';
+import { game_find_unit_by_number } from '../data/game';
+declare const unit_types: any;
 import { VUT_UTYPE, VUT_IMPROVEMENT } from '../data/fcTypes';
-import { get_improvement_image_sprite, improvements } from '../data/improvement';
-import { tile_units } from '../data/tile';
-import { client_state, C_S_RUNNING } from '../client/clientState';
-import { sendRequest } from '../net/connection';
+import { get_improvement_image_sprite } from '../renderer/tilespec';
+declare const improvements: any;
+import { tile_units } from '../data/unit';
+import { clientState as client_state, C_S_RUNNING } from '../client/clientState';
+import { send_request as sendRequest } from '../net/connection';
 import { packet_city_options_req, packet_city_buy, packet_city_change, packet_city_make_specialist, packet_city_make_worker, packet_city_rename, packet_city_sell, packet_city_change_specialist, packet_city_worklist } from '../net/packetConstants';
-import { is_small_screen, numberWithCommas, is_touch_device, blur_input_on_touchdevice } from '../utils/helpers';
-import { setup_window_size } from '../client/clientCore';
-import { set_city_mapview_active, set_default_mapview_active, center_tile_mapcanvas, update_map_canvas, update_map_canvas_full, mapview } from '../renderer/mapview';
-import { EventAggregator } from '../core/events';
-import { request_unit_do_action, ACTION_FOUND_CITY, act_sel_queue_done } from '../data/actions';
+import { isSmallScreen as is_small_screen, numberWithCommas, isTouchDevice as is_touch_device, blur_input_on_touchdevice } from '../utils/helpers';
+import { setupWindowSize as setup_window_size } from '../client/clientMain';
+import { set_city_mapview_active } from '../renderer/mapview';
+import { center_tile_mapcanvas } from '../core/control';
+import { update_map_canvas, update_map_canvas_full, mapview } from '../renderer/mapviewCommon';
+import { setDefaultMapviewActive as set_default_mapview_active } from '../client/clientMain';
+declare const EventAggregator: any;
+import { request_unit_do_action } from '../core/control';
+import { ACTION_FOUND_CITY } from '../data/fcTypes';
+import { act_sel_queue_done } from '../ui/actionDialog';
 
 declare const $: any;
 declare const Handlebars: any;
@@ -1160,7 +1170,7 @@ export function city_worklist_task_down(): void {
 }
 
 export function city_exchange_worklist_task(): void {
-  const prod_l: number = production_selection.length;
+  let prod_l: number = production_selection.length;
   if (prod_l === 0) return;
 
   let i: number;

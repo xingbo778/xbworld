@@ -30,9 +30,10 @@ declare let keyboard_input: boolean;
 declare let dialog_close_trigger: string;
 
 import { network_init, send_message } from "../net/connection"; // TODO: verify correct path
-import { is_small_screen } from "../utils/helpers"; // TODO: verify correct path
-import { clear_chatbox, advance_unit_focus } from "./statusPanel"; // TODO: verify correct path
-import { set_default_mapview_active } from "./controls"; // TODO: verify correct path
+import { isSmallScreen as is_small_screen } from "../utils/helpers"; // TODO: verify correct path
+import { clear_chatbox } from "../core/messages";
+import { advance_unit_focus } from "../core/control";
+import { setDefaultMapviewActive as set_default_mapview_active } from "../client/clientMain";
 
 export let num_hotseat_players: number = 2;
 export let hotseat_players: string[] = [];

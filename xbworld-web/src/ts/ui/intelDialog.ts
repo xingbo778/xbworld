@@ -20,12 +20,18 @@
 declare const $: any;
 declare const Handlebars: any;
 
-import { players, governments, techs, nations, TECH_KNOWN, DS_NO_CONTACT } from '../data/store'; // TODO: adjust imports if needed
-import { client_is_observer, client } from '../client/civClient'; // TODO: adjust imports if needed
-import { player_capital } from '../data/player'; // TODO: adjust imports if needed
-import { research_get } from '../data/tech'; // TODO: adjust imports if needed
-import { get_diplstate_text } from '../data/diplomacy'; // TODO: adjust imports if needed
-import { show_dialog_message } from './dialogs'; // TODO: adjust imports if needed
+import { player_capital, get_diplstate_text, research_get } from '../data/player';
+import { TECH_KNOWN } from '../data/tech';
+import { clientIsObserver as client_is_observer } from '../client/clientState';
+import { showDialogMessage as show_dialog_message } from '../client/civClient';
+
+// Globals from window
+declare const client: any;
+declare const players: any;
+declare const governments: any;
+declare const techs: any;
+declare const nations: any;
+declare const DS_NO_CONTACT: number;
 
 export function show_intelligence_report_dialog(): void {
   if (selected_player === -1) return;

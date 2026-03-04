@@ -1,14 +1,18 @@
 import { store } from '../data/store';
-import { map_pos_to_tile, tile_city } from '../data/map';
-import { tile_get_known } from '../data/tile';
-import { client_state, C_S_RUNNING } from '../client/clientState';
+import { mapPosToTile as map_pos_to_tile } from '../data/map';
+import { tileCity as tile_city } from '../data/tile';
+import { tileGetKnown as tile_get_known, TILE_UNKNOWN, TILE_KNOWN_UNSEEN } from '../data/tile';
+import { WRAP_X, WRAP_Y } from '../data/map';
+import { clientState as client_state, C_S_RUNNING } from '../client/clientState';
 import { globalEvents } from '../core/events';
 import { logNormal, logError } from '../core/log';
-import {
-  LAYER_COUNT, LAYER_SPECIAL1, LAYER_CITY1, LAYER_GOTO,
-  TILE_UNKNOWN, TILE_KNOWN_UNSEEN, WRAP_X, WRAP_Y,
-  FC_WRAP, MAP_TO_NATIVE_POS, NATIVE_TO_MAP_POS, DIVIDE,
-} from '../core/constants'; // Assuming these are in constants.ts
+import { LAYER_COUNT, LAYER_SPECIAL1, LAYER_CITY1, LAYER_GOTO } from './tilespec';
+import { FC_WRAP, DIVIDE } from '../utils/helpers';
+import { mapToNativePos, nativeToMapPos } from '../data/map';
+
+// Aliases for snake_case usage in this file
+const MAP_TO_NATIVE_POS = mapToNativePos;
+const NATIVE_TO_MAP_POS = nativeToMapPos;
 
 // TODO: Import these functions/variables from their respective modules
 declare const tiles: any;

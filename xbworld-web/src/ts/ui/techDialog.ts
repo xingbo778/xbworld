@@ -1,18 +1,29 @@
 import { store } from '../data/store';
-import { player_invention_state, tech_id_by_name, get_tech_by_id, get_tech_by_name, get_tech_cost, get_tech_prereqs, get_tech_reqs, get_tech_effects, get_tech_graphic_tag, get_tech_name, get_tech_helptext, get_tech_wiki_title, get_tech_wiki_image, get_tech_wiki_summary, is_tech_req_for_goal, is_tech_req_for_tech, get_units_from_tech, get_improvements_from_tech, get_tech_flags, get_tech_bonus_tech, get_tech_bridge, get_tech_railroad, get_tech_population_pollution_inc, get_tech_farmland, get_tech_build_airborne, get_tech_last, get_tech_first, get_tech_future, get_tech_unset, get_tech_unknown, get_tech_never, get_tech_max_num_advances, get_tech_last_real, get_tech_count, get_tech_list, get_tech_list_by_name, get_tech_list_by_id, get_tech_list_by_graphic_tag, get_tech_list_by_helptext, get_tech_list_by_wiki_title, get_tech_list_by_wiki_image, get_tech_list_by_wiki_summary, get_tech_list_by_flags, get_tech_list_by_bonus_tech, get_tech_list_by_bridge, get_tech_list_by_railroad, get_tech_list_by_population_pollution_inc, get_tech_list_by_farmland, get_tech_list_by_build_airborne, get_tech_list_by_last, get_tech_list_by_first, get_tech_list_by_future, get_tech_list_by_unset, get_tech_list_by_unknown, get_tech_list_by_never, get_tech_list_by_max_num_advances, get_tech_list_by_last_real, get_tech_list_by_count, get_tech_list_by_list, get_tech_list_by_list_by_name, get_tech_list_by_list_by_id, get_tech_list_by_list_by_graphic_tag, get_tech_list_by_list_by_helptext, get_tech_list_by_list_by_wiki_title, get_tech_list_by_list_by_wiki_image, get_tech_list_by_list_by_wiki_summary, get_tech_list_by_list_by_flags, get_tech_list_by_list_by_bonus_tech, get_tech_list_by_list_by_bridge, get_tech_list_by_list_by_railroad, get_tech_list_by_list_by_population_pollution_inc, get_tech_list_by_list_by_farmland, get_tech_list_by_list_by_build_airborne, get_tech_list_by_list_by_last, get_tech_list_by_list_by_first, get_tech_list_by_list_by_future, get_tech_list_by_list_by_unset, get_tech_list_by_list_by_unknown, get_tech_list_by_list_by_never, get_tech_list_by_list_by_max_num_advances, get_tech_list_by_list_by_last_real, get_tech_list_by_list_by_count } from '../data/tech';
-import { get_current_bulbs_output, get_current_bulbs_output_text, update_net_bulbs } from '../data/game';
-import { tileset_tech_graphic_tag, tileset_unit_type_graphic_tag, tileset_building_graphic_tag, tileset, tileset_name, get_tileset_file_extention } from '../renderer/tilespec';
+import { playerInventionState as player_invention_state, techIdByName as tech_id_by_name, TECH_KNOWN, TECH_UNKNOWN, TECH_PREREQS_KNOWN } from '../data/tech';
+import { getCurrentBulbsOutput as get_current_bulbs_output, getCurrentBulbsOutputText as get_current_bulbs_output_text } from '../data/tech';
+import { update_net_bulbs } from '../ui/rates';
+import { tileset_tech_graphic_tag, tileset_unit_type_graphic_tag, tileset_building_graphic_tag } from '../renderer/tilespec';
+import { tileset_name } from '../renderer/tilesetConfig';
+declare const tileset: any;
+declare const get_tileset_file_extention: any;
 import { mapview_put_tile } from '../renderer/mapview';
-import { sendRequest } from '../net/connection';
+import { send_request as sendRequest } from '../net/connection';
 import { packet_player_research, packet_player_tech_goal } from '../net/packetConstants';
-import { client_state, C_S_RUNNING, client_is_observer, client } from '../client/clientState';
-import { is_small_screen, get_pbem_game_key, is_pbem, pbem_phase_ended, move_points_text } from '../utils/helpers';
-import { EventAggregator } from '../core/events';
-import { unit_types } from '../data/unit';
-import { improvements } from '../data/improvement';
-import { nations } from '../data/nation';
-import { players } from '../data/player';
-import { research_get } from '../data/game';
+import { clientState as client_state, C_S_RUNNING } from '../client/clientState';
+import { clientIsObserver as client_is_observer } from '../client/clientState';
+declare const client: any;
+import { isSmallScreen as is_small_screen } from '../utils/helpers';
+import { isPbem as is_pbem } from '../client/clientCore';
+import { move_points_text } from '../data/unit';
+declare const get_pbem_game_key: any;
+declare const pbem_phase_ended: any;
+declare const EventAggregator: any;
+declare const unit_types: any;
+declare const improvements: any;
+declare const nations: any;
+import { research_get } from '../data/player';
+declare const players: any;
+
 
 declare const $: any;
 declare const reqtree: any; // Assuming reqtree is globally available or imported from somewhere

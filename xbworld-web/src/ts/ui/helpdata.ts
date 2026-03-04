@@ -19,14 +19,20 @@
 
 declare const $: any;
 
-import { to_title_case, string_unqualify } from "../utils/helpers"; // TODO: verify actual path and exports
-import { terrains, improvements, is_wonder } from "../data/improvement"; // TODO: verify actual path and exports
-import { unittype_ids_alphabetic, unit_types, get_unit_type_image_sprite, U_NOT_OBSOLETED } from "../data/unittype"; // TODO: verify actual path and exports
-import { techs, get_technology_image_sprite, get_advances_text } from "../data/tech"; // TODO: verify actual path and exports
-import { governments } from "../data/government"; // TODO: verify actual path and exports
-import { get_improvement_image_sprite, get_improvement_requirements } from "../data/improvement"; // TODO: verify actual path and exports
-import { move_points_text } from "../utils/helpers"; // TODO: verify actual path and exports
-import { ruledir_from_ruleset_name } from "../data/game"; // TODO: verify actual path and exports
+import { is_wonder, get_improvement_requirements } from '../data/improvement';
+import { unittype_ids_alphabetic } from '../data/unit';
+import { U_NOT_OBSOLETED } from '../data/unittype';
+import { get_unit_type_image_sprite, get_technology_image_sprite, get_improvement_image_sprite } from '../renderer/tilespec';
+import { move_points_text } from '../data/unit';
+import { ruledir_from_ruleset_name } from '../core/pregame';
+declare const terrains: any;
+declare const improvements: any;
+declare const unit_types: any;
+declare const techs: any;
+declare const governments: any;
+declare const get_advances_text: any;
+declare function to_title_case(str: string): string;
+declare function string_unqualify(str: string): string;
 
 // The following variables are assumed to be declared elsewhere in the project and imported or global.
 // For this conversion, we declare them as any or appropriate types to avoid TS errors.

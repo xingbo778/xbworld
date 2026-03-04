@@ -29,7 +29,7 @@ interface Action {
  * Return the action with the given id.
  * Returns null if no action with the given id exists.
  */
-function actionByNumber(actId: number): Action | null {
+export function actionByNumber(actId: number): Action | null {
   const actions = (window as any).actions as Record<number, Action>;
   if (actions[actId] == undefined) {
     console.log('Asked for non existing action numbered %d', actId);
@@ -41,7 +41,7 @@ function actionByNumber(actId: number): Action | null {
 /**
  * Returns true iff performing the specified action has the specified result.
  */
-function actionHasResult(paction: Action | null, result: number): boolean | null {
+export function actionHasResult(paction: Action | null, result: number): boolean | null {
   if (paction == null || paction['result'] == null) {
     console.log('action_has_result(): bad action');
     console.log(paction);
@@ -56,7 +56,7 @@ function actionHasResult(paction: Action | null, result: number): boolean | null
  *
  * NOTE: action_prob_not_impl is defined in action_dialog.js (Legacy).
  */
-function actionProbPossible(aprob: ActionProb): boolean {
+export function actionProbPossible(aprob: ActionProb): boolean {
   const notImpl = (window as any).action_prob_not_impl as
     ((p: ActionProb) => boolean) | undefined;
   return 0 < aprob['max'] || (notImpl != null && notImpl(aprob));

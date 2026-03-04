@@ -18,12 +18,17 @@
 
 declare const $: any;
 
-import { E_CHAT_MSG, E_CHAT_PRIVATE, E_CHAT_ALLIES, E_CHAT_OBSERVER } from './eventConstants'; // TODO: verify correct path and exports
-import { civclient_state, C_S_PREPARING } from '../client/clientState'; // TODO: verify correct path and exports
-import { check_text_with_banlist } from './someBanlistModule'; // TODO: import actual function or replace with any
-import { is_longturn, is_small_screen } from './someUtilsModule'; // TODO: import actual functions or replace with any
-import { fc_e_events, E_I_NAME } from './someEventConstantsModule'; // TODO: import actual constants or replace with any
-import { EventAggregator } from './EventAggregator'; // TODO: import actual EventAggregator class or replace with any
+import { E_CHAT_MSG, E_CHAT_PRIVATE, E_CHAT_ALLIES, E_CHAT_OBSERVER, fc_e_events, E_I_NAME } from '../data/eventConstants';
+import { clientState, C_S_PREPARING } from '../client/clientState';
+import { check_text_with_banlist } from '../utils/banlist';
+import { isLongturn } from '../client/clientCore';
+import { is_small_screen } from '../renderer/mapview';
+
+// EventAggregator is loaded as a global script
+declare const EventAggregator: any;
+
+const is_longturn = isLongturn;
+const civclient_state = clientState();
 
 export let chatbox_active: boolean = true;
 export const message_log: any = new EventAggregator(update_chatbox, 125,

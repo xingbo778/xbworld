@@ -23,13 +23,14 @@ declare const document: any;
 declare function swal(message: string): void;
 
 // TODO: import these from appropriate modules
-import { client } from "../client/clientCore"; // TODO: adjust import path and name
-import { governments, government_max_rate } from "../data/government"; // TODO: adjust import path and names
+declare const client: any;
+import { governmentMaxRate as government_max_rate } from "../data/government";
+declare const governments: any;
 import { packet_player_rates } from "../net/packetConstants"; // TODO: adjust import path and name
 import { send_request } from "../net/connection"; // TODO: adjust import path and name
-import { is_small_screen } from "../utils/helpers"; // TODO: adjust import path and name
-import { client_is_observer } from "../client/clientState"; // TODO: adjust import path and name
-import { get_current_bulbs_output } from "../data/tech"; // TODO: adjust import path and name
+import { isSmallScreen as is_small_screen } from "../utils/helpers"; // TODO: adjust import path and name
+import { clientIsObserver as client_is_observer } from '../client/clientState';
+import { getCurrentBulbsOutput as get_current_bulbs_output } from '../data/tech';
 
 export let s_tax: any = null;
 export let s_lux: any = null;

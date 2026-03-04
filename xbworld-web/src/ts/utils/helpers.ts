@@ -143,7 +143,7 @@ if (jq && jq.extend) {
  * Simple benchmark: scrolls the map 30 frames and reports average redraw time.
  */
 let benchmark_start = 0;
-function civclient_benchmark(frame: number): void {
+export function civclient_benchmark(frame: number): void {
   const w = window as any;
   if (frame === 0) benchmark_start = Date.now();
   const ptile = w.map_pos_to_tile(frame + 5, frame + 5);
@@ -163,3 +163,9 @@ Object.defineProperty(window, 'benchmark_start', {
   configurable: true,
   enumerable: true,
 });
+
+export function blur_input_on_touchdevice(): void {
+  if ((document.activeElement as HTMLElement)?.blur) {
+    (document.activeElement as HTMLElement).blur();
+  }
+}

@@ -1,15 +1,20 @@
 import { store } from '../data/store';
-import { find_city_by_number } from '../data/city';
-import { find_unit_by_number, unit_owner, get_unit_homecity_name, unit_can_do_action } from '../data/unit';
-import { unit_types } from '../data/unittype';
-import { player_invention_state } from '../data/tech';
-import { game_info } from '../data/game';
-import { nations } from '../data/nation';
-import { improvements } from '../data/improvement';
-import { actions, action_prob_possible } from '../data/actions';
-import { extras, is_extra_removed_by, is_extra_caused_by, tile_has_extra, extra_owner } from '../data/extra';
-import { tile_units, index_to_tile } from '../data/tile';
-import { sendRequest } from '../net/connection';
+import { game_find_city_by_number as find_city_by_number } from '../data/game';
+import { unit_owner, get_unit_homecity_name, unit_can_do_action, tile_units } from '../data/unit';
+import { game_find_unit_by_number as find_unit_by_number } from '../data/game';
+declare const unit_types: any;
+import { playerInventionState as player_invention_state } from '../data/tech';
+declare const game_info: any;
+declare const nations: any;
+declare const improvements: any;
+import { actionProbPossible as action_prob_possible } from '../data/actions';
+declare const actions: any;
+import { isExtraRemovedBy as is_extra_removed_by, isExtraCausedBy as is_extra_caused_by, extraOwner as extra_owner } from '../data/extra';
+import { tileHasExtra as tile_has_extra } from '../data/tile';
+import { indexToTile as index_to_tile } from '../data/map';
+declare const extras: any;
+
+import { send_request as sendRequest } from '../net/connection';
 import {
   packet_unit_action_query,
   packet_city_name_suggestion_req,
@@ -23,14 +28,18 @@ import {
   is_more_user_input_needed,
   set_is_more_user_input_needed,
   request_unit_do_action,
-  select_tgt_unit,
-  select_tgt_extra,
-} from '../client/clientState'; // Assuming these are in clientState.ts
-import { client } from '../client/clientState'; // Assuming client is also in clientState.ts
+} from '../core/control';
+declare const client: any;
+export function select_tgt_unit(actor_unit: any, target_tile: any, potential_tgt_units: any[]): void {
+  // TODO: implement
+}
+export function select_tgt_extra(actor_unit: any, target_unit: any, target_tile: any, potential_tgt_extras: any[]): void {
+  // TODO: implement
+}
+import { IDENTITY_NUMBER_ZERO, ACTION_COUNT } from '../core/constants';
+import { EXTRA_NONE } from '../data/extra';
+import { INCITE_IMPOSSIBLE_COST } from '../data/city';
 import {
-  IDENTITY_NUMBER_ZERO,
-  TILE_INDEX_NONE,
-  EXTRA_NONE,
   ACTION_SPY_TARGETED_STEAL_TECH,
   ACTION_SPY_TARGETED_STEAL_TECH_ESC,
   ACTION_SPY_TARGETED_SABOTAGE_CITY,
@@ -40,7 +49,6 @@ import {
   ACTION_SPY_BRIBE_UNIT,
   ACTION_UPGRADE_UNIT,
   ACTION_FOUND_CITY,
-  ACTION_COUNT,
   ATK_CITY,
   ATK_UNIT,
   ATK_UNITS,
@@ -49,8 +57,6 @@ import {
   ATK_SELF,
   ATK_COUNT,
   ACTION_ATTACK,
-  REQEST_PLAYER_INITIATED,
-  INCITE_IMPOSSIBLE_COST,
   TECH_KNOWN,
   TECH_PREREQS_KNOWN,
   TECH_UNKNOWN,
@@ -68,7 +74,9 @@ import {
   ACTION_BASE,
   EC_ROAD,
   ACTION_ROAD,
-} from '../core/constants'; // Assuming these constants are in core/constants.ts
+} from '../data/fcTypes';
+const TILE_INDEX_NONE = -1;
+const REQEST_PLAYER_INITIATED = 0;
 import { logNormal, logError } from '../core/log'; // Assuming these are in core/log.ts
 
 declare const $: any; // Declare jQuery

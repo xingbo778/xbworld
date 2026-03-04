@@ -19,13 +19,13 @@
 
 declare const $: any;
 
-import { client } from "../client/clientCore";
-import { nations } from "../data/nation";
-import { can_player_get_gov } from "../data/government";
+declare const client: any;
+declare const nations: any;
+import { canPlayerGetGov as can_player_get_gov } from "../data/government";
 import { send_request } from "../net/connection";
 import { packet_player_change_government, packet_report_req } from "../net/packetConstants";
-import { client_is_observer } from "../client/civClient";
-import { is_small_screen } from "../utils/helpers";
+import { clientIsObserver as client_is_observer } from "../client/clientState";
+import { isSmallScreen as is_small_screen } from "../utils/helpers";
 
 export let governments: any = {};
 export let requested_gov: number = -1;

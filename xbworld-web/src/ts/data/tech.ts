@@ -47,7 +47,7 @@ export const A_FIRST = 1;
  * This can be: TECH_KNOWN, TECH_UNKNOWN, or TECH_PREREQS_KNOWN.
  * Should be called with existing techs or A_FUTURE.
  */
-function playerInventionState(pplayer: any, techId: number): number {
+export function playerInventionState(pplayer: any, techId: number): number {
   if (pplayer == null) {
     return TECH_UNKNOWN;
   } else {
@@ -66,7 +66,7 @@ function playerInventionState(pplayer: any, techId: number): number {
  * Determines if the technology 'checkTechId' is a requirement
  * for reaching the technology 'goalTechId'.
  */
-function isTechReqForGoal(checkTechId: number, goalTechId: number): boolean {
+export function isTechReqForGoal(checkTechId: number, goalTechId: number): boolean {
   if (checkTechId === goalTechId) return true;
   if (goalTechId === 0 || checkTechId === 0) return false;
 
@@ -89,7 +89,7 @@ function isTechReqForGoal(checkTechId: number, goalTechId: number): boolean {
  * Determines if the technology 'checkTechId' is a direct requirement
  * for reaching the technology 'nextTechId'.
  */
-function isTechReqForTech(checkTechId: number, nextTechId: number): boolean {
+export function isTechReqForTech(checkTechId: number, nextTechId: number): boolean {
   if (checkTechId === nextTechId) return false;
   if (nextTechId === 0 || checkTechId === 0) return false;
 
@@ -110,7 +110,7 @@ function isTechReqForTech(checkTechId: number, nextTechId: number): boolean {
  * Returns current bulbs output info object:
  *   { self_bulbs, self_upkeep, pooled, team_bulbs, team_upkeep }
  */
-function getCurrentBulbsOutput(): {
+export function getCurrentBulbsOutput(): {
   self_bulbs: number;
   self_upkeep: number;
   pooled: boolean;
@@ -165,7 +165,7 @@ function getCurrentBulbsOutput(): {
 }
 
 /** Returns a textual description of current bulbs output. */
-function getCurrentBulbsOutputText(cbo?: any): string {
+export function getCurrentBulbsOutputText(cbo?: any): string {
   if (cbo === undefined) {
     cbo = getCurrentBulbsOutput();
   }
@@ -196,7 +196,7 @@ function getCurrentBulbsOutputText(cbo?: any): string {
 }
 
 /** Finds tech id by exact name. Null if not found. */
-function techIdByName(tname: string): string | null {
+export function techIdByName(tname: string): string | null {
   for (const techId in w.techs) {
     if (tname === w.techs[techId]['name']) return techId;
   }

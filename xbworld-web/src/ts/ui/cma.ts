@@ -18,12 +18,17 @@
 ***********************************************************************/
 
 declare const $: any;
-import { client } from '../civClient'; // TODO: adjust import if needed
-import { send_request } from '../../net/connection'; // TODO: adjust import if needed
-import { packet_web_cma_set, packet_web_cma_clear } from '../../net/packetConstants'; // TODO: adjust import if needed
-import { active_city } from '../clientState'; // TODO: adjust import if needed
-import { client_is_observer } from '../clientCore'; // TODO: adjust import if needed
-import { city_owner_player_id } from '../../data/city'; // TODO: adjust import if needed
+import { active_city } from './cityDialog';
+import { clientIsObserver as client_is_observer } from '../client/clientState';
+import { cityOwnerPlayerId as city_owner_player_id } from '../data/city';
+import { packet_web_cma_clear } from '../net/packetConstants';
+
+// send_request is a global function
+declare function send_request(packet: string): void;
+// client is a global
+declare const client: any;
+// packet_web_cma_set may not be defined in packetConstants; define locally
+const packet_web_cma_set = 257;
 
 // Governor Clipboard for copy/paste:
 export let _cma_val_sliders: number[] = [1,0,0,0,0,0];
@@ -33,7 +38,6 @@ export let _cma_celebrate: boolean = false;
 export let _cma_allow_disorder: boolean = false;
 export let _cma_max_growth: boolean = false;
 export let _cma_allow_specialists: boolean = true;
-export let _cma_max_growth: boolean = false;
 
 /**************************************************************************
   Init Governor tab - returns true if the tab was able to generate

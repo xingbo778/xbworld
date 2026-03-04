@@ -182,7 +182,7 @@ export function does_player_own_city(player: Player, city: City): boolean {
   return city.owner === player.playerno;
 }
 
-function is_capital(pcity: City): boolean {
+export function is_capital(pcity: City): boolean {
   if (pcity.improvements == null) return false;
   for (const imp_id in improvements) {
     const imp = improvements[imp_id];

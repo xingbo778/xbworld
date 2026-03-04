@@ -1,25 +1,56 @@
 import { store } from '../data/store';
-import { find_city_by_number, city_tile } from '../data/city';
-import { find_unit_by_number, unit_type } from '../data/unit';
-import { player_invention_state } from '../data/tech';
-import { map_pos_to_tile, mapstep, map_distance_vector } from '../data/map';
-import { tile_units, tile_terrain, tile_terrain_near, tile_has_extra, tile_resource, tile_get_known, is_ocean_tile } from '../data/tile';
-import { get_city_dxy_to_index } from '../data/city';
-import { get_unit_anim_offset, unit_is_in_focus, should_ask_server_for_actions, unit_has_goto } from './render';
-import { get_tileset_file_extention } from './tileset';
+import { cityTile as city_tile, getCityDxyToIndex as get_city_dxy_to_index } from '../data/city';
+import { game_find_city_by_number as find_city_by_number } from '../data/game';
+import { unit_type, tile_units, get_unit_anim_offset, unit_has_goto, idex_lookup_unit as find_unit_by_number } from '../data/unit';
+import { mapPosToTile as map_pos_to_tile, mapstep, mapDistanceVector as map_distance_vector } from '../data/map';
+import { tileGetKnown as tile_get_known, tileHasExtra as tile_has_extra, tileResource as tile_resource } from '../data/tile';
+import { tileTerrain as tile_terrain, tileTerrainNear as tile_terrain_near, isOceanTile as is_ocean_tile } from '../data/terrain';
+import { unit_is_in_focus, should_ask_server_for_actions } from '../core/control';
+
+// player_invention_state is not exported from tech.ts; declare as global
+declare function player_invention_state(pplayer: any, techId: number): number;
+// get_tileset_file_extention is a global function
+declare function get_tileset_file_extention(): string;
+import { TILE_KNOWN_SEEN, TILE_KNOWN_UNSEEN, TILE_UNKNOWN } from '../data/tile';
 import {
-  DIR8_NORTH, DIR8_EAST, DIR8_SOUTH, DIR8_WEST,
-  DIR8_NORTHEAST, DIR8_SOUTHEAST, DIR8_SOUTHWEST, DIR8_NORTHWEST,
-  TILE_KNOWN_SEEN, TILE_KNOWN_UNSEEN, TILE_UNKNOWN,
-  EXTRA_MINE, EXTRA_OIL_WELL, EXTRA_HUT, EXTRA_POLLUTION, EXTRA_FALLOUT,
-  EXTRA_RIVER, EXTRA_ROAD, EXTRA_RAIL, EXTRA_MAGLEV, EXTRA_IRRIGATION, EXTRA_FARMLAND,
-  EXTRA_FORTRESS, EXTRA_AIRBASE, EXTRA_BUOY, EXTRA_RUINS,
-  SSA_AUTOEXPLORE, SSA_AUTOWORKER, SSA_NONE,
   ACTIVITY_CLEAN, ACTIVITY_MINE, ACTIVITY_PLANT, ACTIVITY_IRRIGATE, ACTIVITY_CULTIVATE,
   ACTIVITY_FORTIFIED, ACTIVITY_BASE, ACTIVITY_SENTRY, ACTIVITY_PILLAGE, ACTIVITY_GOTO,
-  ACTIVITY_TRANSFORM, ACTIVITY_FORTIFYING, ACTIVITY_GEN_ROAD, ACTIVITY_CONVERT,
-  UTYF_FLAGLESS
-} from '../core/constants'; // Assuming these are constants
+  ACTIVITY_TRANSFORM, ACTIVITY_FORTIFYING, ACTIVITY_GEN_ROAD, ACTIVITY_CONVERT
+} from '../data/fcTypes';
+import { ServerSideAgent } from '../data/unit';
+import { UTYF_FLAGLESS } from '../data/unittype';
+
+// SSA constants from ServerSideAgent enum
+const SSA_NONE = ServerSideAgent.NONE;
+const SSA_AUTOWORKER = ServerSideAgent.AUTOWORKER;
+const SSA_AUTOEXPLORE = ServerSideAgent.AUTOEXPLORE;
+
+// DIR8 constants - standard Freeciv direction enum
+const DIR8_NORTH = 0;
+const DIR8_NORTHEAST = 1;
+const DIR8_EAST = 2;
+const DIR8_SOUTHEAST = 3;
+const DIR8_SOUTH = 4;
+const DIR8_SOUTHWEST = 5;
+const DIR8_WEST = 6;
+const DIR8_NORTHWEST = 7;
+
+// EXTRA_ constants are set at runtime from server data; declare as globals
+declare const EXTRA_MINE: number;
+declare const EXTRA_OIL_WELL: number;
+declare const EXTRA_HUT: number;
+declare const EXTRA_POLLUTION: number;
+declare const EXTRA_FALLOUT: number;
+declare const EXTRA_RIVER: number;
+declare const EXTRA_ROAD: number;
+declare const EXTRA_RAIL: number;
+declare const EXTRA_MAGLEV: number;
+declare const EXTRA_IRRIGATION: number;
+declare const EXTRA_FARMLAND: number;
+declare const EXTRA_FORTRESS: number;
+declare const EXTRA_AIRBASE: number;
+declare const EXTRA_BUOY: number;
+declare const EXTRA_RUINS: number;
 
 declare const sprites: any;
 declare const tileset: any;
@@ -1549,4 +1580,140 @@ export function fill_path_sprite_array(ptile: any, pcity: any): any[] {
        * hiding it. */
       draw_maglev[dir] = maglev && maglev_near[dir];
       draw_rail[dir] = rail && rail_near[dir] && !draw_maglev[dir];
-      draw_road[dir] = road && road_near[dir] && !draw_rail[
+      draw_road[dir] = road && road_near[dir] && !draw_rail[dir] && !draw_maglev[dir];
+    }
+  }
+
+  return result_sprites;
+}
+
+/**************************************************************************
+  Fill layer 1 sprite array (fortress background).
+**************************************************************************/
+export function fill_layer1_sprite_array(ptile: any, pcity: any): any[] {
+  const w = window as any;
+  const result_sprites: any[] = [];
+
+  if (pcity == null) {
+    if (tile_has_extra(ptile, EXTRA_FORTRESS)) {
+      result_sprites.push({"key": "base.fortress_bg",
+                           "offset_y": -w.normal_tile_height / 2});
+    }
+  }
+
+  return result_sprites;
+}
+
+/**************************************************************************
+  Fill layer 2 sprite array (airbase, buoy, ruins).
+**************************************************************************/
+export function fill_layer2_sprite_array(ptile: any, pcity: any): any[] {
+  const w = window as any;
+  const result_sprites: any[] = [];
+
+  if (pcity == null) {
+    if (tile_has_extra(ptile, EXTRA_AIRBASE)) {
+      result_sprites.push({"key": "base.airbase_mg",
+                           "offset_y": -w.normal_tile_height / 2});
+    }
+    if (tile_has_extra(ptile, EXTRA_BUOY)) {
+      result_sprites.push(w.get_base_flag_sprite(ptile));
+      result_sprites.push({"key": "base.buoy_mg",
+                           "offset_y": -w.normal_tile_height / 2});
+    }
+    if (tile_has_extra(ptile, EXTRA_RUINS)) {
+      result_sprites.push({"key": "extra.ruins_mg",
+                           "offset_y": -w.normal_tile_height / 2});
+    }
+  }
+
+  return result_sprites;
+}
+
+/**************************************************************************
+  Fill layer 3 sprite array (fortress foreground).
+**************************************************************************/
+export function fill_layer3_sprite_array(ptile: any, pcity: any): any[] {
+  const w = window as any;
+  const result_sprites: any[] = [];
+
+  if (pcity == null) {
+    if (tile_has_extra(ptile, EXTRA_FORTRESS)) {
+      result_sprites.push({"key": "base.fortress_fg",
+                           "offset_y": -w.normal_tile_height / 2});
+    }
+  }
+
+  return result_sprites;
+}
+
+/**************************************************************************
+  Assigns the nation's color based on the color of the flag.
+**************************************************************************/
+export function assign_nation_color(nation_id: number): void {
+  const w = window as any;
+  const nation = w.nations[nation_id];
+  if (nation == null || nation['color'] != null) return;
+
+  const flag_key = "f." + nation['graphic_str'];
+  const flag_sprite = w.sprites[flag_key];
+  if (flag_sprite == null) return;
+  const c = flag_sprite.getContext('2d');
+  const width = w.tileset[flag_key][2];
+  const height = w.tileset[flag_key][3];
+  const color_counts: Record<string, number> = {};
+  if (c == null) return;
+  const img_data = c.getImageData(1, 1, width - 2, height - 2).data;
+
+  for (let i = 0; i < img_data.length; i += 4) {
+    const current_color = "rgb(" + img_data[i] + "," + img_data[i + 1] + ","
+                        + img_data[i + 2] + ")";
+    if (current_color in color_counts) {
+      color_counts[current_color] = color_counts[current_color] + 1;
+    } else {
+      color_counts[current_color] = 1;
+    }
+  }
+
+  let max = -1;
+  let max_color: string | null = null;
+
+  for (const current_color in color_counts) {
+    if (color_counts[current_color] > max) {
+      max = color_counts[current_color];
+      max_color = current_color;
+    }
+  }
+
+  nation['color'] = max_color;
+}
+
+/**************************************************************************
+  Check if two colors are too similar.
+**************************************************************************/
+export function is_color_collision(color_a: string | null, color_b: string | null): boolean {
+  const distance_threshold = 20;
+
+  if (color_a == null || color_b == null) return false;
+
+  const pcolor_a = color_rbg_to_list(color_a);
+  const pcolor_b = color_rbg_to_list(color_b);
+  if (!pcolor_a || !pcolor_b) return false;
+
+  const color_distance = Math.sqrt(
+    Math.pow(pcolor_a[0] - pcolor_b[0], 2)
+    + Math.pow(pcolor_a[1] - pcolor_b[1], 2)
+    + Math.pow(pcolor_a[2] - pcolor_b[2], 2));
+
+  return (color_distance <= distance_threshold);
+}
+
+/**************************************************************************
+  Convert RGB color string to number array.
+**************************************************************************/
+export function color_rbg_to_list(pcolor: string | null): number[] | null {
+  if (pcolor == null) return null;
+  const color_rgb = pcolor.match(/\d+/g);
+  if (!color_rgb) return null;
+  return [parseFloat(color_rgb[0]), parseFloat(color_rgb[1]), parseFloat(color_rgb[2])];
+}

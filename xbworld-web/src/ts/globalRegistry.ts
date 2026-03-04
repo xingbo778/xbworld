@@ -442,24 +442,14 @@ w['action_selection_in_progress_for'] = action_selection_in_progress_for;
 w['is_more_user_input_needed'] = is_more_user_input_needed;
 
 import {
-  0,
-  1,
-  2,
-  3,
-  4,
   freelog,
 } from './core/log';
 w['freelog'] = freelog;
 w['LOG_FATAL'] = 0;
-w['0'] = 0;
 w['LOG_ERROR'] = 1;
-w['1'] = 1;
 w['LOG_NORMAL'] = 2;
-w['2'] = 2;
 w['LOG_VERBOSE'] = 3;
-w['3'] = 3;
 w['LOG_DEBUG'] = 4;
-w['4'] = 4;
 
 import {
   add_chatbox_text,

@@ -39,7 +39,7 @@ export function logNormal(message: string, ...args: unknown[]): void {
 }
 
 /** Legacy freelog(level, message) — just logs to console. */
-function freelog(_level: number, message: string): void {
+export function freelog(_level: number, message: string): void {
   console.log(message);
 }
 

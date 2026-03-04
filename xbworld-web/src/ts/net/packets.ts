@@ -10,7 +10,7 @@ import { globalEvents } from '../core/events';
 import { logError, logNormal } from '../core/log';
 import { BitVector } from '../utils/bitvector';
 import { mapAllocate } from '../data/map';
-import { sendMessage } from './connection';
+import { send_message as sendMessage } from './connection';
 
 type PacketHandler = (packet: Record<string, unknown>) => void;
 

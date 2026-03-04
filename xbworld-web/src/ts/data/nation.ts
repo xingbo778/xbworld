@@ -40,7 +40,7 @@ export const MAX_AI_LOVE = 1000;
  * These words are adjectives which can fit in the sentence
  * "The x are y towards us"
  */
-function loveText(love: number): string {
+export function loveText(love: number): string {
   if (love <= -MAX_AI_LOVE * 90 / 100) {
     return 'Genocidal';
   } else if (love <= -MAX_AI_LOVE * 70 / 100) {
@@ -67,7 +67,7 @@ function loveText(love: number): string {
 }
 
 /** Returns score text for a player. */
-function getScoreText(player: any): string | number {
+export function getScoreText(player: any): string | number {
   if (player['score'] >= 0) {
     return player['score'];
   } else {
@@ -79,7 +79,7 @@ function getScoreText(player: any): string | number {
  * Returns the attitude text for a player towards the current player.
  * Used in the nation table's "Attitude" column.
  */
-function colLove(pplayer: any): string {
+export function colLove(pplayer: any): string {
   if (
     w.client_is_observer() ||
     w.client?.conn?.playing == null ||
@@ -100,7 +100,7 @@ function colLove(pplayer: any): string {
  * Rebuilds and displays the Nations of the World table.
  * Replaces update_nation_screen() in nation.js.
  */
-function updateNationScreen(): void {
+export function updateNationScreen(): void {
   let total_players = 0;
   let no_humans = 0;
   let no_ais = 0;
@@ -303,7 +303,7 @@ function updateNationScreen(): void {
  * Handles a click on a row in the nation table.
  * Replaces handle_nation_table_select() in nation.js.
  */
-function handleNationTableSelect(this: any, ev: Event): void {
+export function handleNationTableSelect(this: any, ev: Event): void {
   ev.stopPropagation();
   const new_element = w.$(this);
   const new_player = parseFloat(new_element.data('plrid'));
@@ -322,7 +322,7 @@ function handleNationTableSelect(this: any, ev: Event): void {
  * Enables the appropriate action buttons for the selected nation.
  * Replaces select_a_nation() in nation.js.
  */
-function selectANation(): void {
+export function selectANation(): void {
   const player_id = w.selected_player;
   const pplayer = w.players[w.selected_player];
   if (pplayer == null) return;
@@ -438,7 +438,7 @@ function selectANation(): void {
  * except the scores one.
  * Replaces select_no_nation() in nation.js.
  */
-function selectNoNation(): void {
+export function selectNoNation(): void {
   w.selected_player = -1;
   w.$('#nations_button_div button').not('#game_scores_button').button('disable');
 }
@@ -448,7 +448,7 @@ function selectNoNation(): void {
  * so that it is on view.
  * Replaces nation_table_select_player() in nation.js.
  */
-function nationTableSelectPlayer(player_no: number): void {
+export function nationTableSelectPlayer(player_no: number): void {
   w.$('#players_tab a').click();
   const row = w.$('#nation_table tr[data-plrid=' + player_no + ']');
   if (row.length === 1) {
@@ -458,14 +458,14 @@ function nationTableSelectPlayer(player_no: number): void {
 }
 
 /** Handles the "Cancel Treaty" button click. */
-function cancelTreatyClicked(): void {
+export function cancelTreatyClicked(): void {
   if (w.selected_player === -1) return;
   w.diplomacy_cancel_treaty(w.selected_player);
   w.set_default_mapview_active();
 }
 
 /** Handles the "Withdraw Vision" button click. */
-function withdrawVisionClicked(): void {
+export function withdrawVisionClicked(): void {
   if (w.selected_player === -1) return;
   const packet = {
     pid: w.packet_diplomacy_cancel_pact,
@@ -477,7 +477,7 @@ function withdrawVisionClicked(): void {
 }
 
 /** Handles the "Meet" button click in the nation dialog. */
-function nationMeetClicked(): void {
+export function nationMeetClicked(): void {
   if (w.selected_player === -1) return;
   const pplayer = w.players[w.selected_player];
   if (pplayer == null) return;
@@ -490,7 +490,7 @@ function nationMeetClicked(): void {
 }
 
 /** Handles the "Take Player" button click. */
-function takePlayerClicked(): void {
+export function takePlayerClicked(): void {
   if (w.selected_player === -1) return;
   const pplayer = w.players[w.selected_player];
   w.take_player(pplayer['name']);
@@ -498,7 +498,7 @@ function takePlayerClicked(): void {
 }
 
 /** Handles the "Toggle AI" button click. */
-function toggleAiClicked(): void {
+export function toggleAiClicked(): void {
   if (w.selected_player === -1) return;
   const pplayer = w.players[w.selected_player];
   w.aitoggle_player(pplayer['name']);
@@ -509,7 +509,7 @@ function toggleAiClicked(): void {
  * Issues a /take command for the given player name.
  * Replaces take_player() in nation.js.
  */
-function takePlayer(player_name: string): void {
+export function takePlayer(player_name: string): void {
   w.send_message('/take ' + player_name);
   w.observing = false;
 }
@@ -518,7 +518,7 @@ function takePlayer(player_name: string): void {
  * Issues an /aitoggle command for the given player name.
  * Replaces aitoggle_player() in nation.js.
  */
-function aitogglePlayer(player_name: string): void {
+export function aitogglePlayer(player_name: string): void {
   w.send_message('/aitoggle ' + player_name);
   w.observing = false;
 }
@@ -527,7 +527,7 @@ function aitogglePlayer(player_name: string): void {
  * Centers the map on the selected player's first city.
  * Replaces center_on_player() in nation.js.
  */
-function centerOnPlayer(): void {
+export function centerOnPlayer(): void {
   if (w.selected_player === -1) return;
   for (const city_id in w.cities) {
     const pcity = w.cities[city_id];
@@ -544,7 +544,7 @@ function centerOnPlayer(): void {
  * Only called from within the private-message dialog.
  * Replaces send_private_message() in nation.js.
  */
-function sendPrivateMessage(other_player_name: string): void {
+export function sendPrivateMessage(other_player_name: string): void {
   const message =
     other_player_name + ': ' + w.encode_message_text(w.$('#private_message_text').val());
   const packet = { pid: w.packet_chat_msg_req, message };
@@ -557,7 +557,7 @@ function sendPrivateMessage(other_player_name: string): void {
  * Shows the dialog for sending a private message to another human player.
  * Replaces show_send_private_message_dialog() in nation.js.
  */
-function showSendPrivateMessageDialog(): void {
+export function showSendPrivateMessageDialog(): void {
   if (w.selected_player === -1) return;
   const pplayer = w.players[w.selected_player];
   if (pplayer == null) {

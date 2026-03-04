@@ -20,10 +20,12 @@
 declare const $: any;
 
 import { send_request } from "../net/connection"; // TODO: verify correct import path
-import { client } from "../client/clientCore"; // TODO: verify correct import path
-import { game_info } from "../data/game"; // TODO: verify correct import path
+declare const client: any;
+declare const game_info: any;
 import { packet_spaceship_launch } from "../net/packetConstants"; // TODO: verify correct import path
-import { client_is_observer, is_small_screen, set_default_mapview_active } from "./controls"; // TODO: verify correct import path
+import { clientIsObserver as client_is_observer } from "../client/clientState";
+import { isSmallScreen as is_small_screen } from "../utils/helpers";
+import { setDefaultMapviewActive as set_default_mapview_active } from "../client/clientMain";
 
 export let spaceship_info: any = {};
 

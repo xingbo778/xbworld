@@ -81,7 +81,7 @@ import {
 /**
  * Is there a source tech within range of the target?
  */
-function isTechInRange(
+export function isTechInRange(
   targetPlayer: any,
   range: number,
   tech: number,
@@ -120,7 +120,7 @@ function isTechInRange(
 /**
  * Checks the requirement to see if it is active on the given target.
  */
-function isReqActive(
+export function isReqActive(
   targetPlayer: any,
   targetCity: any,
   targetBuilding: any,
@@ -216,7 +216,7 @@ function isReqActive(
  * Checks the requirement(s) to see if they are active on the given target.
  * Returns TRUE only if all requirements are active.
  */
-function areReqsActive(
+export function areReqsActive(
   targetPlayer: any,
   targetCity: any,
   targetBuilding: any,
@@ -250,7 +250,7 @@ function areReqsActive(
 /**
  * Return the number of shields it takes to build this universal.
  */
-function universalBuildShieldCost(_pcity: any, target: any): number {
+export function universalBuildShieldCost(_pcity: any, target: any): number {
   return target['build_cost'];
 }
 

@@ -3,7 +3,7 @@ import { PacketType } from './protocol';
 import { store } from '../../data/store';
 import { globalEvents } from '../../core/events';
 import { mapAllocate } from '../../data/map';
-import { sendMessage } from '../connection';
+import { send_message as sendMessage } from '../connection';
 
 export function registerGameHandlers(): void {
   registerHandler(PacketType.PROCESSING_STARTED, () => {
