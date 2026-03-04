@@ -1,0 +1,8 @@
+// TODO: Convert from 2dcanvas/tileset_config_amplio2.js
+// Error: <html>
+<head><title>502 Bad Gateway</title></head>
+<body>
+<center><h1>502 Bad Gateway</h1></center>
+<hr><center>openresty</center>
+<p><em>Powered by <a href="https://apisix.apache.org/">APISIX</a>.</em></p></body>
+</html>

@@ -130,6 +130,7 @@ import './client/clientDebug';
 // ---------------------------------------------------------------------------
 import { exposeGameDialog } from './ui/GameDialog';
 import './ui/game-dialog.css';
+import { initControls } from './ui/controls';
 
 // ---------------------------------------------------------------------------
 // Initialise bridge and sync.
@@ -142,6 +143,9 @@ function init(): void {
 
   exposeGameDialog();
   logNormal('[TS] GameDialog component exposed');
+
+  initControls();
+  logNormal('[TS] Controls (order buttons + hotkeys) initialized');
 
   logNormal('[TS] XBWorld TypeScript modules ready');
 }
