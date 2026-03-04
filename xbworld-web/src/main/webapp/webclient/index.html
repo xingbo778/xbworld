@@ -204,6 +204,8 @@ var ts = Date.now();
      ============================================================ -->
 <!-- Tier 0: Constants and base types -->
 <!-- fc_types.js: REMOVED Phase 10 — migrated to src/ts/data/fcTypes.ts -->
+<script>/* Shim: constants needed at global scope before TS module loads */
+var TRUE = true, FALSE = false, MAX_NUM_ADVANCES = 250;</script>
 <!-- events.js: REMOVED Phase 9 — migrated to src/ts/data/eventConstants.ts -->
 <!-- packet_constants.js: REMOVED Phase 9 — migrated to src/ts/net/packetConstants.ts -->
 <!-- effects.js: REMOVED Phase 9 — var init moved to src/ts/main.ts -->

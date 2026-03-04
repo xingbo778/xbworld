@@ -843,3 +843,115 @@ grep -n "w\.\|window\." src/ts/**/*.ts | grep -v "window.location\|window.docume
 | 2D Canvas 渲染 | ~8 | 2dcanvas/mapview.js, tilespec.js | 高（渲染管线复杂） |
 | 数据+UI 混合 | ~10 | government.js, nation.js, city.js | 中（需拆分数据和 UI） |
 | 核心逻辑 | ~6 | civclient.js, client_main.js, map.js | 中（有大量初始化副作用） |
+
+
+---
+
+## 坑 15：全局作用域立即赋值 `var x = CONSTANT` 在 `type="module"` 加载前执行
+
+### 现象
+
+删除 `fc_types.js` 后，游戏地图全黑。`auto_center_on_unit` 变量为 `undefined`，导致 `auto_center_on_focus_unit()` 中的 `if (ptile != null && auto_center_on_unit)` 永远为 `false`，地图视图不会自动居中到玩家位置。
+
+### 根因
+
+`options.js` 在全局作用域中有约 70 个形如 `var auto_center_on_unit = TRUE;` 的赋值语句。`TRUE` 原来在 `fc_types.js` 中定义为 `var TRUE = true;`。
+
+加载顺序：
+```
+fc_types.js (line 206, 已删除) → 定义 TRUE = true
+options.js  (line 248)         → var auto_center_on_unit = TRUE; // 立即执行
+ts-bundle   (line 276, module) → 暴露 TRUE 到 window // 延迟执行
+```
+
+删除 `fc_types.js` 后，`options.js` 执行时 `TRUE` 是 `undefined`（TS bundle 还没加载），所以 `auto_center_on_unit = undefined`。
+
+**这与坑 13 的结论矛盾**：坑 13 说"Legacy JS 中的变量引用几乎全在函数内部"，但 `options.js` 是一个例外 — 它在全局作用域立即使用常量进行赋值。
+
+### 解决方案
+
+在 `index.html` 中 `fc_types.js` 原来的位置添加内联 shim：
+
+```html
+<!-- fc_types.js: REMOVED Phase 10 — migrated to src/ts/data/fcTypes.ts -->
+<script>/* Shim: constants needed at global scope before TS module loads */
+var TRUE = true, FALSE = false, MAX_NUM_ADVANCES = 250;</script>
+```
+
+只需 shim 被全局作用域立即使用的常量（`TRUE`、`FALSE`、`MAX_NUM_ADVANCES`），其他 368 个常量仍由 TS bundle 暴露。
+
+### 教训
+
+**坑 13 的结论需要修正**：不能假设"所有 Legacy JS 的变量引用都在函数内部"。必须逐文件检查全局作用域的立即赋值：
+
+```bash
+# 检查哪些 Legacy JS 文件在全局作用域使用了被删除文件的常量
+for jsfile in src/main/webapp/javascript/*.js; do
+  # 提取全局作用域的 var 赋值右侧引用的变量名
+  grep "^var .* = " "$jsfile" | grep -oP '= \K[A-Z_]+' | sort -u
+done
+```
+
+**删除 Legacy JS 文件的检查清单更新为四项**：
+
+| 检查项 | 方法 |
+|---|---|
+| 1. 函数覆盖 | `grep "function " xxx.js` 对比 TS `exposeToLegacy` |
+| 2. 变量暴露 | `grep "^var " xxx.js`，检查 `window.XXX` 是否存在 |
+| 3. 副作用代码 | `grep "$.extend\|prototype\.\|addEventListener" xxx.js` |
+| 4. **全局作用域立即引用** | 检查其他 Legacy 文件中 `var x = DELETED_CONSTANT` 的模式 |
+
+---
+
+## 效率工具清单（Phase 10 建立）
+
+本次建立了 4 个工具，存放在 `scripts/` 目录：
+
+### 1. `vite.config.dev.ts`（已存在）
+
+稳定的本地开发配置，连接 Railway 后端：
+
+```bash
+BACKEND_URL=https://your-railway-app.up.railway.app npx vite --config vite.config.dev.ts --host 0.0.0.0
+```
+
+- `root` 指向 `src/main/webapp`，确保 `/webclient/` 和 `/javascript/` 路径正确
+- `allowedHosts: true` 允许外部访问
+- 自动代理 `/civclientlauncher`、`/validate_user`、`/civsocket` 到 Railway 后端
+
+### 2. `scripts/mock-server.py`（新建）
+
+录制+回放 WebSocket 消息的 mock server，用于离线测试：
+
+```bash
+# 录制模式：代理真实后端并录制所有消息
+python3 scripts/mock-server.py record --backend ws://real-server:port --output recording.json
+
+# 回放模式：用录制的消息模拟后端
+python3 scripts/mock-server.py replay --input recording.json --port 8002
+```
+
+### 3. `scripts/map-diagnostics.js`（新建）
+
+浏览器控制台诊断脚本，一键检查地图渲染状态：
+
+```javascript
+// 在浏览器控制台执行
+// 输出：tileset 状态、sprite 数量、已知 tile 数、dirty 标志、mapview 原点
+// 如果检测到问题，自动尝试修复（center + redraw）
+```
+
+### 4. `scripts/check-legacy-delete.sh`（新建）
+
+自动化删除检查脚本：
+
+```bash
+# 检查 government.js 是否可以安全删除
+./scripts/check-legacy-delete.sh government.js
+
+# 输出：
+# [FUNCTIONS] 9 defined, 2 covered by TS, 7 MISSING
+# [VARIABLES] 5 defined, 3 exposed, 2 MISSING: REPORT_WONDERS_OF_THE_WORLD, REPORT_TOP_CITIES
+# [SIDE_EFFECTS] None found
+# [VERDICT] NOT SAFE TO DELETE - 7 functions and 2 variables missing
+```
