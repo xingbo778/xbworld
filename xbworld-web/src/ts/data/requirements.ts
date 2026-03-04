@@ -37,7 +37,7 @@ import {
   VUT_GOOD,
   VUT_TERRFLAG,
   VUT_NATIONALITY,
-  VUT_BASEFLAG,
+  // VUT_BASEFLAG removed — not present in XBWorld fc_types.js
   VUT_ROADFLAG,
   VUT_EXTRA,
   VUT_TECHFLAG,
@@ -167,7 +167,7 @@ function isReqActive(
     case VUT_GOOD:
     case VUT_TERRFLAG:
     case VUT_NATIONALITY:
-    case VUT_BASEFLAG:
+    // case VUT_BASEFLAG: — removed, not present in XBWorld
     case VUT_ROADFLAG:
     case VUT_EXTRA:
     case VUT_TECHFLAG:

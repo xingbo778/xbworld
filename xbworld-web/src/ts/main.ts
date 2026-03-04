@@ -59,6 +59,9 @@ import './data/improvement';
 import './data/requirements';
 import './data/government';
 import './data/eventConstants';
+import './data/city';
+import './data/tech';
+import './data/nation';
 
 // ---------------------------------------------------------------------------
 // Phase 2: Import utility modules.

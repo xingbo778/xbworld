@@ -32,23 +32,9 @@ var wikipedia_url = "http://en.wikipedia.org/wiki/";
 /* TECH_KNOWN is self-explanatory, TECH_PREREQS_KNOWN are those for which all
  * requirements are fulfilled; all others (including those which can never
  * be reached) are TECH_UNKNOWN */
-var TECH_UNKNOWN = 0;
-var TECH_PREREQS_KNOWN = 1;
-var TECH_KNOWN = 2;
-
-var AR_ONE = 0;
-var AR_TWO = 1;
-var AR_ROOT = 2;
-var AR_SIZE = 3;
 
 
-var TF_BONUS_TECH = 0; /* player gets extra tech if rearched first */
-var TF_BRIDGE = 1;    /* "Settler" unit types can build bridges over rivers */
-var TF_RAILROAD = 2;  /* "Settler" unit types can build rail roads */
-var TF_POPULATION_POLLUTION_INC = 3;  /* Increase the pollution factor created by population by one */
-var TF_FARMLAND = 4;  /* "Settler" unit types can build farmland */
-var TF_BUILD_AIRBORNE = 5; /* Player can build air units */
-var TF_LAST = 6;
+
 
 /*
   [kept for amusement and posterity]
@@ -62,8 +48,6 @@ typedef int Tech_type_id;
  * so frequently passed to packet and scripting.  The client menu routines
  * sometimes add and substract these numbers.
  */
-var A_NONE = 0;
-var A_FIRST = 1;
 var A_LAST = (MAX_NUM_ADVANCES + 1);
 var A_FUTURE  = (A_LAST + 1);
 var A_UNSET = (A_LAST + 2);
@@ -91,28 +75,6 @@ var bulbs_output_updater = new EventAggregator(update_bulbs_output_info, 250,
 
   If pplayer is NULL this checks whether any player knows the tech (used
   by the client).
-**************************************************************************/
-function player_invention_state(pplayer, tech_id)
-{
-
-  if (pplayer == null) {
-    return TECH_UNKNOWN;
-    /* FIXME: add support for global advances
-    if (tech != A_FUTURE && game.info.global_advances[tech_id]) {
-      return TECH_KNOWN;
-    } else {
-      return TECH_UNKNOWN;
-    }*/
-  } else {
-    /* Research can be null in client when looking for tech_leakage
-     * from player not yet received. */
-    if (pplayer['inventions'] != null && pplayer['inventions'][tech_id] != null) {
-      return pplayer['inventions'][tech_id];
-    } else {
-      return TECH_UNKNOWN;
-    }
-  }
-}
 
 /**************************************************************************
  ...
@@ -310,50 +272,10 @@ function update_tech_tree()
 /**************************************************************************
  Determines if the technology 'check_tech_id' is a requirement
  for reaching the technology 'goal_tech_id'.
-**************************************************************************/
-function is_tech_req_for_goal(check_tech_id, goal_tech_id)
-{
-  if (check_tech_id == goal_tech_id) return true;
-  if (goal_tech_id == 0 || check_tech_id == 0) return false;
-
-    var goal_tech = techs[goal_tech_id];
-    if (goal_tech == null) return false;
-
-    for (var i = 0; i < goal_tech['research_reqs'].length; i++) {
-      var rid = goal_tech['research_reqs'][i]['value'];
-      if (check_tech_id == rid) {
-        return true;
-      } else if (is_tech_req_for_goal(check_tech_id, rid)) {
-        return true;
-      }
-    }
-
-    return false;
-
-}
 
 /**************************************************************************
  Determines if the technology 'check_tech_id' is a direct requirement
  for reaching the technology 'next_tech_id'.
-**************************************************************************/
-function is_tech_req_for_tech(check_tech_id, next_tech_id)
-{
-  if (check_tech_id == next_tech_id) return false;
-  if (next_tech_id == 0 || check_tech_id == 0) return false;
-
-    var next_tech = techs[next_tech_id];
-    if (next_tech == null) return false;
-
-    for (var i = 0; i < next_tech['research_reqs'].length; i++) {
-      var rid = next_tech['research_reqs'][i]['value'];
-      if (check_tech_id == rid) {
-        return true;
-      }
-    }
-
-    return false;
-
-}
 
 /**************************************************************************
  ...
@@ -832,90 +754,9 @@ function show_observer_tech_dialog()
     pooled: whether there's pooled research AND other players in the team
     team_bulbs: total bulbs output from the team, player included
     team_upkeep: total upkeep cost for the team, player included
-**************************************************************************/
-function get_current_bulbs_output()
-{
-  var self_bulbs = 0;
-  var self_upkeep = 0;
-  var pooled = false;
-  var team_bulbs = 0;
-  var team_upkeep = 0;
-
-  if (!client_is_observer() && client.conn.playing != null) {
-
-    var cplayer = client.conn.playing.playerno;
-    for (var city_id in cities){
-      var city = cities[city_id];
-      if(city.owner === cplayer) {
-        self_bulbs += city.prod[O_SCIENCE];
-      }
-    }
-    self_upkeep = client.conn.playing.tech_upkeep;
-
-    if (game_info['team_pooled_research']) {
-      var team = client.conn.playing.team;
-      for (var player_id in players) {
-        var player = players[player_id];
-        if (player.team === team && player.is_alive) {
-          team_upkeep += player.tech_upkeep;
-          if (player.playerno !== cplayer) {
-            pooled = true;
-          }
-        }
-      }
-      if (pooled) {
-        team_bulbs = research_data[team].total_bulbs_prod;
-      }
-    }
-
-    if (!pooled) {
-      /* With no team mates, player's total_bulbs_prod may not be accurate
-       * because the server doesn't send an update research info packet for
-       * tax rates or specialist changes.
-       */
-      team_bulbs = self_bulbs;
-      team_upkeep = self_upkeep;
-    }
-  }
-
-  return {
-    self_bulbs: self_bulbs,
-    self_upkeep: self_upkeep,
-    pooled: pooled,
-    team_bulbs: team_bulbs,
-    team_upkeep: team_upkeep
-  };
-}
 
 /**************************************************************************
  Returns a textual description of current bulbs output.
-**************************************************************************/
-function get_current_bulbs_output_text(cbo)
-{
-  if (cbo === undefined) {
-    cbo = get_current_bulbs_output();
-  }
-
-  var text;
-  if (cbo.self_bulbs === 0 && cbo.self_upkeep === 0) {
-    text = "No bulbs researched";
-  } else {
-    text = cbo.self_bulbs;
-    var net = cbo.self_bulbs - cbo.self_upkeep;
-    if (cbo.self_upkeep !== 0) {
-      text = text + " - " + cbo.self_upkeep + " = " + net;
-    }
-    if (1 == Math.abs(net)) {
-      text = text + " bulb/turn";
-    } else {
-      text = text + " bulbs/turn";
-    }
-  }
-  if (cbo.pooled) {
-    text = text + " (" + (cbo.team_bulbs - cbo.team_upkeep) + " team total)";
-  }
-  return text;
-}
 
 /**************************************************************************
  Updates bulbs output info.
@@ -930,12 +771,4 @@ function update_bulbs_output_info()
 /**************************************************************************
  Finds tech id by exact name.
  Null if not found.
-**************************************************************************/
-function tech_id_by_name(tname)
-{
-  for (var tech_id in techs) {
-    if (tname == techs[tech_id]['name']) return tech_id;
-  }
-  return null;
-}
 

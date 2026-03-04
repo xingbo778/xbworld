@@ -186,17 +186,6 @@ function update_nation_screen()
 
 /**************************************************************************
  ...
-**************************************************************************/
-function col_love(pplayer)
-{
-  if (client_is_observer() || client.conn.playing == null || pplayer['playerno'] == client.conn.playing['playerno']
-      || pplayer['flags'].isSet(PLRF_AI) == false) {
-    return "-";
-  } else {
-    return love_text(pplayer['love'][client.conn.playing['playerno']]);
-  }
-
-}
 
 /**************************************************************************
  ...
@@ -336,13 +325,6 @@ function nation_table_select_player(player_no)
 
 /**************************************************************************
  ...
-**************************************************************************/
-function nation_meet_clicked()
-{
-  if (selected_player == -1) return;
-  diplomacy_init_meeting_req(selected_player);
-  set_default_mapview_active();
-}
 
 /**************************************************************************
  ...
@@ -370,70 +352,18 @@ function withdraw_vision_clicked()
 
 /**************************************************************************
  ...
-**************************************************************************/
-function take_player_clicked()
-{
-  if (selected_player == -1) return;
-  var pplayer = players[selected_player];
-  take_player(pplayer['name']);
-  set_default_mapview_active();
-}
 
 /**************************************************************************
  ...
-**************************************************************************/
-function toggle_ai_clicked()
-{
-  if (selected_player == -1) return;
-  var pplayer = players[selected_player];
-  aitoggle_player(pplayer['name']);
-  set_default_mapview_active();
-}
 
 /**************************************************************************
  ...
-**************************************************************************/
-function get_score_text(player)
-{
-  if (player['score'] >= 0) {
-    return player['score'];
-  } else {
-    return "?";
-  }
-}
 
 /**************************************************************************
   Return a text describing an AI's love for you.  (Oooh, kinky!!)
   These words should be adjectives which can fit in the sentence
   "The x are y towards us"
   "The Babylonians are respectful towards us"
-**************************************************************************/
-function love_text(love)
-{
-  if (love <= - MAX_AI_LOVE * 90 / 100) {
-    return "Genocidal";
-  } else if (love <= - MAX_AI_LOVE * 70 / 100) {
-    return "Belligerent";
-  } else if (love <= - MAX_AI_LOVE * 50 / 100) {
-    return "Hostile";
-  } else if (love <= - MAX_AI_LOVE * 25 / 100) {
-    return "Uncooperative";
-  } else if (love <= - MAX_AI_LOVE * 10 / 100) {
-    return "Uneasy";
-  } else if (love <= MAX_AI_LOVE * 10 / 100) {
-    return "Neutral";
-  } else if (love <= MAX_AI_LOVE * 25 / 100) {
-    return "Respectful";
-  } else if (love <= MAX_AI_LOVE * 50 / 100) {
-    return "Helpful";
-  } else if (love <= MAX_AI_LOVE * 70 / 100) {
-    return "Enthusiastic";
-  } else if (love <= MAX_AI_LOVE * 90 / 100) {
-    return "Admiring";
-  } else {
-    return "Worshipful";
-  }
-}
 
 /**************************************************************************
  ...

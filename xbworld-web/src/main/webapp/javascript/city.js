@@ -35,21 +35,9 @@ var production_selection = [];
 var worklist_selection = [];
 
 /* The city_options enum. */
-var CITYO_DISBAND      = 0;
-var CITYO_NEW_EINSTEIN = 1;
-var CITYO_NEW_TAXMAN   = 2;
-var CITYO_LAST         = 3;
 
-var FEELING_BASE = 0;		/* before any of the modifiers below */
-var FEELING_LUXURY = 1;		/* after luxury */
-var FEELING_EFFECT = 2;		/* after building effects */
-var FEELING_NATIONALITY = 3;  	/* after citizen nationality effects */
-var FEELING_MARTIAL = 4;	/* after units enforce martial order */
-var FEELING_FINAL = 5;		/* after wonders (final result) */
 
-var MAX_LEN_WORKLIST = 64;
 
-var INCITE_IMPOSSIBLE_COST = (1000 * 1000 * 1000);
 
 var city_tab_index = 0;
 var city_prod_clicks = 0;
@@ -59,78 +47,29 @@ var city_screen_updater = new EventAggregator(update_city_screen, 250,
                                               250, 3, 250);
 
 /* Information for mapping workable tiles of a city to local index */
-var city_tile_map = null;
 
 var opt_show_unreachable_items = false;
 
 /**************************************************************************
  ...
-**************************************************************************/
-function city_tile(pcity)
-{
-  if (pcity == null) return null;
-
-  return index_to_tile(pcity['tile']);
-}
 
 /**************************************************************************
  ...
-**************************************************************************/
-function city_owner_player_id(pcity)
-{
-  if (pcity == null) return null;
-  return pcity['owner'];
-}
 
 /**************************************************************************
  ...
-**************************************************************************/
-function city_owner(pcity)
-{
-  return players[city_owner_player_id(pcity)];
-}
 
 /**************************************************************************
  Removes a city from the game
-**************************************************************************/
-function remove_city(pcity_id)
-{
-  if (pcity_id == null || client.conn.playing == null) return;
-  var pcity = cities[pcity_id];
-  if (pcity == null) return;
-
-  var update = client.conn.playing.playerno &&
-               city_owner(pcity).playerno == client.conn.playing.playerno;
-  var ptile = city_tile(cities[pcity_id]);
-  delete cities[pcity_id];
-  if (renderer == RENDERER_WEBGL) update_city_position(ptile);
-  if (update) {
-    city_screen_updater.update();
-    bulbs_output_updater.update();
-  }
-}
 
 /**************************************************************************
  ...
-**************************************************************************/
-function is_city_center(city, tile) {
-  return (city['tile'] == tile['index']);
-}
 
 /**************************************************************************
  ...
-**************************************************************************/
-function is_free_worked(city, tile) {
-  return (city['tile'] == tile['index']);
-}
 
 /**************************************************************************
  ...
- **************************************************************************/
-function is_primary_capital(city)
-{
-  return city['capital'] == CAPITAL_PRIMARY;
-}
 
 /**************************************************************************
  ...
@@ -442,205 +381,44 @@ function show_city_dialog(pcity)
 
 /**************************************************************************
   Returns the name and sprite of the current city production.
-**************************************************************************/
-function get_city_production_type_sprite(pcity)
-{
-  if (pcity == null) return null; 
-  if (pcity['production_kind'] == VUT_UTYPE) {
-    var punit_type = unit_types[pcity['production_value']];
-    return {"type":punit_type,"sprite":get_unit_type_image_sprite(punit_type)};
-  }
-
-  if (pcity['production_kind'] == VUT_IMPROVEMENT) {
-    var improvement = improvements[pcity['production_value']];
-    return {"type":improvement,"sprite":get_improvement_image_sprite(improvement)};
-  }
-
-  return null;
-}
 
 /**************************************************************************
  Returns the name of the current city production.
-**************************************************************************/
-function get_city_production_type(pcity)
-{
-  if (pcity == null) {
-    return null;
-  }
-
-  if (pcity['production_kind'] == VUT_UTYPE) {
-    var punit_type = unit_types[pcity['production_value']];
-    return punit_type;
-  }
-
-  if (pcity['production_kind'] == VUT_IMPROVEMENT) {
-    var improvement = improvements[pcity['production_value']];
-    return improvement;
-  }
-
-  return null;
-}
 
 
 /**************************************************************************
  Returns the number of turns to complete current city production.
-**************************************************************************/
-function get_city_production_time(pcity)
-{
- if (pcity == null) return FC_INFINITY;
-
-  if (pcity['production_kind'] == VUT_UTYPE) {
-    var punit_type = unit_types[pcity['production_value']];
-    return city_turns_to_build(pcity, punit_type, true);
-  }
-
-  if (pcity['production_kind'] == VUT_IMPROVEMENT) {
-    var improvement = improvements[pcity['production_value']];
-    if (improvement['name'] == "Coinage") {
-      return FC_INFINITY;
-    }
-
-    return city_turns_to_build(pcity, improvement, true);
-  }
-
-  return FC_INFINITY;
-}
 
 
 /**************************************************************************
  Returns city production progress, eg. the string "5 / 30"
-**************************************************************************/
-function get_production_progress(pcity)
-{
-  if (pcity == null) return " ";
-
-  if (pcity['production_kind'] == VUT_UTYPE) {
-    var punit_type = unit_types[pcity['production_value']];
-    return pcity['shield_stock'] + "/"
-           + universal_build_shield_cost(pcity, punit_type);
-  }
-
-  if (pcity['production_kind'] == VUT_IMPROVEMENT) {
-    var improvement = improvements[pcity['production_value']];
-    if (improvement['name'] == "Coinage") {
-      return " ";
-    }
-    return  pcity['shield_stock'] + "/"
-            + universal_build_shield_cost(pcity, improvement);
-  }
-
-  return " ";
-}
 
 /**************************************************************************
 ...
-**************************************************************************/
-function generate_production_list()
-{
-  var production_list = [];
-  for (var unit_type_id in unit_types) {
-    var punit_type = unit_types[unit_type_id];
-
-    /* FIXME: web client doesn't support unit flags yet, so this is a hack: */
-    if (punit_type['name'] == "Barbarian Leader" || punit_type['name'] == "Leader") continue;
-
-      production_list.push({"kind": VUT_UTYPE, "value" : punit_type['id'],
-                            "text" : punit_type['name'],
-	                    "helptext" : punit_type['helptext'],
-                            "rule_name" : punit_type['rule_name'],
-                            "build_cost" : punit_type['build_cost'],
-                            "unit_details" : punit_type['attack_strength'] + ", " 
-                                             + punit_type['defense_strength'] + ", " 
-                                             + punit_type['firepower'],
-                            "sprite" : get_unit_type_image_sprite(punit_type)});
-  }
-
-  for (var improvement_id in improvements) {
-    var pimprovement = improvements[improvement_id];
-      var build_cost = pimprovement['build_cost'];
-      if (pimprovement['name'] == "Coinage") build_cost = "-";
-      production_list.push({"kind": VUT_IMPROVEMENT,
-                            "value" : pimprovement['id'],
-                            "text" : pimprovement['name'],
-	                    "helptext" : pimprovement['helptext'],
-                            "rule_name" : pimprovement['rule_name'],
-                            "build_cost" : build_cost,
-                            "unit_details" : "-",
-                            "sprite" : get_improvement_image_sprite(pimprovement) });
-  }
-  return production_list;
-}
 
 /**************************************************************************
   Return whether given city can build given unit, ignoring whether unit
   is obsolete.
-**************************************************************************/
-function can_city_build_unit_direct(pcity, punittype)
-{
-  /* TODO: implement*/
-  return true;
-}
 
 /**************************************************************************
   Return whether given city can build given unit; returns FALSE if unit is
   obsolete.
-**************************************************************************/
-function can_city_build_unit_now(pcity, punittype_id)
-{
-  return (pcity != null && typeof pcity['can_build_unit'] != 'undefined'
-          && pcity['can_build_unit'].isSet(punittype_id));
-}
 
 /**************************************************************************
   Return whether given city can build given building; returns FALSE if
   the building is obsolete.
-**************************************************************************/
-function can_city_build_improvement_now(pcity, pimprove_id)
-{
-  return (pcity != null && typeof pcity['can_build_improvement'] != 'undefined'
-          && pcity['can_build_improvement'].isSet(pimprove_id));
-}
 
 /**************************************************************************
   Return whether given city can build given item.
-**************************************************************************/
-function can_city_build_now(pcity, kind, value)
-{
-  return kind != null && value != null &&
-       ((kind == VUT_UTYPE)
-       ? can_city_build_unit_now(pcity, value)
-       : can_city_build_improvement_now(pcity, value));
-}
 
 
 /**************************************************************************
   Return TRUE iff the city has this building in it.
-**************************************************************************/
-function city_has_building(pcity, improvement_id)
-{
-  return 0 <= improvement_id && improvement_id < ruleset_control.num_impr_types
-    && pcity['improvements'] && pcity['improvements'].isSet(improvement_id);
-}
 
 
 /**************************************************************************
  Calculates the turns which are needed to build the requested
  improvement in the city.  GUI Independent.
-**************************************************************************/
-function city_turns_to_build(pcity, target, include_shield_stock)
-{
-  var city_shield_surplus =  pcity['surplus'][O_SHIELD];
-  var city_shield_stock = include_shield_stock ? pcity['shield_stock'] : 0;
-  var cost = universal_build_shield_cost(pcity, target);
-
-  if (include_shield_stock == true && (pcity['shield_stock'] >= cost)) {
-    return 1;
-  } else if ( pcity['surplus'][O_SHIELD] > 0) {
-    return Math.floor((cost - city_shield_stock - 1) / city_shield_surplus + 1);
-  } else {
-    return FC_INFINITY;
-  }
-}
 
 /**************************************************************************
  Show buy production in city dialog
@@ -782,19 +560,6 @@ function do_city_map_click(ptile)
 
 /**************************************************************************
 ..
-**************************************************************************/
-function does_city_have_improvement(pcity, improvement_name)
-{
-  if (pcity == null || pcity['improvements'] == null) return false;
-
-  for (var z = 0; z < ruleset_control.num_impr_types; z++) {
-    if (pcity['improvements'] != null && pcity['improvements'].isSet(z) && improvements[z] != null
-        && improvements[z]['name'] == improvement_name) {
-      return true;
-    }
-  }
-  return false;
-}
 
 /**************************************************************************
   Shows the Request city name dialog to the user.
@@ -939,21 +704,6 @@ function city_sell_improvement(improvement_id)
 
 /**************************************************************************
   Create text describing city growth.
-**************************************************************************/
-function city_turns_to_growth_text(pcity)
-{
-  var turns = pcity['granary_turns'];
-
-  if (turns == 0) {
-    return "blocked";
-  } else if (turns > 1000000) {
-    return "never";
-  } else if (turns < 0) {
-    return "Starving in " + Math.abs(turns) + " turns";
-  } else {
-    return turns + " turns";
-  }
-}
 
 /**************************************************************************
   Returns an index for a flat array containing x,y data.
@@ -961,164 +711,25 @@ function city_turns_to_growth_text(pcity)
   in the array. That is, for r=0, the array would just have the center;
   for r=1 it'd be (-1,-1), (-1,0), (-1,1), (0,-1), (0,0), etc.
   There's no check for coherence.
-**************************************************************************/
-function dxy_to_center_index(dx, dy, r)
-{
-  return (dx + r) * (2 * r + 1) + dy + r;
-}
 
 /**************************************************************************
   Converts from coordinate offset from city center (dx, dy),
   to index.
-**************************************************************************/
-function get_city_dxy_to_index(dx, dy, pcity)
-{
-  build_city_tile_map(pcity.city_radius_sq);
-  var city_tile_map_index = dxy_to_center_index(dx, dy, city_tile_map.radius);
-  var ctile = city_tile(active_city);
-  return get_city_tile_map_for_pos(ctile.x, ctile.y)[city_tile_map_index];
-}
 
 /**************************************************************************
   Builds city_tile_map info for a given squared city radius.
-**************************************************************************/
-function build_city_tile_map(radius_sq)
-{
-  if (city_tile_map == null || city_tile_map.radius_sq < radius_sq) {
-    var r = Math.floor(Math.sqrt(radius_sq));
-    var vectors = [];
-
-    for (var dx = -r; dx <= r; dx++) {
-      for (var dy = -r; dy <= r; dy++) {
-        var d_sq = map_vector_to_sq_distance(dx, dy);
-        if (d_sq <= radius_sq) {
-          vectors.push([dx, dy, d_sq, dxy_to_center_index(dx, dy, r)]);
-        }
-      }
-    }
-
-    vectors.sort(function (a, b) {
-      var d = a[2] - b[2];
-      if (d !== 0) return d;
-      d = a[0] - b[0];
-      if (d !== 0) return d;
-      return a[1] - b[1];
-    });
-
-    var base_map = [];
-    for (var i = 0; i < vectors.length; i++) {
-      base_map[vectors[i][3]] = i;
-    }
-
-    city_tile_map = {
-      radius_sq: radius_sq,
-      radius: r,
-      base_sorted: vectors,
-      maps: [base_map]
-    };
-  }
-}
 
 /**************************************************************************
   Helper for get_city_tile_map_for_pos.
   From position, radius and size, returns an array with delta_min,
   delta_max and clipped tile_map index.
-**************************************************************************/
-function delta_tile_helper(pos, r, size)
-{
-  var d_min = -pos;
-  var d_max = (size-1) - pos;
-  var i = 0;
-  if (d_min > -r) {
-    i = r + d_min;
-  } else if (d_max < r) {
-    i = 2*r - d_max;
-  }
-  return [d_min, d_max, i];
-}
 
 /**************************************************************************
   Builds the city_tile_map with the given delta limits.
   Helper for get_city_tile_map_for_pos.
-**************************************************************************/
-function build_city_tile_map_with_limits(dx_min, dx_max, dy_min, dy_max)
-{
-  var clipped_map = [];
-  var v = city_tile_map.base_sorted;
-  var vl = v.length;
-  var index = 0;
-  for (var vi = 0; vi < vl; vi++) {
-    var tile_data = v[vi];
-    if (tile_data[0] >= dx_min && tile_data[0] <= dx_max &&
-        tile_data[1] >= dy_min && tile_data[1] <= dy_max) {
-      clipped_map[tile_data[3]] = index;
-      index++;
-    }
-  }
-  return clipped_map;
-}
 
 /**************************************************************************
   Returns the mapping of position from city center to index in city_info.
-**************************************************************************/
-function get_city_tile_map_for_pos(x, y)
-{
-  if (wrap_has_flag(WRAP_X)) {
-    if (wrap_has_flag(WRAP_Y)) {
-
-      // Torus
-      get_city_tile_map_for_pos = function (x, y) {
-        return city_tile_map.maps[0];
-      };
-
-    } else {
-
-      // Cylinder with N-S axis
-      get_city_tile_map_for_pos = function (x, y) {
-        var r = city_tile_map.radius;
-        var d = delta_tile_helper(y, r, map.ysize)
-        if (city_tile_map.maps[d[2]] == null) {
-          var m = build_city_tile_map_with_limits(-r, r, d[0], d[1]);
-          city_tile_map.maps[d[2]] = m;
-        }
-        return city_tile_map.maps[d[2]];
-      };
-
-    }
-  } else {
-    if (wrap_has_flag(WRAP_Y)) {
-
-      // Cylinder with E-W axis
-      get_city_tile_map_for_pos = function (x, y) {
-        var r = city_tile_map.radius;
-        var d = delta_tile_helper(x, r, map.xsize)
-        if (city_tile_map.maps[d[2]] == null) {
-          var m = build_city_tile_map_with_limits(d[0], d[1], -r, r);
-          city_tile_map.maps[d[2]] = m;
-        }
-        return city_tile_map.maps[d[2]];
-      };
-
-    } else {
-
-      // Flat
-      get_city_tile_map_for_pos = function (x, y) {
-        var r = city_tile_map.radius;
-        var dx = delta_tile_helper(x, r, map.xsize)
-        var dy = delta_tile_helper(y, r, map.ysize)
-        var map_i = (2*r + 1) * dx[2] + dy[2];
-        if (city_tile_map.maps[map_i] == null) {
-          var m = build_city_tile_map_with_limits(dx[0], dx[1], dy[0], dy[1]);
-          city_tile_map.maps[map_i] = m;
-        }
-        return city_tile_map.maps[map_i];
-      };
-
-    }
-  }
-
-  return get_city_tile_map_for_pos(x, y);
-}
 
 /**************************************************************************
 ...
@@ -1135,15 +746,6 @@ function city_change_specialist(city_id, from_specialist_id)
 
 /**************************************************************************
 ...  (simplified)
-**************************************************************************/
-function city_can_buy(pcity)
-{
-  var improvement = improvements[pcity['production_value']];
-
-  return (!pcity['did_buy'] && pcity['turn_founded'] != game_info['turn']
-          && improvement['name'] != "Coinage");
-
-}
 
 /**************************************************************************
  Returns how many thousand citizen live in this city.
@@ -1930,13 +1532,6 @@ function update_city_screen()
 /**********************************************************************//**
   Return TRUE iff the city is unhappy.  An unhappy city will fall
   into disorder soon.
-**************************************************************************/
-function city_unhappy(pcity)
-{
-  return (pcity['ppl_happy'][FEELING_FINAL]
-          < pcity['ppl_unhappy'][FEELING_FINAL]
-            + 2 * pcity['ppl_angry'][FEELING_FINAL]);
-}
 
 /**************************************************************************
  Returns the city state: Celebrating, Disorder or Peace.
@@ -1985,51 +1580,9 @@ function city_keyboard_listener(ev)
 
 /**************************************************************************
  Returns the 3d model name for the given city.
-**************************************************************************/
-function city_to_3d_model_name(pcity)
-{
-  var size = 0;
-  if (pcity['size'] >=3 && pcity['size'] <=6) {
-    size = 1;
-  } else if (pcity['size'] > 6 && pcity['size'] <= 9) {
-    size = 2;
-  } else if (pcity['size'] > 9 && pcity['size'] <= 11) {
-    size = 3;
-  } else if (pcity['size'] > 11) {
-    size = 4;
-  }
-
-  var style_id = pcity['style'];
-  if (style_id == -1) style_id = 0;
-  var city_rule = city_rules[style_id];
-
-  var city_style_name = "european";
-  if (city_rule['rule_name'] == "Industrial" || city_rule['rule_name'] == "ElectricAge" || city_rule['rule_name'] == "Modern"
-      || city_rule['rule_name'] == "PostModern" || city_rule['rule_name'] == "Asian") {
-    city_style_name = "modern";
-  }
-
-  return "city_" + city_style_name + "_" + size;
-}
 
 /**************************************************************************
  Returns the city walls scale of for the given city.
-**************************************************************************/
-function get_citywalls_scale(pcity)
-{
-  var scale = 8;
-  if (pcity['size'] >=3 && pcity['size'] <=6) {
-    scale = 9;
-  } else if (pcity['size'] > 6 && pcity['size'] <= 9) {
-    scale = 10;
-  } else if (pcity['size'] > 9 && pcity['size'] <= 11) {
-    scale = 11;
-  } else if (pcity['size'] > 11) {
-    scale = 12;
-  }
-
-  return scale;
-}
 
 /**************************************************************************
  Set the city canvas size for a city based on its radius
