@@ -51,3 +51,9 @@ exposeToLegacy('tile_set_terrain', tileSetTerrain);
 exposeToLegacy('tile_terrain', tileTerrain);
 exposeToLegacy('tile_terrain_near', tileTerrainNear);
 exposeToLegacy('is_ocean_tile', isOceanTile);
+
+// Ensure global variables exist (previously declared in terrain.js)
+const w = window as unknown as Record<string, unknown>;
+if (!w['terrains']) w['terrains'] = {};
+if (!w['resources']) w['resources'] = {};
+if (!w['terrain_control']) w['terrain_control'] = {};

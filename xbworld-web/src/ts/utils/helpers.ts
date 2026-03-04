@@ -126,5 +126,56 @@ exposeToLegacy('get_random_int', getRandomInt);
 exposeToLegacy('supports_mp3', supportsMp3);
 exposeToLegacy('is_right_mouse_selection_supported', isRightMouseSelectionSupported);
 exposeToLegacy('get_tileset_file_extention', getTilesetFileExtension);
-// NOTE: $.getUrlVar is a jQuery plugin, not a standalone function — not migrated
-// NOTE: civclient_benchmark uses setTimeout with string eval — not migrated
+// Expose is_small_screen (legacy name) and other utility functions
+exposeToLegacy('is_small_screen', isSmallScreen);
+exposeToLegacy('is_touch_device', isTouchDevice);
+
+// Register $.getUrlVar / $.getUrlVars jQuery plugins (previously in utility.js)
+// These are used extensively by legacy JS (civclient.js, pregame.js, etc.)
+const jq = (window as any).jQuery || (window as any).$;
+if (jq && jq.extend) {
+  jq.extend({
+    getUrlVars(): Record<string, string> & string[] {
+      const vars: Record<string, string> & string[] = [] as any;
+      const hashes = window.location.href
+        .slice(window.location.href.indexOf('?') + 1)
+        .split('&');
+      for (let i = 0; i < hashes.length; i++) {
+        const hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        (vars as any)['var-' + hash[0].replace(/\\/g, '\\\\').replace(/'/g, "\\'")]  = hash[1];
+      }
+      return vars;
+    },
+    getUrlVar(name: string): string | undefined {
+      return (jq.getUrlVars() as any)['var-' + name];
+    },
+  });
+}
+
+/**
+ * Simple benchmark: scrolls the map 30 frames and reports average redraw time.
+ */
+let benchmark_start = 0;
+function civclient_benchmark(frame: number): void {
+  const w = window as any;
+  if (frame === 0) benchmark_start = Date.now();
+  const ptile = w.map_pos_to_tile(frame + 5, frame + 5);
+  w.center_tile_mapcanvas(ptile);
+  if (frame < 30) {
+    setTimeout(() => civclient_benchmark(frame + 1), 10);
+  } else {
+    const time = (Date.now() - benchmark_start) / 25;
+    w.swal('Redraw time: ' + time);
+  }
+}
+
+exposeToLegacy('civclient_benchmark', civclient_benchmark);
+
+// benchmark_start is read by pregame.js at runtime
+Object.defineProperty(window, 'benchmark_start', {
+  get: () => benchmark_start,
+  set: (v: number) => { benchmark_start = v; },
+  configurable: true,
+  enumerable: true,
+});

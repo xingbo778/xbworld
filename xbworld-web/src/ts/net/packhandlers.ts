@@ -199,11 +199,34 @@ function handle_web_ruleset_unit_addition(packet: any): void {
   }
 }
 
+/**
+ * Recreate the old req[] field of ruleset_tech packets.
+ * This makes it possible to delay research_reqs support.
+ */
+function recreate_old_tech_req(packet: any): void {
+  packet['req'] = [];
+  if (packet['research_reqs']) {
+    for (let i = 0; i < packet['research_reqs'].length; i++) {
+      const requirement = packet['research_reqs'][i];
+      if (requirement.kind === w.VUT_ADVANCE
+          && requirement.range === w.REQ_RANGE_PLAYER
+          && requirement.present) {
+        packet['req'].push(requirement.value);
+      }
+    }
+  }
+  // Fill in A_NONE just in case XBWorld assumes its size is 2.
+  while (packet['req'].length < 2) {
+    packet['req'].push(w.A_NONE ?? 0);
+  }
+}
+
 function handle_ruleset_tech(packet: any): void {
   if (packet['name'] != null && packet['name'].indexOf('?tech:') === 0) {
     packet['name'] = packet['name'].replace('?tech:', '');
   }
   w.techs[packet['id']] = packet;
+  recreate_old_tech_req(packet);
 }
 
 function handle_ruleset_tech_class(_packet: any): void { /* TODO */ }
@@ -680,23 +703,106 @@ function handle_unit_short_info(packet: any): void {
   handle_unit_packet_common(packet);
 }
 
+/**
+ * Handle action decision for a unit — check auto-attack actions first,
+ * then fall back to requesting player decision.
+ */
+function action_decision_handle(punit: any): void {
+  for (let a = 0; a < auto_attack_actions.length; a++) {
+    const action = auto_attack_actions[a];
+    if (w.utype_can_do_action(w.unit_type(punit), action) && w.auto_attack) {
+      const packet = {
+        'pid':             w.packet_unit_get_actions,
+        'actor_unit_id':   punit['id'],
+        'target_unit_id':  w.IDENTITY_NUMBER_ZERO,
+        'target_tile_id':  punit['action_decision_tile'],
+        'target_extra_id': w.EXTRA_NONE,
+        'request_kind':    REQEST_BACKGROUND_FAST_AUTO_ATTACK,
+      };
+      w.send_request(JSON.stringify(packet));
+      return;
+    }
+  }
+  w.action_decision_request(punit);
+}
+
+/**
+ * Do an auto action or request that the player makes a decision
+ * for the specified unit.
+ */
+function action_decision_maybe_auto(
+  actor_unit: any, action_probabilities: any,
+  target_tile: any, target_extra: any,
+  target_unit: any, _target_city: any
+): void {
+  for (let a = 0; a < auto_attack_actions.length; a++) {
+    const action = auto_attack_actions[a];
+    if (w.action_prob_possible(action_probabilities[action]) && w.auto_attack) {
+      let target = target_tile['index'];
+      if (action === w.ACTION_NUKE_CITY) {
+        const tc = w.tile_city(target_tile);
+        if (!tc) continue;
+        target = tc['id'];
+      }
+      w.request_unit_do_action(action, actor_unit['id'], target);
+      return;
+    }
+  }
+  w.action_decision_request(actor_unit);
+}
+
+/**
+ * Simple wrapper: update_client_state -> set_client_state.
+ */
+function update_client_state(value: any): void {
+  w.set_client_state(value);
+}
+
 function handle_unit_packet_common(packet_unit: any): void {
   const punit = w.player_find_unit_by_id(
     w.unit_owner(packet_unit), packet_unit['id']
   );
 
+  // Clear old tile reference before updating
+  if (typeof w.clear_tile_unit === 'function') {
+    w.clear_tile_unit(punit);
+  }
+
   if (punit == null && w.game_find_unit_by_number(packet_unit['id']) != null) {
-    // Unit changed owner
-    w.client_remove_unit(w.game_find_unit_by_number(packet_unit['id']));
+    // Unit changed owner — delete old and recreate
+    w.handle_unit_remove(packet_unit['id']);
   }
 
   let old_tile: any = null;
   if (punit != null) old_tile = w.index_to_tile(punit['tile']);
 
   if (w.units[packet_unit['id']] == null) {
+    // New unit
+    if (w.should_ask_server_for_actions(packet_unit)) {
+      action_decision_handle(packet_unit);
+    }
+    packet_unit['anim_list'] = [];
     w.units[packet_unit['id']] = packet_unit;
+    w.units[packet_unit['id']]['facing'] = 6;
   } else {
+    // Existing unit update
+    if ((punit['action_decision_want'] !== packet_unit['action_decision_want']
+         || punit['action_decision_tile'] !== packet_unit['action_decision_tile'])
+        && w.should_ask_server_for_actions(packet_unit)) {
+      action_decision_handle(packet_unit);
+    }
+    if (typeof w.update_unit_anim_list === 'function') {
+      w.update_unit_anim_list(w.units[packet_unit['id']], packet_unit);
+    }
     Object.assign(w.units[packet_unit['id']], packet_unit);
+    // Also update current_focus references
+    if (w.current_focus != null) {
+      for (let i = 0; i < w.current_focus.length; i++) {
+        if (w.current_focus[i]['id'] === packet_unit['id']) {
+          Object.assign(w.current_focus[i], packet_unit);
+        }
+      }
+    }
   }
 
   w.update_tile_unit(w.units[packet_unit['id']]);
@@ -1509,6 +1615,12 @@ exposeToLegacy('handle_edit_object_created', handle_edit_object_created);
 
 // Goto
 exposeToLegacy('handle_web_goto_path', handle_web_goto_path);
+
+// Action decision helpers
+exposeToLegacy('action_decision_handle', action_decision_handle);
+exposeToLegacy('action_decision_maybe_auto', action_decision_maybe_auto);
+exposeToLegacy('update_client_state', update_client_state);
+exposeToLegacy('recreate_old_tech_req', recreate_old_tech_req);
 
 // Packet dispatch
 exposeToLegacy('packet_hand_table', packet_hand_table);

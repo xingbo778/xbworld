@@ -215,3 +215,21 @@ exposeToLegacy('get_invalid_username_reason', get_invalid_username_reason);
 exposeToLegacy('player_capital', player_capital);
 exposeToLegacy('does_player_own_city', does_player_own_city);
 exposeToLegacy('research_data', research_data);
+
+// Expose constants that legacy JS references as globals
+const w = window as unknown as Record<string, unknown>;
+w['MAX_NUM_PLAYERS'] = MAX_NUM_PLAYERS;
+w['MAX_AI_LOVE'] = MAX_AI_LOVE;
+// DiplState enum values (const enum is inlined, so expose manually)
+w['DS_ARMISTICE'] = DiplState.DS_ARMISTICE;
+w['DS_WAR'] = DiplState.DS_WAR;
+w['DS_CEASEFIRE'] = DiplState.DS_CEASEFIRE;
+w['DS_PEACE'] = DiplState.DS_PEACE;
+w['DS_ALLIANCE'] = DiplState.DS_ALLIANCE;
+w['DS_NO_CONTACT'] = DiplState.DS_NO_CONTACT;
+w['DS_TEAM'] = DiplState.DS_TEAM;
+w['DS_LAST'] = DiplState.DS_LAST;
+// PlayerFlag enum values
+w['PLRF_AI'] = PlayerFlag.PLRF_AI;
+w['PLRF_SCENARIO_RESERVED'] = PlayerFlag.PLRF_SCENARIO_RESERVED;
+w['PLRF_COUNT'] = PlayerFlag.PLRF_COUNT;

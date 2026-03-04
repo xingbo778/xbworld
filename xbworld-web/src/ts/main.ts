@@ -16,9 +16,35 @@ import { syncStoreWithLegacy } from './bridge/sync';
 import { logNormal } from './core/log';
 
 // ---------------------------------------------------------------------------
-// Phase 0: Patch missing legacy functions BEFORE any module overrides.
+// Phase 0: Patch missing legacy functions and ensure global data stores exist.
 // ---------------------------------------------------------------------------
 const win = window as unknown as Record<string, unknown>;
+
+// Ensure global data stores exist before any module or handler runs.
+// These were previously declared in effects.js, specialist.js, etc.
+if (!win['effects']) win['effects'] = {};
+if (!win['specialists']) win['specialists'] = {};
+// Previously declared in player.js
+if (!win['players']) win['players'] = {};
+if (!win['research_data']) win['research_data'] = {};
+// Previously declared in game.js
+if (win['game_info'] === undefined) win['game_info'] = null;
+if (win['calendar_info'] === undefined) win['calendar_info'] = null;
+if (win['game_rules'] === undefined) win['game_rules'] = null;
+if (win['ruleset_control'] === undefined) win['ruleset_control'] = null;
+if (win['ruleset_summary'] === undefined) win['ruleset_summary'] = null;
+if (win['ruleset_description'] === undefined) win['ruleset_description'] = null;
+// Previously declared in terrain.js
+if (!win['terrains']) win['terrains'] = {};
+if (!win['resources']) win['resources'] = {};
+if (!win['terrain_control']) win['terrain_control'] = {};
+// Previously declared in government.js
+if (!win['governments']) win['governments'] = {};
+if (win['requested_gov'] === undefined) win['requested_gov'] = -1;
+// Previously declared in connection.js
+if (!win['connections']) win['connections'] = {};
+if (!win['conn_ping_info']) win['conn_ping_info'] = {};
+if (!win['debug_ping_list']) win['debug_ping_list'] = [];
 
 if (typeof win['update_unit_position'] !== 'function') {
   win['update_unit_position'] = function (_ptile: unknown): void {
