@@ -10,9 +10,9 @@ import { clientState as client_state, C_S_RUNNING } from '../../client/clientSta
 import { DiplState, PlayerFlag } from '../../data/player';
 import { send_message } from '../../net/connection';
 import { isTouchDevice as is_touch_device } from '../../utils/helpers';
-import { logNormal } from '../../core/log';
 import { message_log, max_chat_message_length } from '../../core/messages';
 import { E_LOG_ERROR } from '../../data/eventConstants';
+import * as S from './controlState';
 
 const FC_DS_ALLIANCE = DiplState.DS_ALLIANCE;
 const FC_PLRF_AI = PlayerFlag.PLRF_AI;
@@ -25,21 +25,9 @@ declare const diplstates: any;
 declare const sprites: any;
 
 // ---------------------------------------------------------------------------
-// State
-// ---------------------------------------------------------------------------
-
-export let chat_send_to: number = -1;
-export const CHAT_ICON_EVERYBODY: string = String.fromCharCode(62075);
-export const CHAT_ICON_ALLIES: string = String.fromCharCode(61746);
-
-// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
-/**
- * Set the chatbox messages context to the next item on the list if it is
- * small. Otherwise, show a dialog for the user to select one.
- */
 export function chat_context_change(): void {
   const recipients = chat_context_get_recipients();
   if (recipients.length < 4) {
@@ -49,9 +37,6 @@ export function chat_context_change(): void {
   }
 }
 
-/**
- * Get ordered list of possible alive human chatbox messages recipients.
- */
 export function chat_context_get_recipients(): any[] {
   let allies = false;
   const pm: any[] = [];
@@ -75,7 +60,6 @@ export function chat_context_get_recipients(): any[] {
     const nation = nations[pplayer['nation']];
     if (nation == null) continue;
 
-    // TODO: add connection state, to list connected players first
     pm.push({
       id: player_id,
       description: pplayer['name'] + " of the " + nation['adjective'],
@@ -104,12 +88,9 @@ export function chat_context_get_recipients(): any[] {
   return pm;
 }
 
-/**
- * Switch chatbox messages recipients.
- */
 export function chat_context_set_next(recipients: any[]): void {
   let next = 0;
-  while (next < recipients.length && recipients[next].id != chat_send_to) {
+  while (next < recipients.length && recipients[next].id != S.chat_send_to) {
     next++;
   }
   next++;
@@ -120,10 +101,6 @@ export function chat_context_set_next(recipients: any[]): void {
   set_chat_direction(recipients[next].id);
 }
 
-/**
- * Show a dialog for the user to select the default recipient of
- * chatbox messages.
- */
 export function chat_context_dialog_show(recipients: any[]): void {
   const dlg = $("#chat_context_dialog");
   if (dlg.length > 0) {
@@ -164,7 +141,7 @@ export function chat_context_dialog_show(recipients: any[]): void {
   };
 
   for (let i = 0; i < recipients.length; i++) {
-    if (recipients[i].id != chat_send_to) {
+    if (recipients[i].id != S.chat_send_to) {
       const ctx = add_row(recipients[i].id, recipients[i].flag,
         recipients[i].description);
 
@@ -172,9 +149,9 @@ export function chat_context_dialog_show(recipients: any[]): void {
         ctx.font = "18px FontAwesome";
         ctx.fillStyle = "rgba(32, 32, 32, 1)";
         if (recipients[i].id == null) {
-          ctx.fillText(CHAT_ICON_EVERYBODY, 5, 15);
+          ctx.fillText(S.CHAT_ICON_EVERYBODY, 5, 15);
         } else {
-          ctx.fillText(CHAT_ICON_ALLIES, 8, 16);
+          ctx.fillText(S.CHAT_ICON_ALLIES, 8, 16);
         }
       }
     }
@@ -201,10 +178,7 @@ export function chat_context_dialog_show(recipients: any[]): void {
   $("#chat_context_dialog").dialog('open');
 }
 
-/**
- * Handle a choice in the chat context dialog.
- */
-export function handle_chat_direction_chosen(ev: JQuery.ClickEvent): void {
+export function handle_chat_direction_chosen(this: any, ev: any): void {
   const new_send_to = $(this).data("chatSendTo");
   $("#chat_context_dialog").dialog('close');
   if (new_send_to == null) {
@@ -214,12 +188,8 @@ export function handle_chat_direction_chosen(ev: JQuery.ClickEvent): void {
   }
 }
 
-/**
- * Set the context for the chatbox.
- */
 export function set_chat_direction(player_id: number | null): void {
-
-  if (player_id == chat_send_to) return;
+  if (player_id == S.chat_send_to) return;
 
   let player_name: string;
   const icon = $("#chat_direction");
@@ -231,14 +201,14 @@ export function set_chat_direction(player_id: number | null): void {
     ctx.clearRect(0, 0, 29, 20);
     ctx.font = "18px FontAwesome";
     ctx.fillStyle = "rgba(192, 192, 192, 1)";
-    ctx.fillText(CHAT_ICON_EVERYBODY, 7, 15);
+    ctx.fillText(S.CHAT_ICON_EVERYBODY, 7, 15);
     player_name = 'everybody';
   } else if (client.conn.playing != null
     && player_id == client.conn.playing['playerno']) {
     ctx.clearRect(0, 0, 29, 20);
     ctx.font = "18px FontAwesome";
     ctx.fillStyle = "rgba(192, 192, 192, 1)";
-    ctx.fillText(CHAT_ICON_ALLIES, 10, 16);
+    ctx.fillText(S.CHAT_ICON_ALLIES, 10, 16);
     player_name = 'allies';
   } else {
     const pplayer = players[player_id];
@@ -253,13 +223,10 @@ export function set_chat_direction(player_id: number | null): void {
   }
 
   icon.attr("title", "Sending messages to " + player_name);
-  chat_send_to = player_id;
+  S.setChatSendTo(player_id as number);
   $("#game_text_input").focus();
 }
 
-/**
- * Common replacements and encoding for messages.
- */
 export function encode_message_text(message: string): string {
   message = message.replace(/^\s+|\s+$/g, "");
   message = message.replace(/&/g, "&amp;");
@@ -270,18 +237,13 @@ export function encode_message_text(message: string): string {
   return encodeURIComponent(message);
 }
 
-/**
- * Tell whether this is a simple message to the choir.
- */
 export function is_unprefixed_message(message: string | null): boolean {
   if (message === null) return false;
   if (message.length === 0) return true;
 
-  /* Commands, messages to allies and explicit send to everybody */
   const first = message.charAt(0);
   if (first === '/' || first === '.' || first === ':') return false;
 
-  /* Private messages */
   let quoted_pos = -1;
   if (first === '"' || first === "'") {
     quoted_pos = message.indexOf(first, 1);
@@ -292,24 +254,18 @@ export function is_unprefixed_message(message: string | null): boolean {
   return (space_pos !== -1 && (space_pos < private_mark));
 }
 
-/**
- * Handle text input from chat fields.
- */
-export function check_text_input(event: JQuery.KeyDownEvent, chatboxtextarea: JQuery<HTMLElement>): boolean | undefined {
-
+export function check_text_input(event: any, chatboxtextarea: any): boolean | undefined {
   if (event.keyCode == 13 && event.shiftKey == 0) {
     let message = chatboxtextarea.val() as string;
 
-    if (chat_send_to != null && chat_send_to >= 0
+    if (S.chat_send_to != null && S.chat_send_to >= 0
       && is_unprefixed_message(message)) {
       if (client.conn.playing != null
-        && chat_send_to == client.conn.playing['playerno']) {
+        && S.chat_send_to == client.conn.playing['playerno']) {
         message = ". " + encode_message_text(message);
       } else {
-        const pplayer = players[chat_send_to];
+        const pplayer = players[S.chat_send_to];
         if (pplayer == null) {
-          // Change to public chat, don't send the message,
-          // keep it in the chatline and hope the user notices
           set_chat_direction(null);
           return;
         }
@@ -329,15 +285,15 @@ export function check_text_input(event: JQuery.KeyDownEvent, chatboxtextarea: JQ
 
     chatboxtextarea.val('');
     if (!is_touch_device()) chatboxtextarea.focus();
-    // Note: keyboard_input is set externally via the parent module's reference
+    S.setKeyboardInput(true);
 
     if (message.length >= 4 && message === message.toUpperCase()) {
-      return; //disallow all uppercase messages.
+      return;
     }
 
     if (is_longturn() && C_S_RUNNING == client_state()
       && message != null && message.indexOf(encode_message_text("/set")) != -1) {
-      return; // disallow changing settings in a running LongTurn game.
+      return;
     }
 
     if (message.length >= max_chat_message_length) {

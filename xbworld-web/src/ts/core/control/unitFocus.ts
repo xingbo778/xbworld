@@ -7,7 +7,7 @@
 import { store } from '../../data/store';
 import { cityOwnerPlayerId as city_owner_player_id, cityTile as city_tile } from '../../data/city';
 import { unit_type, unit_list_size, unit_list_without } from '../../data/unit';
-import { game_find_unit_by_number } from '../../data/game';
+import { game_find_unit_by_number as _game_find_unit_by_number } from '../../data/game';
 import { utype_can_do_action, utype_can_do_action_result, can_player_build_unit_direct } from '../../data/unittype';
 import { mapPosToTile as map_pos_to_tile, indexToTile as index_to_tile } from '../../data/map';
 import { tileCity as tile_city, tileHasExtra as tile_has_extra } from '../../data/tile';
@@ -302,7 +302,7 @@ export function update_unit_order_commands(): { [key: string]: any } {
         $("#order_railroad").hide();
         $("#order_maglev").hide();
         if (!(tile_has_extra(ptile, FC_EXTRA_RIVER)
-          && player_invention_state(client.conn.playing, tech_id_by_name('Bridge Building')) == FC_TECH_UNKNOWN)) {
+          && player_invention_state(client.conn.playing, tech_id_by_name('Bridge Building') as unknown as number) == FC_TECH_UNKNOWN)) {
           unit_actions["road"] = { name: "Build road (R)" };
           $("#order_road").show();
         } else {
@@ -310,7 +310,7 @@ export function update_unit_order_commands(): { [key: string]: any } {
         }
       } else if (!tile_has_extra(ptile, FC_EXTRA_RAIL)
         && player_invention_state(client.conn.playing,
-          tech_id_by_name('Railroad')) == FC_TECH_KNOWN
+          tech_id_by_name('Railroad') as unknown as number) == FC_TECH_KNOWN
         && tile_has_extra(ptile, FC_EXTRA_ROAD)) {
         $("#order_road").hide();
         $("#order_maglev").hide();
@@ -319,7 +319,7 @@ export function update_unit_order_commands(): { [key: string]: any } {
       } else if (typeof FC_EXTRA_MAGLEV !== 'undefined'
         && !tile_has_extra(ptile, FC_EXTRA_MAGLEV)
         && player_invention_state(client.conn.playing,
-          tech_id_by_name('Superconductors')) == FC_TECH_KNOWN
+          tech_id_by_name('Superconductors') as unknown as number) == FC_TECH_KNOWN
         && tile_has_extra(ptile, FC_EXTRA_RAIL)) {
         $("#order_road").hide();
         $("#order_railroad").hide();
@@ -337,7 +337,7 @@ export function update_unit_order_commands(): { [key: string]: any } {
       $("#order_auto_workers").show();
       $("#order_clean").show();
       if (!tile_has_extra(ptile, FC_EXTRA_MINE)
-        && tile_terrain(ptile)['mining_time'] > 0) {
+        && (tile_terrain(ptile) as any)['mining_time'] > 0) {
         $("#order_mine").show();
         unit_actions["mine"] = { name: "Mine (M)" };
       } else {
@@ -352,18 +352,18 @@ export function update_unit_order_commands(): { [key: string]: any } {
         $("#order_clean").hide();
       }
 
-      if (tile_terrain(ptile)['cultivate_time'] > 0) {
+      if ((tile_terrain(ptile) as any)['cultivate_time'] > 0) {
         $("#order_forest_remove").show();
         unit_actions["cultivate"] = { name: "Cultivate (I)" };
       } else {
         $("#order_forest_remove").hide();
       }
-      if (tile_terrain(ptile)['irrigation_time'] > 0) {
+      if ((tile_terrain(ptile) as any)['irrigation_time'] > 0) {
         if (!tile_has_extra(ptile, FC_EXTRA_IRRIGATION)) {
           $("#order_irrigate").show();
           $("#order_build_farmland").hide();
           unit_actions["irrigation"] = { name: "Irrigation (I)" };
-        } else if (!tile_has_extra(ptile, FC_EXTRA_FARMLAND) && player_invention_state(client.conn.playing, tech_id_by_name('Refrigeration')) == FC_TECH_KNOWN) {
+        } else if (!tile_has_extra(ptile, FC_EXTRA_FARMLAND) && player_invention_state(client.conn.playing, tech_id_by_name('Refrigeration') as unknown as number) == FC_TECH_KNOWN) {
           $("#order_build_farmland").show();
           $("#order_irrigate").hide();
           unit_actions["irrigation"] = { name: "Build farmland (I)" };
@@ -375,17 +375,17 @@ export function update_unit_order_commands(): { [key: string]: any } {
         $("#order_irrigate").hide();
         $("#order_build_farmland").hide();
       }
-      if (tile_terrain(ptile)['plant_time'] > 0) {
+      if ((tile_terrain(ptile) as any)['plant_time'] > 0) {
         $("#order_forest_add").show();
         unit_actions["plant"] = { name: "Plant (M)" };
       } else {
         $("#order_forest_add").hide();
       }
-      if (player_invention_state(client.conn.playing, tech_id_by_name('Construction')) == FC_TECH_KNOWN) {
+      if (player_invention_state(client.conn.playing, tech_id_by_name('Construction') as unknown as number) == FC_TECH_KNOWN) {
         unit_actions["fortress"] = { name: string_unqualify(terrain_control['gui_type_base0']) + " (Shift-F)" };
       }
 
-      if (player_invention_state(client.conn.playing, tech_id_by_name('Radio')) == FC_TECH_KNOWN) {
+      if (player_invention_state(client.conn.playing, tech_id_by_name('Radio') as unknown as number) == FC_TECH_KNOWN) {
         unit_actions["airbase"] = { name: string_unqualify(terrain_control['gui_type_base1']) + " (E)" };
       }
 
@@ -447,7 +447,7 @@ export function update_unit_order_commands(): { [key: string]: any } {
       unit_actions["airlift"] = { name: "Airlift (Shift-L)" };
     }
 
-    if (pcity != null && ptype != null && store.unit_types[ptype['obsoleted_by']] != null && can_player_build_unit_direct(client.conn.playing, store.unit_types[ptype['obsoleted_by']])) {
+    if (pcity != null && ptype != null && store.unitTypes[ptype['obsoleted_by']] != null && can_player_build_unit_direct(client.conn.playing, store.unitTypes[ptype['obsoleted_by']])) {
       unit_actions["upgrade"] = { name: "Upgrade unit (U)" };
     }
     if (ptype != null && ptype['name'] != "Explorer") {
@@ -460,8 +460,8 @@ export function update_unit_order_commands(): { [key: string]: any } {
       for (let r = 0; r < units_on_tile.length; r++) {
         const tunit = units_on_tile[r];
         if (tunit['id'] == punit['id']) continue;
-        const ntype = unit_type(tunit);
-        if (ntype['transport_capacity'] > 0) unit_actions["unit_load"] = { name: "Load on transport (L)" };
+        const ntype = unit_type(tunit) as any;
+        if (ntype != null && ntype['transport_capacity'] > 0) unit_actions["unit_load"] = { name: "Load on transport (L)" };
       }
     }
 
@@ -516,7 +516,7 @@ export function init_game_unit_panel(): void {
     dialogClass: 'unit_dialog  no-close',
     position: { my: 'right bottom', at: 'right bottom', of: window, within: $("#tabs-map") },
     appendTo: '#tabs-map',
-    close: function(event: JQuery.TriggeredEvent, ui: JQuery.UI.DialogUIParams) { S.setUnitpanelActive(false); }
+    close: function(event: any, ui: any) { S.setUnitpanelActive(false); }
 
   }).dialogExtend({
     "minimizable": true,
@@ -707,7 +707,7 @@ export function update_active_units_dialog(): void {
   if (S.current_focus.length == 1) {
     ptile = index_to_tile(S.current_focus[0]['tile']);
     punits.push(S.current_focus[0]);
-    const tmpunits = tile_units(ptile);
+    const tmpunits = tile_units(ptile) || [];
 
     for (let i = 0; i < tmpunits.length; i++) {
       const kunit = tmpunits[i];
@@ -735,29 +735,29 @@ export function update_active_units_dialog(): void {
 
   if (S.current_focus.length == 1) {
     const aunit = S.current_focus[0];
-    const ptype = unit_type(aunit);
-    unit_info_html += "<div id='active_unit_info' title='" + ptype['helptext'] + "'>";
+    const ptype = unit_type(aunit) as any;
+    unit_info_html += "<div id='active_unit_info' title='" + (ptype ? ptype['helptext'] : '') + "'>";
 
     if (store.client.conn.playing != null && S.current_focus[0]['owner'] != store.client.conn.playing.playerno) {
       unit_info_html += "<b>" + store.nations[store.players[S.current_focus[0]['owner']]['nation']]['adjective'] + "</b> ";
     }
 
-    unit_info_html += "<b>" + ptype['name'] + "</b>: ";
+    unit_info_html += "<b>" + (ptype ? ptype['name'] : '') + "</b>: ";
     if (get_unit_homecity_name(aunit) != null) {
       unit_info_html += " " + get_unit_homecity_name(aunit) + " ";
     }
-    if (S.current_focus[0]['owner'] == store.client.conn.playing.playerno) {
+    if (store.client.conn.playing != null && S.current_focus[0]['owner'] == store.client.conn.playing.playerno) {
       unit_info_html += "<span>" + get_unit_moves_left(aunit) + "</span> ";
     }
-    unit_info_html += "<br><span title='Attack strength'>A:" + ptype['attack_strength']
-      + "</span> <span title='Defense strength'>D:" + ptype['defense_strength']
-      + "</span> <span title='Firepower'>F:" + ptype['firepower']
+    unit_info_html += "<br><span title='Attack strength'>A:" + (ptype ? ptype['attack_strength'] : 0)
+      + "</span> <span title='Defense strength'>D:" + (ptype ? ptype['defense_strength'] : 0)
+      + "</span> <span title='Firepower'>F:" + (ptype ? ptype['firepower'] : 0)
       + "</span> <span title='Health points'>H:"
-      + aunit['hp'] + "/" + ptype['hp'] + "</span>";
+      + aunit['hp'] + "/" + (ptype ? ptype['hp'] : 0) + "</span>";
     if (aunit['veteran'] > 0) {
       unit_info_html += " <span>Veteran: " + aunit['veteran'] + "</span>";
     }
-    if (ptype['transport_capacity'] > 0) {
+    if (ptype && ptype['transport_capacity'] > 0) {
       unit_info_html += " <span>Transport: " + ptype['transport_capacity'] + "</span>";
     }
 

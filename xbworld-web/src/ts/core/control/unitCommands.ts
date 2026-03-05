@@ -108,12 +108,12 @@ export function key_unit_load() {
     let transporter_unit_id = 0;
 
     let has_transport_unit = false;
-    const units_on_tile = tile_units(ptile);
+    const units_on_tile = tile_units(ptile) || [];
     for (let r = 0; r < units_on_tile.length; r++) {
       const tunit = units_on_tile[r];
       if (tunit['id'] == punit['id']) continue;
-      const ntype = unit_type(tunit);
-      if (ntype['transport_capacity'] > 0) {
+      const ntype = unit_type(tunit) as any;
+      if (ntype != null && ntype['transport_capacity'] > 0) {
         has_transport_unit = true;
         transporter_unit_id = tunit['id'];
       }
@@ -131,13 +131,13 @@ export function key_unit_unload() {
   const funits = get_units_in_focus();
   if (funits.length === 0) return;
   const last_unit = funits[funits.length - 1];
-  const units_on_tile = tile_units(index_to_tile(last_unit['tile']));
+  const units_on_tile = tile_units(index_to_tile(last_unit['tile'])) || [];
 
   for (let i = 0; i < units_on_tile.length; i++) {
     const punit = units_on_tile[i];
 
     if (punit['transported'] && punit['transported_by'] > 0
-      && punit['owner'] == store.client.conn.playing.playerno) {
+      && store.client.conn.playing != null && punit['owner'] == store.client.conn.playing.playerno) {
       request_new_unit_activity(punit, ACTIVITY_IDLE, EXTRA_NONE);
       request_unit_do_action(ACTION_TRANSPORT_DEBOARD, punit['id'],
         punit['transported_by']);
@@ -155,7 +155,7 @@ export function key_unit_show_cargo() {
   const funits = get_units_in_focus();
   if (funits.length === 0) return;
   const last_unit = funits[funits.length - 1];
-  const units_on_tile = tile_units(index_to_tile(last_unit['tile']));
+  const units_on_tile = tile_units(index_to_tile(last_unit['tile'])) || [];
 
   S.setCurrentFocus([]);
   for (let i = 0; i < units_on_tile.length; i++) {
@@ -456,8 +456,8 @@ export function request_unit_build_city() {
         return;
       }
 
-      const ptype = unit_type(punit);
-      if (ptype['name'] == "Settlers" || ptype['name'] == "Engineers") {
+      const ptype = unit_type(punit) as any;
+      if (ptype != null && (ptype['name'] == "Settlers" || ptype['name'] == "Engineers")) {
         let packet = null;
         const target_city = tile_city(index_to_tile(punit['tile']));
 
@@ -543,11 +543,12 @@ export function key_unit_move(dir: number) {
     };
 
     if (punit['transported']
+      && store.client.conn.playing != null
       && newtile['units'].every(function (ounit: any) {
-        return ounit['owner'] == store.client.conn.playing.playerno;
+        return ounit['owner'] == store.client.conn.playing!.playerno;
       })
       && (tile_city(newtile) == null
-        || tile_city(newtile)['owner'] == store.client.conn.playing.playerno)
+        || tile_city(newtile)!['owner'] == store.client.conn.playing!.playerno)
       && !tile_has_extra(newtile, EXTRA_HUT)
       && (newtile['extras_owner'] == store.client.conn.playing.playerno
         || !tile_has_territory_claiming_extra(newtile))) {
