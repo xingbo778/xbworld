@@ -216,11 +216,23 @@ class OpenAIProvider(LLMProvider):
 
         clean_msgs = []
         for m in messages:
-            clean = {"role": m["role"], "content": m.get("content", "")}
-            if m.get("tool_calls"):
-                clean["tool_calls"] = m["tool_calls"]
-            if m.get("tool_call_id"):
-                clean["tool_call_id"] = m["tool_call_id"]
+            role = m["role"]
+            if role == "assistant" and m.get("tool_calls"):
+                # Assistant message with tool_calls: content can be null
+                clean = {
+                    "role": "assistant",
+                    "content": m.get("content") or None,
+                    "tool_calls": m["tool_calls"],
+                }
+            elif role == "tool":
+                # Tool response message: must have tool_call_id
+                clean = {
+                    "role": "tool",
+                    "tool_call_id": m.get("tool_call_id", ""),
+                    "content": m.get("content", ""),
+                }
+            else:
+                clean = {"role": role, "content": m.get("content", "")}
             clean_msgs.append(clean)
 
         body = {
@@ -267,11 +279,25 @@ class OpenAIProvider(LLMProvider):
         }
 
     def format_tool_results(self, results, original_calls):
-        return {
-            "role": "tool",
-            "tool_call_id": original_calls[0].get("id", ""),
-            "content": "\n".join(f"{r['name']}: {r['result']}" for r in results),
-        }
+        """Return a list of tool messages, one per tool_call_id.
+
+        OpenAI requires each tool_call_id from the assistant message to have
+        a corresponding tool-role response message.
+        """
+        msgs = []
+        for i, fc in enumerate(original_calls):
+            tool_call_id = fc.get("id", "")
+            # Match result by index (results and original_calls are aligned)
+            if i < len(results):
+                content = f"{results[i]['name']}: {results[i]['result']}"
+            else:
+                content = "(no result)"
+            msgs.append({
+                "role": "tool",
+                "tool_call_id": tool_call_id,
+                "content": content,
+            })
+        return msgs
 
 
 # ---------------------------------------------------------------------------

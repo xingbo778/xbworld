@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 from typing import Optional, Callable, Awaitable
 
 import aiohttp
+import websockets
+from websockets.connection import State as WsState
 
 from config import (
     LAUNCHER_URL, WS_BASE_URL,
@@ -172,7 +174,7 @@ class GameClient:
         self.username = username
         self.server_port: int = -1
         self.state = GameState()
-        self.ws: Optional[aiohttp.ClientWebSocketResponse] = None
+        self.ws = None  # websockets.WebSocketClientProtocol
         self._session: Optional[aiohttp.ClientSession] = None
         self._recv_task: Optional[asyncio.Task] = None
         self._turn_counter = 0
@@ -212,8 +214,11 @@ class GameClient:
                      self.username, self.state.connected, self.state.turn, self._packets_processed)
         if self._recv_task:
             self._recv_task.cancel()
-        if self.ws and not self.ws.closed:
-            await self.ws.close()
+        if self.ws:
+            try:
+                await self.ws.close()
+            except Exception:
+                pass
         if self._session:
             await self._session.close()
         self.state.connected = False
@@ -223,11 +228,11 @@ class GameClient:
 
     async def send_packet(self, packet: dict):
         """Send a raw JSON packet to the server."""
-        if self.ws and not self.ws.closed:
+        if self.ws and self.ws.state == WsState.OPEN:
             logger.debug("[%s] >> packet pid=%s", self.username, packet.get("pid"))
-            await self.ws.send_str(json.dumps(packet))
+            await self.ws.send(json.dumps(packet))
         else:
-            logger.warning("[%s] Cannot send packet pid=%s: WebSocket closed", self.username, packet.get("pid"))
+            logger.warning("[%s] Cannot send packet pid=%s: WebSocket closed/not ready", self.username, packet.get("pid"))
 
     async def send_chat(self, message: str):
         """Send a chat/command message (e.g. '/set tax 30')."""
@@ -470,7 +475,13 @@ class GameClient:
         last_err = None
         for attempt in range(max_retries):
             try:
-                self.ws = await self._session.ws_connect(ws_url)
+                self.ws = await websockets.connect(
+                    ws_url,
+                    ping_interval=20,
+                    ping_timeout=60,
+                    max_size=None,
+                    close_timeout=10,
+                )
                 logger.info("[%s] WebSocket connected on attempt %d", self.username, attempt + 1)
                 break
             except Exception as e:
@@ -501,23 +512,23 @@ class GameClient:
             "password": "",
         }
         logger.info("[%s] Sending login packet to server", self.username)
-        await self.ws.send_str(json.dumps(login))
+        await self.ws.send(json.dumps(login))
 
     # -- internal: receive loop ---------------------------------------------
 
     async def _recv_loop(self):
         logger.info("[%s] recv_loop started", self.username)
         try:
-            async for msg in self.ws:
+            async for raw in self.ws:
                 self._ws_msg_count += 1
                 if self._ws_msg_count % 500 == 0:
                     stats = self.get_ws_stats()
                     logger.info("[%s] WS stats: %d msgs, %d pkts, %.1f msg/s, uptime=%.0fs",
                                 self.username, stats["total_ws_msgs"], stats["packets_processed"],
                                 stats["ws_msg_rate_per_s"], stats["uptime_s"])
-                if msg.type == aiohttp.WSMsgType.TEXT:
+                if isinstance(raw, str):
                     try:
-                        packets = json.loads(msg.data)
+                        packets = json.loads(raw)
                         if isinstance(packets, list):
                             for pkt in packets:
                                 if pkt:
@@ -525,10 +536,13 @@ class GameClient:
                         elif isinstance(packets, dict):
                             self._handle_packet(packets)
                     except json.JSONDecodeError:
-                        logger.warning("[%s] Bad JSON from server: %s", self.username, msg.data[:200])
-                elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
-                    logger.warning("[%s] WebSocket msg type=%s, breaking recv loop", self.username, msg.type)
-                    break
+                        logger.warning("[%s] Bad JSON from server: %s", self.username, raw[:200])
+                else:
+                    logger.debug("[%s] Non-text WS message (type=%s, len=%d)",
+                                 self.username, type(raw).__name__, len(raw) if raw else 0)
+        except websockets.exceptions.ConnectionClosed as e:
+            logger.warning("[%s] WebSocket connection closed: code=%s reason=%s",
+                           self.username, e.code, e.reason)
         except asyncio.CancelledError:
             logger.debug("[%s] recv_loop cancelled", self.username)
         except Exception as e:

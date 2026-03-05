@@ -453,7 +453,10 @@ class XBWorldAgent:
                     })
 
                 tool_msg = self._provider.format_tool_results(tool_results, func_calls)
-                self.conversation.append(tool_msg)
+                if isinstance(tool_msg, list):
+                    self.conversation.extend(tool_msg)
+                else:
+                    self.conversation.append(tool_msg)
                 continue
 
             if text_content:
@@ -467,9 +470,31 @@ class XBWorldAgent:
 
     def _trim_conversation(self):
         """Keep conversation manageable by trimming old messages.
-        Aggressive trimming reduces LLM token usage — the #1 bottleneck."""
-        if len(self.conversation) > 16:
-            self.conversation = [self.conversation[0]] + self.conversation[-10:]
+        Aggressive trimming reduces LLM token usage — the #1 bottleneck.
+
+        For OpenAI compatibility, we must ensure:
+        1. Every 'tool' message follows an 'assistant' message with tool_calls
+        2. Every tool_call_id in an assistant message has a matching tool response
+        """
+        if len(self.conversation) <= 16:
+            return
+
+        system_msg = self.conversation[0] if self.conversation and self.conversation[0].get("role") == "system" else None
+        recent = self.conversation[-10:]
+
+        # Find the first valid start: skip orphaned tool messages at the beginning
+        start = 0
+        while start < len(recent) and recent[start].get("role") == "tool":
+            start += 1
+
+        # Also ensure we don't start with an assistant message that has tool_calls
+        # without the corresponding tool responses
+        cleaned = recent[start:]
+
+        if system_msg:
+            self.conversation = [system_msg] + cleaned
+        else:
+            self.conversation = cleaned
 
     def get_status(self) -> dict:
         """Return a JSON-serializable status summary for API consumers."""
