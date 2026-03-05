@@ -8,6 +8,10 @@ import {
   toTitleCase,
   stringUnqualify,
   secondsToHumanTime,
+  getRandomInt,
+  isSmallScreen,
+  getTilesetFileExtension,
+  blur_input_on_touchdevice,
 } from '@/utils/helpers';
 
 describe('clone', () => {
@@ -92,5 +96,152 @@ describe('secondsToHumanTime', () => {
     expect(secondsToHumanTime(45)).toBe('45s');
     expect(secondsToHumanTime(125)).toBe('2m 5s');
     expect(secondsToHumanTime(3661)).toBe('1h 1m');
+  });
+
+  it('should return 0s for negative values', () => {
+    expect(secondsToHumanTime(-5)).toBe('0s');
+  });
+
+  it('should handle exactly 60 seconds', () => {
+    expect(secondsToHumanTime(60)).toBe('1m 0s');
+  });
+
+  it('should handle exactly 3600 seconds', () => {
+    expect(secondsToHumanTime(3600)).toBe('1h 0m');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Additional edge case tests
+// ---------------------------------------------------------------------------
+
+describe('clone edge cases', () => {
+  it('should clone arrays', () => {
+    const arr = [1, 2, { a: 3 }];
+    const cloned = clone(arr);
+    expect(cloned).toEqual(arr);
+    expect(cloned).not.toBe(arr);
+    expect(cloned[2]).not.toBe(arr[2]);
+  });
+
+  it('should return undefined as-is', () => {
+    expect(clone(undefined)).toBe(undefined);
+  });
+
+  it('should return boolean as-is', () => {
+    expect(clone(true)).toBe(true);
+    expect(clone(false)).toBe(false);
+  });
+});
+
+describe('DIVIDE edge cases', () => {
+  it('should handle large numbers', () => {
+    expect(DIVIDE(1000000, 3)).toBe(333333);
+  });
+
+  it('should handle negative divisor', () => {
+    expect(DIVIDE(7, -3)).toBe(-3);
+    expect(DIVIDE(-7, -3)).toBe(2);
+  });
+
+  it('should handle exact division', () => {
+    expect(DIVIDE(9, 3)).toBe(3);
+    expect(DIVIDE(-9, 3)).toBe(-3);
+  });
+});
+
+describe('FC_WRAP edge cases', () => {
+  it('should handle value equal to range', () => {
+    expect(FC_WRAP(10, 10)).toBe(0);
+  });
+
+  it('should handle large negative values', () => {
+    expect(FC_WRAP(-100, 7)).toBe(FC_WRAP(-100 % 7 + 7, 7));
+  });
+
+  it('should handle value much larger than range', () => {
+    expect(FC_WRAP(25, 4)).toBe(1);
+  });
+});
+
+describe('XOR with truthy/falsy values', () => {
+  it('should work with truthy/falsy non-boolean values', () => {
+    expect(XOR(1, 0)).toBe(true);
+    expect(XOR(0, 1)).toBe(true);
+    expect(XOR(1, 1)).toBe(false);
+    expect(XOR(0, 0)).toBe(false);
+    expect(XOR('a', '')).toBe(true);
+    expect(XOR(null, undefined)).toBe(false);
+  });
+});
+
+describe('numberWithCommas edge cases', () => {
+  it('should handle negative numbers', () => {
+    expect(numberWithCommas(-1000)).toBe('-1,000');
+  });
+
+  it('should handle string input', () => {
+    expect(numberWithCommas('1234567')).toBe('1,234,567');
+  });
+});
+
+describe('toTitleCase edge cases', () => {
+  it('should handle single word', () => {
+    expect(toTitleCase('hello')).toBe('Hello');
+  });
+
+  it('should handle empty string', () => {
+    expect(toTitleCase('')).toBe('');
+  });
+
+  it('should handle already title case', () => {
+    expect(toTitleCase('Hello World')).toBe('Hello World');
+  });
+});
+
+describe('stringUnqualify edge cases', () => {
+  it('should handle ? without colon', () => {
+    expect(stringUnqualify('?noColon')).toBe('?noColon');
+  });
+
+  it('should handle string starting with other char', () => {
+    expect(stringUnqualify('normal:text')).toBe('normal:text');
+  });
+
+  it('should handle empty string', () => {
+    expect(stringUnqualify('')).toBe('');
+  });
+});
+
+describe('getRandomInt', () => {
+  it('should return integer in [min, max) range', () => {
+    for (let i = 0; i < 20; i++) {
+      const val = getRandomInt(0, 10);
+      expect(val).toBeGreaterThanOrEqual(0);
+      expect(val).toBeLessThan(10);
+      expect(Number.isInteger(val)).toBe(true);
+    }
+  });
+
+  it('should return min when range is 1', () => {
+    expect(getRandomInt(5, 6)).toBe(5);
+  });
+});
+
+describe('isSmallScreen', () => {
+  it('should return a boolean', () => {
+    expect(typeof isSmallScreen()).toBe('boolean');
+  });
+});
+
+describe('getTilesetFileExtension', () => {
+  it('should return .png', () => {
+    expect(getTilesetFileExtension()).toBe('.png');
+  });
+});
+
+describe('blur_input_on_touchdevice', () => {
+  it('should not throw when called', () => {
+    expect(() => blur_input_on_touchdevice()).not.toThrow();
   });
 });
