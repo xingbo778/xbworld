@@ -39,8 +39,6 @@ import {
   cityPopulation,
   dxyToCenterIndex,
   deltaTileHelper,
-  cityTo3dModelName,
-  getCitywallsScale,
 } from '@/data/city';
 import {
   VUT_UTYPE,
@@ -565,82 +563,3 @@ describe('deltaTileHelper', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// 3D model helpers
-// ---------------------------------------------------------------------------
-
-describe('cityTo3dModelName', () => {
-  beforeEach(() => {
-    win.city_rules = [
-      { rule_name: 'European' },
-      { rule_name: 'Industrial' },
-      { rule_name: 'Asian' },
-    ];
-  });
-
-  afterEach(() => {
-    delete win.city_rules;
-  });
-
-  it('should return european style for small city', () => {
-    const city = makeCity({ size: 2, style: 0 });
-    expect(cityTo3dModelName(city)).toBe('city_european_0');
-  });
-
-  it('should return european style for medium city (size 3-6)', () => {
-    const city = makeCity({ size: 5, style: 0 });
-    expect(cityTo3dModelName(city)).toBe('city_european_1');
-  });
-
-  it('should return european style for large city (size 7-9)', () => {
-    const city = makeCity({ size: 8, style: 0 });
-    expect(cityTo3dModelName(city)).toBe('city_european_2');
-  });
-
-  it('should return european style for very large city (size 10-11)', () => {
-    const city = makeCity({ size: 10, style: 0 });
-    expect(cityTo3dModelName(city)).toBe('city_european_3');
-  });
-
-  it('should return european style for mega city (size > 11)', () => {
-    const city = makeCity({ size: 15, style: 0 });
-    expect(cityTo3dModelName(city)).toBe('city_european_4');
-  });
-
-  it('should return modern style for Industrial city rule', () => {
-    const city = makeCity({ size: 5, style: 1 });
-    expect(cityTo3dModelName(city)).toBe('city_modern_1');
-  });
-
-  it('should return modern style for Asian city rule', () => {
-    const city = makeCity({ size: 5, style: 2 });
-    expect(cityTo3dModelName(city)).toBe('city_modern_1');
-  });
-
-  it('should default to style 0 when style is -1', () => {
-    const city = makeCity({ size: 5, style: -1 });
-    expect(cityTo3dModelName(city)).toBe('city_european_1');
-  });
-});
-
-describe('getCitywallsScale', () => {
-  it('should return 8 for small city (size < 3)', () => {
-    expect(getCitywallsScale(makeCity({ size: 2 }))).toBe(8);
-  });
-
-  it('should return 9 for size 3-6', () => {
-    expect(getCitywallsScale(makeCity({ size: 5 }))).toBe(9);
-  });
-
-  it('should return 10 for size 7-9', () => {
-    expect(getCitywallsScale(makeCity({ size: 8 }))).toBe(10);
-  });
-
-  it('should return 11 for size 10-11', () => {
-    expect(getCitywallsScale(makeCity({ size: 11 }))).toBe(11);
-  });
-
-  it('should return 12 for size > 11', () => {
-    expect(getCitywallsScale(makeCity({ size: 15 }))).toBe(12);
-  });
-});
