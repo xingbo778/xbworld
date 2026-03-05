@@ -1,6 +1,16 @@
 """Configuration for XBWorld Agent and Server."""
 
 import os
+from pathlib import Path
+
+# Load .env file if present (no external dependency needed)
+_env_path = Path(__file__).resolve().parent / ".env"
+if _env_path.is_file():
+    for _line in _env_path.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _key, _, _val = _line.partition("=")
+            os.environ.setdefault(_key.strip(), _val.strip())
 
 # XBWorld unified server
 SERVER_HOST = os.getenv("XBWORLD_HOST", "localhost")
@@ -25,9 +35,9 @@ MINOR_VERSION = 1
 PATCH_VERSION = 90
 
 # LLM configuration
-LLM_MODEL = os.getenv("LLM_MODEL", "openai/gemini-3-flash-preview")
-LLM_API_KEY = os.getenv("COMPASS_API_KEY", os.getenv("LLM_API_KEY", ""))
-LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://compass.llm.shopee.io/compass-api/v1")
+LLM_MODEL = os.getenv("LLM_MODEL", "google/gemini-3-flash-preview")
+LLM_API_KEY = os.getenv("LLM_API_KEY", "")
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1")
 
 # Agent behavior
 MAX_MESSAGES_KEPT = 200

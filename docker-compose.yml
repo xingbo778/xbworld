@@ -1,17 +1,33 @@
 version: "3"
 services:
-  xbworld:
+  # Backend: FastAPI server + freeciv engine + WS proxy
+  # Uses the separate xbworld-backend repo/directory
+  backend:
     build:
-      context: .
-      dockerfile: Dockerfile.railway
-    container_name: xbworld
+      context: ./xbworld-backend
+      dockerfile: Dockerfile
+    container_name: xbworld-backend
     ports:
       - "8080:8080"
       - "6000-6009:6000-6009"
     environment:
       - PYTHONUNBUFFERED=1
     volumes:
-      - data:/app/data/savegames
+      - savegames:/app/data/savegames
+
+  # Frontend: nginx serving static web client
+  # Uses the separate xbworld-web repo/directory
+  frontend:
+    build:
+      context: ./xbworld-web
+      dockerfile: Dockerfile
+    container_name: xbworld-frontend
+    ports:
+      - "8081:80"
+    environment:
+      - BACKEND_URL=http://backend:8080
+    depends_on:
+      - backend
 
 volumes:
-  data:
+  savegames:

@@ -2,6 +2,16 @@
 
 XBWorld is designed as an **AI-agent-first** civilization game platform. The primary users are AI agents; humans observe and influence agents via chat.
 
+## Repository Structure
+
+This mono-repo orchestrates three independent components, each designed to work as a standalone repository:
+
+| Directory | Description | Standalone Repo |
+|-----------|-------------|-----------------|
+| `xbworld-backend/` | Python FastAPI server + freeciv C engine | Has own Dockerfile, docker-compose |
+| `xbworld-web/` | TypeScript/HTML5 web client (PIXI.js) | Has own Dockerfile, docker-compose |
+| `scripts/`, `config/` | Shared build scripts & config | — |
+
 ## Current Architecture
 
 ```
@@ -15,12 +25,12 @@ XBWorld is designed as an **AI-agent-first** civilization game platform. The pri
 │                          │                                    │
 │                  ┌───────▼────────┐                           │
 │                  │ FastAPI Gateway │  ← REST + SSE + WS       │
-│                  │   (port 8642)   │                          │
+│                  │   (port 8080)   │  [xbworld-backend]       │
 │                  └───────┬────────┘                           │
 │                          │                                    │
 │                  ┌───────▼────────┐                           │
-│                  │ xbworld-proxy  │  ← WebSocket ↔ TCP        │
-│                  │ (Tornado)      │                           │
+│                  │  WS Proxy      │  ← WebSocket ↔ TCP        │
+│                  │ (in-process)   │                           │
 │                  └───────┬────────┘                           │
 │                          │                                    │
 │                  ┌───────▼────────┐                           │
@@ -29,10 +39,20 @@ XBWorld is designed as an **AI-agent-first** civilization game platform. The pri
 │                  └────────────────┘                           │
 │                                                               │
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │ Observers: Static HTML UI / SSE Dashboard / Browser    │  │
+│  │ Web Client: TypeScript + PIXI.js [xbworld-web]        │  │
+│  │ Served via nginx → reverse proxy to backend            │  │
 │  └────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────┘
 ```
+
+## Deployment Options
+
+| Mode | How | Description |
+|------|-----|-------------|
+| **Full Stack** | `Dockerfile.railway` | Single image: backend + frontend |
+| **Separate Services** | `xbworld-backend/Dockerfile` + `xbworld-web/Dockerfile` | Independent containers |
+| **Local Dev** | `docker-compose.yml` | Both services orchestrated |
+| **Frontend Dev** | `cd xbworld-web && npm run dev` | Vite dev server, proxies to remote backend |
 
 ## API Endpoints
 
@@ -96,12 +116,8 @@ class DecisionEngine(ABC):
 | Component | AI-Only | With Observer | Full Stack |
 |-----------|---------|---------------|------------|
 | freeciv-server (C) | Required | Required | Required |
-| xbworld-proxy | Required | Required | Required |
-| FastAPI (Python) | Required | Required | Required |
-| Nginx | Optional | Recommended | Required |
-| Tomcat/Java | Not needed | Not needed | Required |
-| MariaDB | Not needed (`--no-auth`) | Not needed | Required |
-| publite2 | Not needed | Not needed | Required |
+| FastAPI + WS Proxy (Python) | Required | Required | Required |
+| xbworld-web (nginx) | Not needed | Recommended | Required |
 
 ### Standalone Mode (AI-Only)
 
@@ -136,7 +152,7 @@ The SSE event stream (`GET /game/events`) publishes:
 
 ## Freeciv Server Source
 
-The Freeciv C server is included as a git submodule at `freeciv/freeciv`,
+The Freeciv C server is included as a git submodule at `xbworld-backend/freeciv/freeciv`,
 pointing to the `xbworld` branch of [xingbo778/freeciv](https://github.com/xingbo778/freeciv)
 (forked from [freeciv/freeciv](https://github.com/freeciv/freeciv)).
 
@@ -151,14 +167,14 @@ The `xbworld` branch starts from upstream commit `add9f4e1` and includes:
 ### Customization Layers
 
 ```
-Layer 1: Rulesets          freeciv/freeciv/data/xbworld/*.ruleset
+Layer 1: Rulesets          xbworld-backend/freeciv/freeciv/data/xbworld/*.ruleset
          (no recompile     Edit text files, rebuild to install.
           for testing)     Covers: techs, units, buildings, terrain, victory.
 
-Layer 2: Lua Scripts       freeciv/freeciv/data/xbworld/script.lua
+Layer 2: Lua Scripts       xbworld-backend/freeciv/freeciv/data/xbworld/script.lua
                            Event-driven logic: turn triggers, special events.
 
-Layer 3: C Source          freeciv/freeciv/server/*.c, common/*.c, ai/*.c
+Layer 3: C Source          xbworld-backend/freeciv/freeciv/server/*.c, common/*.c, ai/*.c
                            Full engine control: combat formulas, turn flow,
                            packet protocol, diplomacy logic.
 ```
@@ -166,7 +182,7 @@ Layer 3: C Source          freeciv/freeciv/server/*.c, common/*.c, ai/*.c
 ### Build Workflow
 
 ```bash
-cd freeciv
+cd xbworld-backend/freeciv
 ./prepare_freeciv.sh          # configure + build + install to ~/freeciv/
 ./prepare_freeciv.sh clean    # full rebuild from scratch
 ```
@@ -180,13 +196,13 @@ Changes to the Freeciv source are committed in two places:
 
 ```bash
 # 1. Inside the submodule (push to xingbo778/freeciv xbworld branch)
-cd freeciv/freeciv
+cd xbworld-backend/freeciv/freeciv
 git add -A && git commit -m "feat: description"
 git push origin xbworld
 
 # 2. In the main repo (update submodule reference)
-cd ../..
-git add freeciv/freeciv
+cd ../../..
+git add xbworld-backend/freeciv/freeciv
 git commit -m "chore: update freeciv submodule"
 ```
 

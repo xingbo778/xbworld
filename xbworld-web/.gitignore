@@ -1,5 +1,29 @@
-flyway.properties
-node_modules
-# E2E test artifacts
+# Dependencies
+node_modules/
+dist/
+
+# Build output
+src/main/webapp/javascript/ts-bundle/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# E2E / Playwright test artifacts
+test-results/
+playwright-report/
 tests/e2e/smoke-results.json
 tests/e2e/smoke-test.log
+
+# Large binary assets
+src/main/webapp/music/
+
+# Legacy
+flyway.properties

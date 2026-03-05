@@ -1,17 +1,13 @@
+# Freeciv C server build artifacts (source is a git submodule)
+freeciv/build/
+
+# Secrets
+.env
+
 # Python
 .venv/
 *.pyc
 __pycache__/
-
-# Node / Frontend
-node_modules/
-**/dist/
-
-# Build output
-**/target/
-*.class
-*.war
-*.jar
 
 # Logs
 logs/
@@ -32,8 +28,5 @@ docker-compose.override.yml
 .DS_Store
 Thumbs.db
 
-# Generated / large assets
-doc/
-.github/
-music/
-
+# Data directory runtime files
+data/savegames/

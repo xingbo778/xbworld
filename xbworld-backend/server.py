@@ -44,8 +44,9 @@ from ws_proxy import handle_civsocket
 
 logger = logging.getLogger("xbworld-server")
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-WEBAPP_DIR = PROJECT_ROOT / "xbworld-web" / "src" / "main" / "webapp"
+PROJECT_ROOT = Path(__file__).resolve().parent
+_webapp_env = os.getenv("WEBAPP_DIR", "")
+WEBAPP_DIR = Path(_webapp_env) if _webapp_env else Path("/nonexistent")  # Optional: set to serve frontend files
 
 STRATEGY_PROMPT_TEMPLATE = """You are an expert XBWorld player AI agent named "{name}". You control a civilization and make strategic decisions each turn.
 

@@ -1,4 +1,4 @@
-[submodule "freeciv/freeciv"]
-	path = freeciv/freeciv
+[submodule "xbworld-backend/freeciv/freeciv"]
+	path = xbworld-backend/freeciv/freeciv
 	url = https://github.com/xingbo778/freeciv.git
 	branch = xbworld

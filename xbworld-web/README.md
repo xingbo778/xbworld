@@ -1,47 +1,116 @@
-XBWorld Web Client
-==================
+# XBWorld Web Client
 
-The XBWorld web client — an HTML5 browser-based game client built with
-JavaScript/TypeScript. Served as static files by the FastAPI server
-(`xbworld-agent/server.py`).
+XBWorld web client — an HTML5 browser-based game client built with TypeScript + PIXI.js.
 
-Directory Layout
-----------------
+## Architecture
 
 ```
-src/main/webapp/
-  webclient/       — Main game client HTML entry point
-  javascript/      — Game client JS source (gradually migrating to TS)
-  css/             — Stylesheets
-  images/          — Game images, logos, flags
-  tileset/         — Tileset PNG sprites
-  static/          — Landing page assets and PWA manifest
-  docs/            — In-game help text
-  music/           — Background music (served from /music/)
+┌──────────────────────────────────────────────────────┐
+│                 XBWorld Frontend                       │
+│                                                      │
+│  ┌──────────────┐   ┌──────────────┐                │
+│  │ PIXI.js      │   │ TypeScript   │                │
+│  │ Renderer     │   │ Game Client  │                │
+│  │ (WebGL)      │   │ (State/UI)   │                │
+│  └──────┬───────┘   └──────┬───────┘                │
+│         │                  │                         │
+│         └──────┬───────────┘                         │
+│                │ WebSocket + REST                     │
+│                ▼                                     │
+│   nginx reverse proxy → backend (port 8080)          │
+└──────────────────────────────────────────────────────┘
 ```
 
-Development
------------
+## Quick Start
 
-For frontend development with hot-reload:
+### Docker
 
 ```bash
-cd src/main/webapp
+docker build -t xbworld-frontend .
+docker run -p 8081:80 -e BACKEND_URL=http://localhost:8080 xbworld-frontend
+```
+
+Or with docker-compose:
+
+```bash
+docker-compose up
+```
+
+### Local Development
+
+1. Install dependencies:
+
+```bash
 npm install
-npm run dev          # Vite dev server on :3000, proxies API to :8080
 ```
 
-Build for production:
+2. Start the dev server (with backend proxy):
 
 ```bash
-npm run build        # Output in dist/
-npm run typecheck    # TypeScript type checking
+BACKEND_URL=http://localhost:8080 npx vite --config vite.config.dev.ts
 ```
 
-See `MIGRATION.md` for the JavaScript to TypeScript migration guide.
+3. Build for production:
 
-License
--------
+```bash
+npm run build
+```
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start Vite dev server |
+| `npm run build` | TypeScript check + Vite production build |
+| `npm run typecheck` | TypeScript type checking only |
+| `npm run test` | Run unit tests (Vitest) |
+| `npm run test:e2e` | Run E2E tests (Playwright) |
+| `npm run lint` | Lint TypeScript code |
+| `npm run format` | Format code with Prettier |
+
+## Project Structure
+
+```
+xbworld-web/
+├── src/
+│   ├── main/webapp/           # Static HTML/CSS/JS/images
+│   │   ├── webclient/         # Main HTML entry point
+│   │   ├── javascript/        # Legacy JS + TS bundle output
+│   │   ├── css/               # Stylesheets
+│   │   ├── images/            # Game images
+│   │   ├── tileset/           # Tile sprites
+│   │   ├── music/             # Background music
+│   │   └── fonts/             # Custom fonts
+│   └── ts/                    # TypeScript source (modern rewrite)
+│       ├── audio/             # Audio manager
+│       ├── client/            # Client loop
+│       ├── core/              # Core logic (events, control, log)
+│       ├── data/              # Data models & store
+│       ├── net/               # Network (WebSocket, packets)
+│       ├── renderer/          # PIXI.js rendering
+│       ├── ui/                # UI dialogs
+│       └── utils/             # Helpers
+├── tests/                     # Test files
+├── Dockerfile                 # Docker build (nginx)
+├── docker-compose.yml         # Docker compose config
+├── nginx.conf                 # nginx reverse proxy config
+├── vite.config.ts             # Vite production build config
+├── vite.config.dev.ts         # Vite dev server config
+├── tsconfig.json              # TypeScript config
+├── package.json               # npm dependencies
+└── playwright.config.ts       # E2E test config
+```
+
+## Connecting to Backend
+
+The frontend connects to the XBWorld backend via:
+- **WebSocket**: `/civsocket/{port}` (game protocol)
+- **REST API**: `/game/`, `/agents/`, `/meta/` (JSON)
+- **SSE**: `/game/events` (real-time events)
+
+Set the `BACKEND_URL` environment variable to point to the backend service.
+
+## License
 
 Released under the GNU Affero General Public License v3.
 Based on the original Freeciv-web project by Andreas Rosdal.
