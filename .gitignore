@@ -1,6 +1,3 @@
-# Freeciv C server build artifacts (source is a git submodule)
-xbworld-backend/freeciv/build/
-
 # Python
 .venv/
 *.pyc
@@ -40,13 +37,3 @@ doc/
 .github/
 music/
 
-# Large binary assets (music, test results)
-xbworld-web/src/main/webapp/music/
-xbworld-web/test-results/
-xbworld-web/playwright-report/
-
-# Data directory runtime files
-xbworld-backend/data/savegames/
-
-# Vite-built TS bundle (generated during Docker build)
-xbworld-web/src/main/webapp/javascript/ts-bundle/
