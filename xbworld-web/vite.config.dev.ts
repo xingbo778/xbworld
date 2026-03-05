@@ -81,6 +81,7 @@ export default defineConfig({
         ws: true,
         changeOrigin: true,
         secure: false,
+        ...(proxyEnv ? { agent: httpsAgent } : {}),
       },
 
       // API endpoints — must cover all backend routes
