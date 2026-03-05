@@ -23,8 +23,9 @@ const BACKEND = process.env.BACKEND_URL || 'https://xbworld-production.up.railwa
 const backendWs = BACKEND.replace(/^http/, 'ws');
 
 // Use egress proxy if available (e.g. in Claude Code web environment),
-// otherwise use a plain HTTPS agent.
-const proxyEnv = process.env.HTTPS_PROXY || process.env.https_proxy;
+// but skip it when connecting to a local backend.
+const isLocalBackend = /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(BACKEND);
+const proxyEnv = !isLocalBackend ? (process.env.HTTPS_PROXY || process.env.https_proxy) : undefined;
 const httpsAgent = proxyEnv
   ? new HttpsProxyAgent(proxyEnv)
   : new https.Agent({
@@ -34,11 +35,11 @@ const httpsAgent = proxyEnv
     });
 
 // Common proxy options for all API endpoints
-const apiProxy = {
+const apiProxy: Record<string, unknown> = {
   target: BACKEND,
   changeOrigin: true,
   secure: false,
-  agent: httpsAgent,
+  ...(BACKEND.startsWith('https') ? { agent: httpsAgent } : {}),
 };
 
 export default defineConfig({
