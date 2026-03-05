@@ -56,9 +56,7 @@ w['switchRenderer'] = switchRenderer;
 
 import {
   getInvalidUsernameReason,
-  isHotseat,
   isLongturn,
-  isPbem,
   isServer,
   isUsernameValidShow,
   motdInit,
@@ -71,10 +69,6 @@ import {
 } from './client/clientCore';
 w['is_longturn'] = isLongturn;
 w['isLongturn'] = isLongturn;
-w['is_pbem'] = isPbem;
-w['isPbem'] = isPbem;
-w['is_hotseat'] = isHotseat;
-w['isHotseat'] = isHotseat;
 w['is_server'] = isServer;
 w['isServer'] = isServer;
 w['set_phase_start'] = setPhaseStart;

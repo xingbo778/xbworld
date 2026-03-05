@@ -30,15 +30,6 @@ declare const audio: any;
 declare const music_list: string[];
 declare const map_select_setting_enabled: boolean;
 declare const canvas_text_font: string;
-declare const speech_enabled: boolean;
-declare const speak_unfiltered: (message: string) => void;
-declare const load_voices: () => void;
-declare const voice: string;
-declare const anaglyph_3d_enabled: boolean;
-declare const RENDERER_WEBGL: any;
-declare const renderer: any;
-declare const webgl_preload: () => void;
-declare const webgl_benchmark_run: () => void;
 declare const benchmark_start: number;
 declare const swal: any;
 declare const jsSHA: any;
@@ -67,16 +58,11 @@ export const QUALITY_HIGH: number = 3;   // Best quality, add features which req
 export let graphics_quality: number = QUALITY_HIGH;
 
 // TODO: Import these functions from their respective modules if they exist.
-declare function is_pbem(): boolean;
-declare function is_hotseat(): boolean;
 declare function is_longturn(): boolean;
 declare function get_tileset_file_extention(): string;
 declare function helpdata_format_current_ruleset(): string;
-declare function is_speech_supported(): boolean;
 declare function validate_username(): boolean;
 declare function init_common_intro_dialog(): void;
-declare function show_pbem_dialog(): void;
-declare function challenge_pbem_player_dialog(message: string): void;
 declare function is_username_valid_show(username: string): boolean;
 declare function forceLower(element: HTMLInputElement): boolean;
 
@@ -106,10 +92,6 @@ export function sanitize_username(un: string): string
 export function pregame_start_game(): void
 {
   if (client.conn['player_num'] == null) return;
-
-  if (is_pbem() || is_hotseat()) {
-    set_alternate_turns();
-  }
 
   const test_packet = {"pid" : packet_player_ready, "is_ready" : true,
                      "player_no": client.conn['player_num']};
@@ -281,11 +263,6 @@ export function update_player_info_pregame_real(): void
             "hard": {name: "Hard"},
             "sep2": "---------"
        };
-
-    if (is_pbem()) {
-      pregame_context_items = {
-            "pick_nation": {name: "Pick nation"}};
-    }
 
     if (!is_longturn()) {
       $("#pregame_player_list").contextMenu({
@@ -608,15 +585,15 @@ export function pregame_settings(): void
 	  "<td><input type='text' name='metamessage' id='metamessage' size='28' maxlength='42'></td></tr>" +
 	  "<tr title='Enables music'><td>Music:</td>" +
           "<td><input type='checkbox' name='music_setting' id='music_setting'>Play Music</td></tr>" +
-	  "<tr class='not_pbem' title='Total number of players (including AI players)'><td>Number of Players (including AI):</td>" +
+	  "<tr title='Total number of players (including AI players)'><td>Number of Players (including AI):</td>" +
 	  "<td><input type='number' name='aifill' id='aifill' size='4' length='3' min='0' max='12' step='1'></td></tr>" +
-	  "<tr class='not_pbem' title='Maximum seconds per turn'><td>Timeout (seconds per turn):</td>" +
+	  "<tr title='Maximum seconds per turn'><td>Timeout (seconds per turn):</td>" +
 	  "<td><input type='number' name='timeout' id='timeout' size='4' length='3' min='30' max='3600' step='1'></td></tr>" +
-          "<tr class='not_pbem' title='Creates a private game where players need to know this password in order to join.'><td>Password for private game:</td>" +
+          "<tr title='Creates a private game where players need to know this password in order to join.'><td>Password for private game:</td>" +
 	  "<td><input type='text' name='password' id='password' size='10' length='10'></td></tr>" +
 	  "<tr title='Map size (in thousands of tiles)'><td>Map size:</td>" +
 	  "<td><input type='number' name='mapsize' id='mapsize' size='4' length='3' min='1' max='10' step='1'></td></tr>" +
-	  "<tr class='not_pbem' title='This setting sets the skill-level of the AI players'><td>AI skill level:</td>" +
+	  "<tr title='This setting sets the skill-level of the AI players'><td>AI skill level:</td>" +
 	  "<td><select name='skill_level' id='skill_level'>" +
 	      "<option value='1'>Restricted</option>" +
 	      "<option value='2'>Novice</option>" +
@@ -635,7 +612,7 @@ export function pregame_settings(): void
 	  "<td><input type='number' name='citymindist' id='citymindist' size='4' length='4' min='1' max='9' step='1'></td></tr>" +
           "<tr title='The game will end at the end of the given turn.'><td>End turn:</td>" +
 	  "<td><input type='number' name='endturn' id='endturn' size='4' length='4' min='0' max='32767' step='1'></td></tr>" +
-	  "<tr class='not_pbem' title='Enables score graphs for all players, showing score, population, techs and more."+
+	  "<tr title='Enables score graphs for all players, showing score, population, techs and more."+
           " This will lead to information leakage about other players.'><td>Score graphs</td>" +
           "<td><input type='checkbox' name='scorelog_setting' id='scorelog_setting' checked>Enable score graphs</td></tr>" +
       "<tr id='killstack_area'><td id='killstack_label'></td>" +
@@ -658,10 +635,6 @@ export function pregame_settings(): void
 	    "<table id='settings_table'>" +
         "<tr title='Font on map'><td>Font on map:</td>" +
 	    "<td><input type='text' name='mapview_font' id='mapview_font' size='28' maxlength='42' value='16px Georgia, serif'></td></tr>" +
-	    "<tr id='speech_enabled'><td id='speech_label'></td>" +
-        "<td><input type='checkbox' id='speech_setting'>Enable speech audio messages</td></tr>" +
-	    "<tr id='voice_row'><td id='voice_label'></td>" +
-        "<td><select name='voice' id='voice'></select></td></tr>" +
         "</table>" +
       "</div>"
 	  ;
@@ -745,33 +718,10 @@ export function pregame_settings(): void
   $("#select_multiple_units_area").prop("title", "Select multiple units with right-click and drag");
   $("#select_multiple_units_label").prop("innerHTML", "Select multiple units with right-click and drag");
 
-  // TODO: Check if these elements exist in the HTML
-  // $("#3d_antialiasing_label").prop("innerHTML", "Antialiasing:");
-
   const stored_antialiasing_setting = simpleStorage.get("antialiasing_setting", "");
   if (stored_antialiasing_setting != null && stored_antialiasing_setting == "false") {
-      // $("#3d_antialiasing_setting").prop("checked", false);
       antialiasing_setting = false;
   }
-
-  // $('#3d_antialiasing_setting').change(function() {
-  //   antialiasing_setting = !antialiasing_setting;
-  //   simpleStorage.set("antialiasing_setting", antialiasing_setting ? "true" : "false");
-  // });
-
-  if (is_speech_supported()) {
-    $("#speech_setting").prop("checked", speech_enabled);
-    $("#speech_label").prop("innerHTML", "Speech messages:");
-    $("#voice_label").prop("innerHTML", "Voice:");
-  } else {
-    $("#speech_label").prop("innerHTML", "Speech messages:");
-    $("#speech_setting").parent().html("Speech Synthesis API is not supported or enabled in your browser.");
-  }
-
-  // $("#anaglyph_label").prop("innerHTML", "3D Anaglyph glasses:");
-  // $('#anaglyph_setting').change(function() {
-  //   anaglyph_3d_enabled = !anaglyph_3d_enabled;
-  // });
 
   if (server_settings['metamessage'] != null
       && server_settings['metamessage']['val'] != null) {
@@ -948,68 +898,8 @@ export function pregame_settings(): void
   });
 
 
-  $('#graphics_quality').change(function() {
-    graphics_quality = parseFloat($('#graphics_quality').val());
-    simpleStorage.set("graphics_quality", graphics_quality);
-    // TODO: load_count is a global variable, consider making it a setting or part of a state object.
-    // @ts-ignore
-    load_count = 0;
-    webgl_preload();
-  });
-
-  $("#graphics_quality").val(graphics_quality);
-
-  $(".benchmark").click(function() {
-    swal({
-      title: "Run benchmark?",
-      text: "Do you want to run a benchmark now? This will start a new game and run measure the performance of a game playing for 30 turns.",
-      type: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#DD6B55",
-      confirmButtonText: "Yes, run benchmark!",
-      closeOnConfirm: true
-    },
-    function(){
-      webgl_benchmark_run();
-    });
-  });
-
-  if (renderer == RENDERER_WEBGL) {
-    $(".benchmark").button();
-    $("#show_voice_commands").button();
-  } else {
-    $('[href="#pregame_settings_tabs-2"]').closest('li').hide();
-  }
-
-  $('#speech_setting').change(function() {
-    // TODO: speech_enabled is a global variable, consider making it a setting or part of a state object.
-    // @ts-ignore
-    if ($('#speech_setting').prop('checked')) {
-      // @ts-ignore
-      speech_enabled = true;
-      speak_unfiltered("Speech enabled.");
-    } else {
-      // @ts-ignore
-      speech_enabled = false;
-    }
-  });
-
-  $('#voice').change(function() {
-    // TODO: voice is a global variable, consider making it a setting or part of a state object.
-    // @ts-ignore
-    voice = $('#voice').val();
-  });
-
-  if (is_speech_supported()) {
-    load_voices();
-    window.speechSynthesis.onvoiceschanged = function(e: Event) {
-      load_voices();
-    };
-  }
-
-  if (is_pbem()) {
-    $(".not_pbem").hide();
-  }
+  // Hide WebGL-only settings tab
+  $('[href="#pregame_settings_tabs-2"]').closest('li').hide();
 
   $("#settings_table").tooltip();
 
@@ -1342,7 +1232,7 @@ export function validate_username_callback(): void
         $("#password_row").show();
         $("#password_req").focus();
         $("#password_td").html("<input id='password_req' type='password' size='25' maxlength='200'>  &nbsp; <a class='pwd_reset' href='#' style='color: #666666;'>Forgot password?</a>");
-        $(".pwd_reset").click(forgot_pbem_password);
+        $(".pwd_reset").click(forgot_password);
       }
     },
    error: function (request: JQuery.jqXHR, textStatus: string, errorThrown: string) {
@@ -1372,9 +1262,8 @@ export function show_new_user_account_dialog(gametype?: string): void
                 + "<div id='captcha_element'></div><br><br>"
                 + "<div><small><ul><li>It is free and safe to create a new account on XBWorld.</li>"
                 + "<li>A user account allows you to save and load games.</li>"
-                + "<li>Other players can use your username to start Play-by-email games with you.</li>"
                 + "<li>You will not receive any spam and your e-mail address will be kept safe. Your password is stored securely as a secure hash.</li>"
-                + "<li>You can <a href='#' onclick='javascript:close_pbem_account();' style='color: black;'>cancel</a> your account at any time if you want.</li>"
+                + "<li>You can cancel your account at any time if you want.</li>"
                 + "</ul></small></div>";
 
   // Reset dialog page.
@@ -1390,18 +1279,10 @@ export function show_new_user_account_dialog(gametype?: string): void
 			buttons:
 			{
                 "Cancel" : function() {
-                    if (gametype == "pbem") {
-                      show_pbem_dialog();
-                    } else {
 	                  init_common_intro_dialog();
-	                }
 				},
 				"Signup new user" : function() {
-				    if (gametype == "pbem") {
-				      create_new_freeciv_user_account_request("pbem");
-				    } else {
 				      create_new_freeciv_user_account_request("normal");
-				    }
 
 				}
 			}
@@ -1493,18 +1374,14 @@ export function create_new_freeciv_user_account_request(action_type: string): bo
 
   $.ajax({
    type: 'POST',
-   url: "/create_pbem_user?username=" + encodeURIComponent(username) + "&email=" + encodeURIComponent(email)
+   url: "/create_user?username=" + encodeURIComponent(username) + "&email=" + encodeURIComponent(email)
             + "&password=" + sha_password + "&captcha=" + encodeURIComponent(captcha as string),
    success: function(data: any, textStatus: string, request: any) {
        (window as any).simpleStorage.set("username", username);
        (window as any).simpleStorage.set("password", password);
-       if (action_type == "pbem") {
-         challenge_pbem_player_dialog("New account created. Your username is: " + username + ". You can now start a new PBEM game or wait for an invitation for another player.");
-       } else {
-         $("#dialog").dialog('close');
-         network_init();
-         logged_in_with_password = true;
-       }
+       $("#dialog").dialog('close');
+       network_init();
+       logged_in_with_password = true;
       },
    error: function(request: any, textStatus: string, errorThrown: string) {
      $("#dialog").parent().show();
@@ -1629,7 +1506,7 @@ export function onloadCallback(): void {
 /**************************************************************************
   Reset the password for the user.
 **************************************************************************/
-export function forgot_pbem_password(): void {
+export function forgot_password(): void {
   const w = window as any;
   let password_reset_count = 0;
 

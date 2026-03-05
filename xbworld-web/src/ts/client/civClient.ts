@@ -11,7 +11,7 @@
  * game_type, music_list, audio, audio_enabled, last_turn_change_time,
  * turn_change_elapsed, seconds_to_phasedone, seconds_to_phasedone_sync,
  * dialog_close_trigger, dialog_message_close_task, RENDERER_2DCANVAS,
- * RENDERER_WEBGL, renderer) remain as legacy globals while civclient.js
+ * renderer) remain as legacy globals while civclient.js
  * is still loaded. Guards below initialise them once civclient.js is removed.
  */
 
@@ -40,7 +40,6 @@ if (w.seconds_to_phasedone_sync === undefined) w.seconds_to_phasedone_sync = 0;
 if (w.dialog_close_trigger === undefined)   w.dialog_close_trigger = '';
 if (w.dialog_message_close_task === undefined) w.dialog_message_close_task = undefined;
 if (w.RENDERER_2DCANVAS === undefined)      w.RENDERER_2DCANVAS = 1;
-if (w.RENDERER_WEBGL === undefined)         w.RENDERER_WEBGL = 2;
 if (w.renderer === undefined)               w.renderer = w.RENDERER_2DCANVAS;
 if (!w.music_list) {
   w.music_list = [

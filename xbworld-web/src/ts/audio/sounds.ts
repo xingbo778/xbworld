@@ -21,7 +21,7 @@ declare const window: any;
 
 export let sound_path: string = "/sounds/";
 
-// TODO: import or define sounds_enabled, soundset, is_unit_visible, unit_type, renderer, RENDERER_WEBGL
+// TODO: import or define sounds_enabled, soundset, is_unit_visible, unit_type
 
 export function check_unit_sound_play(old_unit: any, new_unit: any): void {
   if (!sounds_enabled) return;

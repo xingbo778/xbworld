@@ -42,8 +42,6 @@ import {
 } from '@/data/terrain';
 import {
   isLongturn,
-  isPbem,
-  isHotseat,
   isServer,
   setPhaseStart,
   getInvalidUsernameReason,
@@ -387,16 +385,6 @@ describe('clientCore.ts', () => {
       expect(isLongturn()).toBe(false);
     });
 
-    it('isPbem should return true for pbem game', () => {
-      win.game_type = 'pbem';
-      expect(isPbem()).toBe(true);
-    });
-
-    it('isHotseat should return true for hotseat game', () => {
-      win.game_type = 'hotseat';
-      expect(isHotseat()).toBe(true);
-    });
-
     it('isServer should always return false', () => {
       expect(isServer()).toBe(false);
     });
@@ -434,10 +422,6 @@ describe('clientCore.ts', () => {
       expect(getInvalidUsernameReason('a'.repeat(32))).toBe('too long');
     });
 
-    it('should return "not available" for "pbem"', () => {
-      expect(getInvalidUsernameReason('pbem')).toBe('not available');
-      expect(getInvalidUsernameReason('PBEM')).toBe('not available');
-    });
 
     it('should return invalid for names starting with number', () => {
       expect(getInvalidUsernameReason('1abc')).toContain('invalid');

@@ -5,8 +5,6 @@
  *   - show_debug_info() — logs version, browser, network stats to console
  */
 
-import { RENDERER_WEBGL } from '../core/constants';
-
 const win = window as any;
 
 // ---------------------------------------------------------------------------

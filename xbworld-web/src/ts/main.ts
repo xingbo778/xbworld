@@ -50,25 +50,6 @@ if (!win['improvements']) win['improvements'] = {};
 if (!win['map']) win['map'] = {};
 
 // ---------------------------------------------------------------------------
-// Step 1: Patch missing WebGL stubs (2D canvas mode).
-// ---------------------------------------------------------------------------
-if (typeof win['update_unit_position'] !== 'function') {
-  win['update_unit_position'] = function (_ptile: unknown): void {
-    /* no-op in 2D renderer */
-  };
-}
-const webglStubs: Record<string, (...args: unknown[]) => unknown> = {
-  webgl_canvas_pos_to_tile: () => null,
-  init_webgl_mapview: () => {},
-  webgl_start_renderer: () => {},
-};
-for (const [name, fn] of Object.entries(webglStubs)) {
-  if (typeof win[name] !== 'function') {
-    win[name] = fn;
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Step 2: Import all TS modules (order matters for initialization).
 // ---------------------------------------------------------------------------
 

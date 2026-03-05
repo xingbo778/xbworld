@@ -7,8 +7,6 @@
  *
  * Migrated functions:
  *   - is_longturn()
- *   - is_pbem()
- *   - is_hotseat()
  *   - is_server()
  *   - set_phase_start()
  *   - request_observe_game()
@@ -35,20 +33,6 @@ const win = window as any;
  */
 export function isLongturn(): boolean {
   return win.game_type === 'longturn';
-}
-
-/**
- * Returns TRUE if this is a PBEM (play-by-email) game.
- */
-export function isPbem(): boolean {
-  return win.game_type === 'pbem';
-}
-
-/**
- * Returns TRUE if this is a hotseat game.
- */
-export function isHotseat(): boolean {
-  return win.game_type === 'hotseat';
 }
 
 /**
@@ -132,9 +116,6 @@ export function getInvalidUsernameReason(name: string | null): string | null {
     return 'too long';
   }
   const lower = name.toLowerCase();
-  if (lower === 'pbem') {
-    return 'not available';
-  }
   // Must start with a letter, then letters and numbers only
   if (!/^[a-z][a-z0-9]*$/g.test(lower)) {
     return 'invalid: only English letters and numbers are allowed, and must start with a letter';

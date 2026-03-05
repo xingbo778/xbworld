@@ -447,4 +447,3 @@ export const enum ClientState {
 
 // ─── Renderer Type ───────────────────────────────────────────────────────────
 export const RENDERER_2DCANVAS = 1;
-export const RENDERER_WEBGL = 2;

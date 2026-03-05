@@ -51,9 +51,6 @@ const tile_terrain = tileTerrain;
 const city_owner_player_id = cityOwnerPlayerId;
 const wrap_has_flag = wrapHasFlag;
 
-// webgl_canvas_pos_to_tile is only used in WebGL mode; declare as global fallback
-declare function webgl_canvas_pos_to_tile(x: number, y: number): any;
-
 export let OVERVIEW_TILE_SIZE: number = 1;
 export let overviewTimerId: number = -1;
 export let min_overview_width: number = 200;

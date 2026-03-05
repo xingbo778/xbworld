@@ -13,8 +13,6 @@ const DIR8_EAST = 2;
 const DIR8_SOUTH = 4;
 const DIR8_WEST = 6;
 
-// webgl_preload is loaded from a separate WebGL module at runtime
-declare function webgl_preload(): void;
 // setup_window_size is a global function
 declare function setup_window_size(): void;
 
@@ -28,7 +26,6 @@ declare const tileset: any; // Tileset configuration object
 declare const mapview: any; // Global mapview object
 declare let MAPVIEW_REFRESH_INTERVAL: number;
 declare const renderer: any; // Renderer type
-declare const RENDERER_WEBGL: any; // Renderer type constant
 declare const RENDERER_2DCANVAS: any; // Renderer type constant
 declare const active_city: any; // Active city object
 declare const resize_enabled: boolean;

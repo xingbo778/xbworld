@@ -443,7 +443,6 @@ export function handle_chat_msg(packet: any): void {
       message = "<span class='chatbox_text_tileinfo' "
           + "onclick='center_tile_id(" + ptile + ");'>" + message + '</span>';
     }
-    if (w.is_speech_supported()) w.speak(message);
   }
 
   packet['message'] = message;

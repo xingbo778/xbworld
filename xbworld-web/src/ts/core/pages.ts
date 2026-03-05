@@ -19,8 +19,6 @@
 
 declare const $: any;
 declare const renderer: any;
-declare const RENDERER_WEBGL: any;
-declare function webgl_start_renderer(): void;
 declare function set_chat_direction(direction: any): void;
 
 export const PAGE_MAIN: number = 0;		/* Main menu, aka intro page.  */

@@ -20,7 +20,6 @@ declare const C_S_RUNNING: 2;
 declare const C_S_OVER: 3;
 
 declare const RENDERER_2DCANVAS: 1;
-declare const RENDERER_WEBGL: 2;
 
 // ---------------------------------------------------------------------------
 // Core game state (mutable globals set by packhand.js)
@@ -215,7 +214,6 @@ declare function is_small_screen(): boolean;
 // ---------------------------------------------------------------------------
 declare function control_unit_killed(punit: any): void;
 declare function unit_is_in_focus(punit: any): boolean;
-declare function webgl_clear_unit_focus(): void;
 declare function map_to_gui_pos(x: number, y: number): { gui_dx: number; gui_dy: number };
 declare function tile_has_extra(ptile: any, extra_id: number): boolean;
 declare function is_extra_removed_by(extra: any, cause: number): boolean;

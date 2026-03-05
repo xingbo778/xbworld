@@ -167,9 +167,4 @@ export function init_options_dialog(): void {
     simpleStorage.set('sndFX', sounds_enabled);
   });
 
-  // Speech and 3D renderer features removed
-  $('#speech_enabled_setting').attr('disabled', true);
-  $("#switch_renderer_button").hide();
-  $("#renderer_help").hide();
-  $("#update_model_button").hide();
 }

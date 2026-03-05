@@ -90,16 +90,7 @@ declare const mapview: any;
 declare const mapview_canvas: any;
 declare const center_tile_mapcanvas: any;
 declare const update_unit_position: any;
-import { RENDERER_2DCANVAS, RENDERER_WEBGL } from '../core/constants';
 import { mapctrl_init_2d } from '../renderer/mapctrl';
-declare const webgl_canvas_pos_to_map_pos: any;
-declare const webgl_canvas_pos_to_tile: any;
-declare const camera_look_at: any;
-declare let camera_current_x: number;
-declare let camera_current_y: number;
-declare let camera_current_z: number;
-declare const webgl_clear_unit_focus: any;
-declare const init_webgl_mapctrl: any;
 import { request_new_unit_activity, request_unit_do_action } from '../renderer/mapctrl';
 
 declare const $: any;

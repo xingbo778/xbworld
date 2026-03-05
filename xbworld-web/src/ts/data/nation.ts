@@ -228,14 +228,7 @@ export function updateNationScreen(): void {
 
   selectNoNation();
 
-  if (w.is_pbem()) {
-    /* TODO: PBEM games do not support diplomacy. */
-    w.$('#meet_player_button').hide();
-    w.$('#cancel_treaty_button').hide();
-    w.$('#take_player_button').hide();
-    w.$('#toggle_ai_button').hide();
-    w.$('#game_scores_button').hide();
-  } else if (w.is_longturn()) {
+  if (w.is_longturn()) {
     w.$('#take_player_button').hide();
     w.$('#toggle_ai_button').hide();
     w.$('#game_scores_button').hide();
@@ -359,7 +352,7 @@ export function selectANation(): void {
   }
 
   if (
-    !w.is_hotseat() &&
+
     !pplayer['flags'].isSet(w.PLRF_AI) &&
     w.diplstates[player_id] != null &&
     w.diplstates[player_id] === w.DS_NO_CONTACT
@@ -419,7 +412,7 @@ export function selectANation(): void {
   }
 
   if (
-    !w.is_hotseat() &&
+
     w.client_is_observer() &&
     pplayer['flags'].isSet(w.PLRF_AI) &&
     w.nations[pplayer['nation']]['is_playable'] &&
