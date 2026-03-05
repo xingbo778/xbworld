@@ -9,6 +9,11 @@
  * NOTE: is_touch_device is defined in control.js, not utility.js.
  */
 
+declare const $: any;
+declare const swal: any;
+declare const map_pos_to_tile: (x: number, y: number) => any;
+declare const center_tile_mapcanvas: (ptile: any) => void;
+
 /** Deep clone a plain object (no circular refs). */
 export function clone<T>(obj: T): T {
   if (obj == null || typeof obj !== 'object') return obj;
@@ -72,7 +77,7 @@ export function isSmallScreen(): boolean {
 export function isTouchDevice(): boolean {
   return ('ontouchstart' in window
     || 'onmsgesturechange' in window
-    || ((window as any).DocumentTouch != null && document instanceof (window as any).DocumentTouch))
+    || ((globalThis as any).DocumentTouch != null && document instanceof (globalThis as any).DocumentTouch))
     ? true : false;
 }
 
@@ -90,7 +95,7 @@ export function getTilesetFileExtension(): string {
  * Falls back to Math.random if fc_seedrandom is not available.
  */
 export function getRandomInt(min: number, max: number): number {
-  const rng = (window as any).fc_seedrandom;
+  const rng = (globalThis as any).fc_seedrandom;
   const rand = typeof rng === 'function' ? rng() : Math.random();
   return Math.floor(rand * (max - min)) + min;
 }
@@ -101,7 +106,7 @@ export function getRandomInt(min: number, max: number): number {
  */
 export function isRightMouseSelectionSupported(): boolean {
   if (isTouchDevice()) return false;
-  const platform = (window as any).platform;
+  const platform = (globalThis as any).platform;
   if (platform && platform.description) {
     const desc = platform.description as string;
     if (desc.indexOf('Mac OS X') > 0 || desc.indexOf('Chrome OS') > 0 || desc.indexOf('CrOS') > 0) {
@@ -118,7 +123,7 @@ export function isRightMouseSelectionSupported(): boolean {
 // Expose is_small_screen (legacy name) and other utility functions
 // Register $.getUrlVar / $.getUrlVars jQuery plugins (previously in utility.js)
 // These are used extensively by legacy JS (civclient.js, pregame.js, etc.)
-const jq = (window as any).jQuery || (window as any).$;
+const jq = typeof $ !== 'undefined' ? $ : null;
 if (jq && jq.extend) {
   jq.extend({
     getUrlVars(): Record<string, string> & string[] {
@@ -144,15 +149,14 @@ if (jq && jq.extend) {
  */
 let benchmark_start = 0;
 export function civclient_benchmark(frame: number): void {
-  const w = window as any;
   if (frame === 0) benchmark_start = Date.now();
-  const ptile = w.map_pos_to_tile(frame + 5, frame + 5);
-  w.center_tile_mapcanvas(ptile);
+  const ptile = map_pos_to_tile(frame + 5, frame + 5);
+  center_tile_mapcanvas(ptile);
   if (frame < 30) {
     setTimeout(() => civclient_benchmark(frame + 1), 10);
   } else {
     const time = (Date.now() - benchmark_start) / 25;
-    w.swal('Redraw time: ' + time);
+    swal('Redraw time: ' + time);
   }
 }
 
