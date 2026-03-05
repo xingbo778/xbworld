@@ -35,7 +35,7 @@ MINOR_VERSION = 1
 PATCH_VERSION = 90
 
 # LLM configuration
-LLM_MODEL = os.getenv("LLM_MODEL", "google/gemini-2.5-flash-preview")
+LLM_MODEL = os.getenv("LLM_MODEL", "google/gemini-3-flash-preview")
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1")
 
