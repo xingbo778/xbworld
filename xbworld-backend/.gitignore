@@ -1,6 +1,9 @@
 # Freeciv C server build artifacts (source is a git submodule)
 freeciv/build/
 
+# Secrets
+.env
+
 # Python
 .venv/
 *.pyc

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Generate XBWorld logo using Compass/Gemini image generation API.
+"""Generate XBWorld logo using LLM image generation API.
 
 Usage:
-    COMPASS_API_KEY=your-key python scripts/generate_logo.py
+    LLM_API_KEY=your-key python scripts/generate_logo.py
 
 Generates:
     - xbworld-web/src/main/webapp/images/xbworld-logo.png (main logo)
@@ -15,8 +15,8 @@ import json
 import os
 import sys
 
-API_KEY = os.getenv("COMPASS_API_KEY", "")
-BASE_URL = os.getenv("LLM_BASE_URL", "https://compass.llm.shopee.io/compass-api/v1")
+API_KEY = os.getenv("LLM_API_KEY", "")
+BASE_URL = os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1")
 
 LOGO_PROMPT = (
     "Modern minimalist logo for 'XBWorld', a civilization strategy game. "
@@ -98,9 +98,9 @@ def create_svg_fallback():
 
 def main():
     if not API_KEY:
-        print("COMPASS_API_KEY not set. Creating SVG fallback logos...")
+        print("LLM_API_KEY not set. Creating SVG fallback logos...")
         create_svg_fallback()
-        print("\nTo generate PNG logos, set COMPASS_API_KEY and re-run this script.")
+        print("\nTo generate PNG logos, set LLM_API_KEY and re-run this script.")
         return
 
     try:

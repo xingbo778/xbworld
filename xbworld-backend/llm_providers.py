@@ -54,7 +54,7 @@ class LLMProvider(ABC):
 
 
 # ---------------------------------------------------------------------------
-# Gemini (native generateContent via Compass or direct)
+# Gemini (native generateContent API)
 # ---------------------------------------------------------------------------
 
 class GeminiProvider(LLMProvider):
