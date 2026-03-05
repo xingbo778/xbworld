@@ -1,5 +1,24 @@
-flyway.properties
-node_modules
+# Dependencies
+node_modules/
+dist/
+
+# Build output
+src/main/webapp/javascript/ts-bundle/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
 # E2E test artifacts
 tests/e2e/smoke-results.json
 tests/e2e/smoke-test.log
+
+# Legacy
+flyway.properties

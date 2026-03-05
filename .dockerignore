@@ -18,15 +18,19 @@ music/
 config/
 xbworld-backend/test_*
 xbworld-backend/static/
-xbworld-web/src/main/java/
 xbworld-web/tests/
-xbworld-web/pom.xml
-xbworld-web/build*.sh
+xbworld-web/docs/
 xbworld-web/dist/
 xbworld-web/node_modules/
 xbworld-web/eslint.config.mjs
 xbworld-web/vitest.config.ts
-# Note: src/ts/, package*.json, tsconfig*.json, vite.config.ts are now
+xbworld-web/playwright.config.ts
+xbworld-web/e2e_canvas_test.cjs
+xbworld-web/pnpm-lock.yaml
+xbworld-web/.dockerignore
+xbworld-web/docker-compose.yml
+xbworld-web/Dockerfile
+# Note: src/ts/, package*.json, tsconfig*.json, vite.config.ts, nginx.conf are
 # INCLUDED in the build context for the Vite TS build stage (Stage 3).
 
 # Build artifacts

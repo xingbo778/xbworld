@@ -1,0 +1,11 @@
+version: "3"
+services:
+  xbworld-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: xbworld-frontend
+    ports:
+      - "8081:80"
+    environment:
+      - BACKEND_URL=http://host.docker.internal:8080

@@ -1,0 +1,16 @@
+.git
+.github
+node_modules
+dist
+tests
+docs
+*.md
+!README.md
+eslint.config.mjs
+.prettierrc
+.prettierignore
+vitest.config.ts
+playwright.config.ts
+e2e_canvas_test.cjs
+pnpm-lock.yaml
+src/main/webapp/javascript/ts-bundle/

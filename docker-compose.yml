@@ -16,10 +16,11 @@ services:
       - savegames:/app/data/savegames
 
   # Frontend: nginx serving static web client
+  # Uses the separate xbworld-web repo/directory
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.frontend
+      context: ./xbworld-web
+      dockerfile: Dockerfile
     container_name: xbworld-frontend
     ports:
       - "8081:80"

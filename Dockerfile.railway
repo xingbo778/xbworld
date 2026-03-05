@@ -3,7 +3,7 @@
 #
 # For separated deployments, use:
 #   - xbworld-backend/Dockerfile   (backend only)
-#   - Dockerfile.frontend           (frontend only)
+#   - xbworld-web/Dockerfile        (frontend only)
 ###############################################################################
 
 ###############################################################################

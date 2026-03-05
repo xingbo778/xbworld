@@ -2,6 +2,16 @@
 
 XBWorld is designed as an **AI-agent-first** civilization game platform. The primary users are AI agents; humans observe and influence agents via chat.
 
+## Repository Structure
+
+This mono-repo orchestrates three independent components, each designed to work as a standalone repository:
+
+| Directory | Description | Standalone Repo |
+|-----------|-------------|-----------------|
+| `xbworld-backend/` | Python FastAPI server + freeciv C engine | Has own Dockerfile, docker-compose |
+| `xbworld-web/` | TypeScript/HTML5 web client (PIXI.js) | Has own Dockerfile, docker-compose |
+| `scripts/`, `config/` | Shared build scripts & config | — |
+
 ## Current Architecture
 
 ```
@@ -15,12 +25,12 @@ XBWorld is designed as an **AI-agent-first** civilization game platform. The pri
 │                          │                                    │
 │                  ┌───────▼────────┐                           │
 │                  │ FastAPI Gateway │  ← REST + SSE + WS       │
-│                  │   (port 8642)   │                          │
+│                  │   (port 8080)   │  [xbworld-backend]       │
 │                  └───────┬────────┘                           │
 │                          │                                    │
 │                  ┌───────▼────────┐                           │
-│                  │ xbworld-proxy  │  ← WebSocket ↔ TCP        │
-│                  │ (Tornado)      │                           │
+│                  │  WS Proxy      │  ← WebSocket ↔ TCP        │
+│                  │ (in-process)   │                           │
 │                  └───────┬────────┘                           │
 │                          │                                    │
 │                  ┌───────▼────────┐                           │
@@ -29,10 +39,20 @@ XBWorld is designed as an **AI-agent-first** civilization game platform. The pri
 │                  └────────────────┘                           │
 │                                                               │
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │ Observers: Static HTML UI / SSE Dashboard / Browser    │  │
+│  │ Web Client: TypeScript + PIXI.js [xbworld-web]        │  │
+│  │ Served via nginx → reverse proxy to backend            │  │
 │  └────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────┘
 ```
+
+## Deployment Options
+
+| Mode | How | Description |
+|------|-----|-------------|
+| **Full Stack** | `Dockerfile.railway` | Single image: backend + frontend |
+| **Separate Services** | `xbworld-backend/Dockerfile` + `xbworld-web/Dockerfile` | Independent containers |
+| **Local Dev** | `docker-compose.yml` | Both services orchestrated |
+| **Frontend Dev** | `cd xbworld-web && npm run dev` | Vite dev server, proxies to remote backend |
 
 ## API Endpoints
 
@@ -96,12 +116,8 @@ class DecisionEngine(ABC):
 | Component | AI-Only | With Observer | Full Stack |
 |-----------|---------|---------------|------------|
 | freeciv-server (C) | Required | Required | Required |
-| xbworld-proxy | Required | Required | Required |
-| FastAPI (Python) | Required | Required | Required |
-| Nginx | Optional | Recommended | Required |
-| Tomcat/Java | Not needed | Not needed | Required |
-| MariaDB | Not needed (`--no-auth`) | Not needed | Required |
-| publite2 | Not needed | Not needed | Required |
+| FastAPI + WS Proxy (Python) | Required | Required | Required |
+| xbworld-web (nginx) | Not needed | Recommended | Required |
 
 ### Standalone Mode (AI-Only)
 
