@@ -39,8 +39,27 @@ const apiProxy = {
   agent: httpsAgent,
 };
 
+// In dev mode, index.html loads <script src="/javascript/ts-bundle/main.iife.js">
+// which doesn't exist (it's a production build artifact). This plugin rewrites
+// that request to the TS entry point so Vite can serve it with HMR.
+function devTsBundlePlugin() {
+  return {
+    name: 'dev-ts-bundle-redirect',
+    configureServer(server: any) {
+      server.middlewares.use((req: any, _res: any, next: any) => {
+        if (req.url === '/javascript/ts-bundle/main.iife.js') {
+          req.url = '/@fs' + resolve(__dirname, 'src/ts/main.ts');
+        }
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig({
   root: resolve(__dirname, 'src/main/webapp'),
+
+  plugins: [devTsBundlePlugin()],
 
   resolve: {
     alias: {
@@ -70,6 +89,10 @@ export default defineConfig({
   server: {
     port: 3000,
     allowedHosts: true,
+    fs: {
+      // Allow serving TS source files from outside the webapp root
+      allow: [resolve(__dirname, 'src')],
+    },
 
     proxy: {
       // WebSocket proxy — browser connects to local ws://localhost:3000/civsocket/...
