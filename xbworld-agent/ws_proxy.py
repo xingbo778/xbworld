@@ -14,6 +14,7 @@ import json
 import logging
 import re
 import struct
+import time
 import uuid
 from typing import Optional
 
@@ -44,6 +45,9 @@ class CivBridge:
         self._stopped = False
         self._send_buffer: list[str] = []
         self._flush_task: Optional[asyncio.Task] = None
+        self._tcp_pkt_count = 0
+        self._ws_send_count = 0
+        self._start_time = time.monotonic()
 
     async def connect_to_server(self, login_packet: str) -> bool:
         logger.info("[proxy:%s] Connecting to civserver at 127.0.0.1:%d", self.username, self.server_port)
@@ -67,7 +71,9 @@ class CivBridge:
         await self._send_to_server(message)
 
     async def close(self):
-        logger.info("[proxy:%s] Closing bridge (server_port=%d)", self.username, self.server_port)
+        elapsed = time.monotonic() - self._start_time
+        logger.info("[proxy:%s] Closing bridge (server_port=%d, tcp_pkts=%d, ws_sends=%d, uptime=%.1fs)",
+                     self.username, self.server_port, self._tcp_pkt_count, self._ws_send_count, elapsed)
         self._stopped = True
         if self._flush_task and not self._flush_task.done():
             self._flush_task.cancel()
@@ -93,43 +99,57 @@ class CivBridge:
             self._writer.write(header + encoded + b"\0")
             await self._writer.drain()
         except Exception as e:
-            logger.warning("Failed to send to civserver for %s: %s", self.username, e)
+            logger.warning("[proxy:%s] Failed to send to civserver: %s", self.username, e)
 
     async def _server_reader_loop(self):
         """Read packets from freeciv-server TCP and forward to WebSocket client."""
+        exit_reason = "unknown"
         try:
             while not self._stopped and self._reader:
                 header_data = await self._read_exact(2)
                 if header_data is None:
+                    exit_reason = "TCP read returned None (connection closed or timeout)"
                     break
 
                 (packet_size,) = struct.unpack(">H", header_data)
                 body_size = packet_size - 2
                 if body_size <= 0 or body_size > 32767:
-                    logger.error("Invalid packet size %d from server for %s", body_size, self.username)
+                    logger.error("[proxy:%s] Invalid packet size %d from server", self.username, body_size)
                     continue
 
                 body = await self._read_exact(body_size)
                 if body is None:
+                    exit_reason = "TCP body read returned None"
                     break
 
                 if body and body[-1] == 0:
                     body = body[:-1]
 
+                self._tcp_pkt_count += 1
+
                 try:
                     text = body.decode("utf-8", errors="ignore")
                     self._send_buffer.append(text)
                 except UnicodeDecodeError:
-                    logger.error("UTF-8 decode error for %s", self.username)
+                    logger.error("[proxy:%s] UTF-8 decode error", self.username)
                     continue
 
-                await self._flush_to_client()
+                flush_ok = await self._flush_to_client()
+                if not flush_ok:
+                    exit_reason = "flush_to_client failed (WebSocket send error)"
+                    break
+
+            if self._stopped:
+                exit_reason = "stopped flag set"
 
         except asyncio.CancelledError:
-            pass
+            exit_reason = "cancelled"
         except Exception as e:
-            logger.warning("Server reader error for %s: %s", self.username, e)
+            exit_reason = f"exception: {type(e).__name__}: {e}"
+            logger.warning("[proxy:%s] Server reader error: %s", self.username, e)
         finally:
+            logger.info("[proxy:%s] _server_reader_loop exited: reason='%s' tcp_pkts=%d ws_sends=%d",
+                         self.username, exit_reason, self._tcp_pkt_count, self._ws_send_count)
             if not self._stopped:
                 logger.info("[proxy:%s] TCP connection from civserver closed (server initiated)", self.username)
                 await self.close()
@@ -138,18 +158,30 @@ class CivBridge:
         try:
             data = await asyncio.wait_for(self._reader.readexactly(n), timeout=300)
             return data
-        except (asyncio.IncompleteReadError, asyncio.TimeoutError, ConnectionError):
+        except (asyncio.IncompleteReadError, asyncio.TimeoutError, ConnectionError) as e:
+            logger.info("[proxy:%s] _read_exact(%d) failed: %s", self.username, n, type(e).__name__)
             return None
 
-    async def _flush_to_client(self):
+    async def _flush_to_client(self) -> bool:
+        """Flush send buffer to WebSocket client. Returns False if send failed."""
         if not self._send_buffer or self._stopped:
-            return
+            return True
         packet = "[" + ",".join(self._send_buffer) + "]"
         self._send_buffer.clear()
         try:
             await self.ws.send_text(packet)
-        except Exception:
+            self._ws_send_count += 1
+            if self._ws_send_count % 500 == 0:
+                elapsed = time.monotonic() - self._start_time
+                logger.info("[proxy:%s] WS send stats: %d sends, %d tcp_pkts, %.1f sends/s, uptime=%.1fs",
+                             self.username, self._ws_send_count, self._tcp_pkt_count,
+                             self._ws_send_count / elapsed if elapsed > 0 else 0, elapsed)
+            return True
+        except Exception as e:
+            logger.error("[proxy:%s] _flush_to_client FAILED: %s: %s (after %d sends, %d tcp_pkts)",
+                          self.username, type(e).__name__, e, self._ws_send_count, self._tcp_pkt_count)
             self._stopped = True
+            return False
 
     async def _send_error(self, message: str):
         error_json = json.dumps({
@@ -217,10 +249,11 @@ async def handle_civsocket(ws: WebSocket, proxy_port: int):
 
             await bridge.send_from_client(message)
 
-    except WebSocketDisconnect:
-        logger.info("[proxy] WebSocket disconnected for conn_id=%s", conn_id[:8])
+    except WebSocketDisconnect as e:
+        logger.info("[proxy] WebSocket disconnected for conn_id=%s: code=%s reason=%s",
+                     conn_id[:8], getattr(e, 'code', '?'), getattr(e, 'reason', '?'))
     except Exception as e:
-        logger.warning("[proxy] WebSocket error for conn_id=%s: %s", conn_id[:8], e)
+        logger.warning("[proxy] WebSocket error for conn_id=%s: %s: %s", conn_id[:8], type(e).__name__, e)
     finally:
         if bridge:
             await bridge.close()
