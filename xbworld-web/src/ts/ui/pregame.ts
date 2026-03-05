@@ -6,7 +6,7 @@
 import { store } from '../data/store';
 import { $id, on, show } from '../utils/dom';
 import { getUrlVar, isSmallScreen } from '../utils/helpers';
-import { networkInit, networkInitManualHack, sendMessage } from '../net/connection';
+import { network_init, network_init_manual_hack, send_message } from '../net/connection';
 import { showDialog, closeDialog } from './dialogs';
 
 export function initPregame(): void {
@@ -15,7 +15,7 @@ export function initPregame(): void {
   const nationBtn = $id('pick_nation_button');
   const settingsBtn = $id('pregame_settings_button');
 
-  if (startBtn) on(startBtn, 'click', () => sendMessage('/start'));
+  if (startBtn) on(startBtn, 'click', () => send_message('/start'));
   if (loadBtn) on(loadBtn, 'click', showLoadDialog);
   if (nationBtn) on(nationBtn, 'click', showNationPicker);
   if (settingsBtn) on(settingsBtn, 'click', showGameSettings);
@@ -50,7 +50,7 @@ export function showIntroDialog(title: string, message: string): void {
         store.username = name;
         localStorage.setItem('username', name);
         closeDialog('intro_dialog');
-        networkInit();
+        network_init();
       },
     },
   });
@@ -81,7 +81,7 @@ export function initCommonIntroDialog(): void {
       return;
     }
     if (getUrlVar('autostart') === 'true') store.autostart = true;
-    networkInitManualHack(port, user, getUrlVar('savegame'));
+    network_init_manual_hack(port, user, getUrlVar('savegame'));
     return;
   }
 

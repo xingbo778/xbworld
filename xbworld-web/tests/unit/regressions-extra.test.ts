@@ -57,8 +57,7 @@ import {
   VUT_SERVERSETTING,
 } from '@/data/fcTypes';
 
-// Import helpers module to test DIVIDE
-import '@/utils/helpers';
+import { DIVIDE } from '@/utils/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const win = window as any;
@@ -139,31 +138,29 @@ describe('VUT_* constant values must match server enum', () => {
 
 describe('Pitfall #8: DIVIDE must use Math.floor semantics', () => {
   it('should handle positive division', () => {
-    expect(win.DIVIDE(7, 3)).toBe(2);
-    expect(win.DIVIDE(9, 3)).toBe(3);
-    expect(win.DIVIDE(10, 3)).toBe(3);
+    expect(DIVIDE(7, 3)).toBe(2);
+    expect(DIVIDE(9, 3)).toBe(3);
+    expect(DIVIDE(10, 3)).toBe(3);
   });
 
   it('should handle negative dividend (floor towards -infinity)', () => {
-    expect(win.DIVIDE(-7, 3)).toBe(-3);
-    expect(win.DIVIDE(-1, 3)).toBe(-1);
-    expect(win.DIVIDE(-9, 3)).toBe(-3);
+    expect(DIVIDE(-7, 3)).toBe(-3);
+    expect(DIVIDE(-1, 3)).toBe(-1);
+    expect(DIVIDE(-9, 3)).toBe(-3);
   });
 
   it('should handle zero', () => {
-    expect(win.DIVIDE(0, 5)).toBe(0);
+    expect(DIVIDE(0, 5)).toBe(0);
   });
 
   it('should handle negative divisor', () => {
-    expect(win.DIVIDE(7, -3)).toBe(-3);
-    expect(win.DIVIDE(-7, -3)).toBe(2);
+    expect(DIVIDE(7, -3)).toBe(-3);
+    expect(DIVIDE(-7, -3)).toBe(2);
   });
 
   it('should NOT double-compensate (the parseInt bug)', () => {
-    // This was the original bug: Math.floor(-7/3) = -3, but the old code
-    // also subtracted 1, giving -4. The fix is just Math.floor.
-    expect(win.DIVIDE(-7, 3)).not.toBe(-4);
-    expect(win.DIVIDE(-7, 3)).toBe(-3);
+    expect(DIVIDE(-7, 3)).not.toBe(-4);
+    expect(DIVIDE(-7, 3)).toBe(-3);
   });
 });
 

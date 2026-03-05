@@ -6,22 +6,29 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
-// Side-effect imports to trigger exposeToLegacy
-import '@/data/improvement';
-import '@/data/extra';
-import '@/data/actions';
-import '@/data/government';
-import '@/data/terrain';
-import '@/data/unittype';
-import '@/client/clientCore';
-
-// Direct exports
-import { improvementIdByName } from '@/data/improvement';
+// Direct imports for functions
+import {
+  is_wonder,
+  get_improvement_requirements,
+  get_improvements_from_tech,
+  improvementIdByName,
+  improvements_init,
+  improvements_add_building,
+} from '@/data/improvement';
 import {
   EXTRA_NONE,
   BASE_GUI_FORTRESS,
   BASE_GUI_AIRBASE,
+  extraByNumber,
+  isExtraCausedBy,
+  isExtraRemovedBy,
 } from '@/data/extra';
+import {
+  actionByNumber,
+  actionHasResult,
+  actionProbPossible,
+} from '@/data/actions';
+import { governmentMaxRate } from '@/data/government';
 import {
   UTYF_FLAGLESS,
   UTYF_PROVIDES_RANSOM,
@@ -51,53 +58,55 @@ const win = window as any;
 
 describe('improvement.ts', () => {
   beforeEach(() => {
-    win.improvements = {
-      0: { id: 0, name: 'Palace', soundtag: 'b_palace', reqs: [{ kind: 1, value: 5, present: true }] },
-      1: { id: 1, name: 'Barracks', soundtag: 'b_barracks', reqs: [{ kind: 1, value: 3, present: true }] },
-      2: { id: 2, name: 'Great Wall', soundtag: 'w_great_wall', reqs: [{ kind: 1, value: 10, present: true }] },
-      3: { id: 3, name: 'Library', soundtag: 'b_library', reqs: [] },
-    };
+    improvements_init();
+    const buildings = [
+      { id: 0, name: 'Palace', soundtag: 'b_palace', reqs: [{ kind: 1, value: 5, present: true }] },
+      { id: 1, name: 'Barracks', soundtag: 'b_barracks', reqs: [{ kind: 1, value: 3, present: true }] },
+      { id: 2, name: 'Great Wall', soundtag: 'w_great_wall', reqs: [{ kind: 1, value: 10, present: true }] },
+      { id: 3, name: 'Library', soundtag: 'b_library', reqs: [] },
+    ];
+    buildings.forEach((b) => improvements_add_building(b));
   });
 
   afterEach(() => {
-    delete win.improvements;
+    improvements_init();
   });
 
   describe('is_wonder', () => {
     it('should return true for wonders (soundtag starts with w)', () => {
-      expect(win.is_wonder(win.improvements[2])).toBe(true);
+      expect(is_wonder(win.improvements[2])).toBe(true);
     });
 
     it('should return false for buildings (soundtag starts with b)', () => {
-      expect(win.is_wonder(win.improvements[0])).toBe(false);
-      expect(win.is_wonder(win.improvements[1])).toBe(false);
+      expect(is_wonder(win.improvements[0])).toBe(false);
+      expect(is_wonder(win.improvements[1])).toBe(false);
     });
   });
 
   describe('get_improvement_requirements', () => {
     it('should return tech ids from reqs with kind=1 and present=true', () => {
-      expect(win.get_improvement_requirements(0)).toEqual([5]);
-      expect(win.get_improvement_requirements(1)).toEqual([3]);
+      expect(get_improvement_requirements(0)).toEqual([5]);
+      expect(get_improvement_requirements(1)).toEqual([3]);
     });
 
     it('should return empty array when no reqs', () => {
-      expect(win.get_improvement_requirements(3)).toEqual([]);
+      expect(get_improvement_requirements(3)).toEqual([]);
     });
 
     it('should return empty array for non-existent improvement', () => {
-      expect(win.get_improvement_requirements(99)).toEqual([]);
+      expect(get_improvement_requirements(99)).toEqual([]);
     });
   });
 
   describe('get_improvements_from_tech', () => {
     it('should return improvements that require the given tech', () => {
-      const result = win.get_improvements_from_tech(5);
+      const result = get_improvements_from_tech(5);
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('Palace');
     });
 
     it('should return empty array for tech with no improvements', () => {
-      expect(win.get_improvements_from_tech(99)).toEqual([]);
+      expect(get_improvements_from_tech(99)).toEqual([]);
     });
   });
 
@@ -118,7 +127,6 @@ describe('improvement.ts', () => {
 // ===========================================================================
 
 describe('extra.ts', () => {
-  // Helper: create a mock BitVector with isSet method
   function mockBV(...setBits: number[]) {
     return { isSet: (bit: number) => setBits.includes(bit) };
   }
@@ -145,35 +153,35 @@ describe('extra.ts', () => {
     });
   });
 
-  describe('extra_by_number', () => {
+  describe('extraByNumber', () => {
     it('should return extra by id', () => {
-      expect(win.extra_by_number(0)?.name).toBe('Road');
-      expect(win.extra_by_number(1)?.name).toBe('Fortress');
+      expect(extraByNumber(0)?.name).toBe('Road');
+      expect(extraByNumber(1)?.name).toBe('Fortress');
     });
 
     it('should return null for non-existent extra', () => {
-      expect(win.extra_by_number(99)).toBeNull();
+      expect(extraByNumber(99)).toBeNull();
     });
   });
 
-  describe('is_extra_caused_by', () => {
+  describe('isExtraCausedBy', () => {
     it('should return true when cause bit is set', () => {
-      expect(win.is_extra_caused_by(win.extras[0], 0)).toBe(true);
-      expect(win.is_extra_caused_by(win.extras[0], 1)).toBe(true);
+      expect(isExtraCausedBy(win.extras[0], 0)).toBe(true);
+      expect(isExtraCausedBy(win.extras[0], 1)).toBe(true);
     });
 
     it('should return false when cause bit is not set', () => {
-      expect(win.is_extra_caused_by(win.extras[0], 2)).toBe(false);
+      expect(isExtraCausedBy(win.extras[0], 2)).toBe(false);
     });
   });
 
-  describe('is_extra_removed_by', () => {
+  describe('isExtraRemovedBy', () => {
     it('should return true when rmcause bit is set', () => {
-      expect(win.is_extra_removed_by(win.extras[1], 1)).toBe(true);
+      expect(isExtraRemovedBy(win.extras[1], 1)).toBe(true);
     });
 
     it('should return false when rmcause bit is not set', () => {
-      expect(win.is_extra_removed_by(win.extras[1], 0)).toBe(false);
+      expect(isExtraRemovedBy(win.extras[1], 0)).toBe(false);
     });
   });
 });
@@ -194,37 +202,37 @@ describe('actions.ts', () => {
     delete win.actions;
   });
 
-  describe('action_by_number', () => {
+  describe('actionByNumber', () => {
     it('should return action by id', () => {
-      expect(win.action_by_number(0)?.ui_name).toBe('Attack');
+      expect(actionByNumber(0)?.ui_name).toBe('Attack');
     });
 
     it('should return null for non-existent action', () => {
-      expect(win.action_by_number(99)).toBeNull();
+      expect(actionByNumber(99)).toBeNull();
     });
   });
 
-  describe('action_has_result', () => {
+  describe('actionHasResult', () => {
     it('should return true when result matches', () => {
-      expect(win.action_has_result(win.actions[0], 10)).toBe(true);
+      expect(actionHasResult(win.actions[0], 10)).toBe(true);
     });
 
     it('should return false when result does not match', () => {
-      expect(win.action_has_result(win.actions[0], 20)).toBe(false);
+      expect(actionHasResult(win.actions[0], 20)).toBe(false);
     });
 
     it('should return null for null action', () => {
-      expect(win.action_has_result(null, 10)).toBeNull();
+      expect(actionHasResult(null, 10)).toBeNull();
     });
   });
 
-  describe('action_prob_possible', () => {
+  describe('actionProbPossible', () => {
     it('should return true when max > 0', () => {
-      expect(win.action_prob_possible({ min: 0, max: 100 })).toBe(true);
+      expect(actionProbPossible({ min: 0, max: 100 })).toBe(true);
     });
 
     it('should return false when max is 0 and no not_impl', () => {
-      expect(win.action_prob_possible({ min: 0, max: 0 })).toBe(false);
+      expect(actionProbPossible({ min: 0, max: 0 })).toBe(false);
     });
   });
 });
@@ -234,33 +242,33 @@ describe('actions.ts', () => {
 // ===========================================================================
 
 describe('government.ts', () => {
-  describe('government_max_rate', () => {
+  describe('governmentMaxRate', () => {
     it('should return 100 for Anarchy (0)', () => {
-      expect(win.government_max_rate(0)).toBe(100);
+      expect(governmentMaxRate(0)).toBe(100);
     });
 
     it('should return 60 for Despotism (1)', () => {
-      expect(win.government_max_rate(1)).toBe(60);
+      expect(governmentMaxRate(1)).toBe(60);
     });
 
     it('should return 70 for Monarchy (2)', () => {
-      expect(win.government_max_rate(2)).toBe(70);
+      expect(governmentMaxRate(2)).toBe(70);
     });
 
     it('should return 80 for Communism (3)', () => {
-      expect(win.government_max_rate(3)).toBe(80);
+      expect(governmentMaxRate(3)).toBe(80);
     });
 
     it('should return 80 for Republic (4)', () => {
-      expect(win.government_max_rate(4)).toBe(80);
+      expect(governmentMaxRate(4)).toBe(80);
     });
 
     it('should return 100 for Democracy (5)', () => {
-      expect(win.government_max_rate(5)).toBe(100);
+      expect(governmentMaxRate(5)).toBe(100);
     });
 
     it('should return 100 for unknown government', () => {
-      expect(win.government_max_rate(99)).toBe(100);
+      expect(governmentMaxRate(99)).toBe(100);
     });
   });
 });

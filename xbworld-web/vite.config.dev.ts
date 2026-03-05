@@ -17,26 +17,29 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import https from 'https';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
 const BACKEND = process.env.BACKEND_URL || 'https://xbworld-production.up.railway.app';
 const backendWs = BACKEND.replace(/^http/, 'ws');
 
-// Create a custom HTTPS agent that ignores certificate validation issues.
-// Railway's TLS setup sometimes causes "socket disconnected before TLS
-// handshake" errors with the default Node.js http-proxy agent.
-const httpsAgent = new https.Agent({
-  rejectUnauthorized: false,
-  keepAlive: true,
-  // Increase timeout to handle Railway's cold-start latency
-  timeout: 30000,
-});
+// Use egress proxy if available (e.g. in Claude Code web environment),
+// but skip it when connecting to a local backend.
+const isLocalBackend = /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(BACKEND);
+const proxyEnv = !isLocalBackend ? (process.env.HTTPS_PROXY || process.env.https_proxy) : undefined;
+const httpsAgent = proxyEnv
+  ? new HttpsProxyAgent(proxyEnv)
+  : new https.Agent({
+      rejectUnauthorized: false,
+      keepAlive: true,
+      timeout: 30000,
+    });
 
 // Common proxy options for all API endpoints
-const apiProxy = {
+const apiProxy: Record<string, unknown> = {
   target: BACKEND,
   changeOrigin: true,
   secure: false,
-  agent: httpsAgent,
+  ...(BACKEND.startsWith('https') ? { agent: httpsAgent } : {}),
 };
 
 export default defineConfig({
@@ -79,6 +82,7 @@ export default defineConfig({
         ws: true,
         changeOrigin: true,
         secure: false,
+        ...(proxyEnv ? { agent: httpsAgent } : {}),
       },
 
       // API endpoints — must cover all backend routes
