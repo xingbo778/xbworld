@@ -6,8 +6,9 @@
 
 import { store } from '../../data/store';
 import { cityOwnerPlayerId as city_owner_player_id, cityTile as city_tile } from '../../data/city';
-import { unit_type, unit_list_size, unit_list_without } from '../../data/unit';
+import { unit_type, unit_list_size, unit_list_without, get_unit_homecity_name, get_unit_moves_left } from '../../data/unit';
 import { game_find_unit_by_number as _game_find_unit_by_number } from '../../data/game';
+import { get_unit_image_sprite } from '../../renderer/tilespec';
 import { utype_can_do_action, utype_can_do_action_result, can_player_build_unit_direct } from '../../data/unittype';
 import { mapPosToTile as map_pos_to_tile, indexToTile as index_to_tile } from '../../data/map';
 import { tileCity as tile_city, tileHasExtra as tile_has_extra } from '../../data/tile';
@@ -29,6 +30,7 @@ import * as S from './controlState';
 // Circular imports — OK, only used inside functions
 import { should_ask_server_for_actions, can_ask_server_for_actions, action_selection_next_in_focus } from './actionSelection';
 import { request_new_unit_activity } from './unitCommands';
+import { center_tile_mapcanvas } from './mapClick';
 
 const FC_ACTIVITY_IDLE = ACTIVITY_IDLE;
 const FC_SSA_NONE = ServerSideAgent.NONE;
@@ -52,15 +54,12 @@ declare const EXTRA_MAGLEV: number;
 declare const EXTRA_MINE: number;
 declare const EXTRA_POLLUTION: number;
 declare const EXTRA_FALLOUT: number;
-declare function center_tile_mapcanvas(tile: any): void;
 declare function update_unit_position(ptile: any): void;
-declare function get_unit_image_sprite(unit: any): any;
-declare function game_find_unit_by_number(id: number): any;
 declare const normal_tile_height: number;
-declare function tile_units_func(ptile: any): any[];
-declare function get_unit_homecity_name(unit: any): string | null;
-declare function get_unit_moves_left(unit: any): string;
-declare function map_city_tile(city: any): any;
+// tile_units is already imported from data/unit — alias for readability
+const tile_units_func = tile_units;
+// map_city_tile is the same as city_tile
+const map_city_tile = city_tile;
 
 // Action constants accessed as globals
 declare const FC_ACTION_FOUND_CITY: number;
@@ -456,7 +455,7 @@ export function update_unit_order_commands(): { [key: string]: any } {
 
     // Load unit on transport
     if (pcity != null) {
-      const units_on_tile = tile_units_func(ptile);
+      const units_on_tile = tile_units_func(ptile) || [];
       for (let r = 0; r < units_on_tile.length; r++) {
         const tunit = units_on_tile[r];
         if (tunit['id'] == punit['id']) continue;
@@ -466,7 +465,7 @@ export function update_unit_order_commands(): { [key: string]: any } {
     }
 
     // Unload unit from transport
-    const units_on_tile = tile_units_func(ptile);
+    const units_on_tile = tile_units_func(ptile) || [];
     if (ptype['transport_capacity'] > 0 && units_on_tile.length >= 2) {
       for (let r = 0; r < units_on_tile.length; r++) {
         const tunit = units_on_tile[r];
@@ -666,10 +665,10 @@ export function find_visible_unit(ptile: any): any {
     return null;
   }
 
-  const vunits = tile_units_func(ptile);
+  const vunits = tile_units_func(ptile) || [];
   for (i = 0; i < vunits.length; i++) {
     const aunit = vunits[i];
-    if (aunit['anim_list'] != null && aunit['anim_list'].length > 0) {
+    if (aunit['anim_list'] != null && (aunit['anim_list'] as any[]).length > 0) {
       return aunit;
     }
   }
@@ -681,7 +680,7 @@ export function find_visible_unit(ptile: any): any {
     }
   }
 
-  return tile_units_func(ptile)[0];
+  return (tile_units_func(ptile) || [])[0];
 }
 
 export function get_drawable_unit(ptile: any, citymode: any): any {

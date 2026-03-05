@@ -12,6 +12,8 @@ import { indexToTile as index_to_tile } from '../../data/map';
 import { send_request } from '../../net/connection';
 import { packet_unit_get_actions, packet_unit_sscs_set } from '../../net/packetConstants';
 import { game_find_unit_by_number } from '../../data/game';
+import { canClientIssueOrders as can_client_issue_orders } from '../../client/clientState';
+import { popup_actor_arrival } from '../../ui/options';
 import * as S from './controlState';
 // Circular import — OK because only used inside functions (not at init time)
 import { unit_is_in_focus, unit_focus_urgent } from './unitFocus';
@@ -26,9 +28,8 @@ const REQEST_PLAYER_INITIATED = 0;
 
 type packet_type_t = Record<string, any>;
 
+// observing is exported from pregame.ts; using declare to avoid circular dep
 declare const observing: boolean;
-declare const popup_actor_arrival: boolean;
-declare function can_client_issue_orders(): boolean;
 
 // ---------------------------------------------------------------------------
 // Public API
