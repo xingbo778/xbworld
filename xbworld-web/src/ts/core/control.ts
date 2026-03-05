@@ -55,7 +55,6 @@ const FC_TECH_KNOWN = TECH_KNOWN;
 const FC_B_AIRPORT_NAME = B_AIRPORT_NAME;
 const REQEST_PLAYER_INITIATED = 0;
 const sendRequest = send_request;
-const sendMessage = send_message;
 
 // Declare globals for runtime variables
 declare const game_info: any;
@@ -775,7 +774,7 @@ export function check_text_input(event: JQuery.KeyDownEvent, chatboxtextarea: JQ
       return;
     }
 
-    sendMessage(message);
+    send_message(message);
     return false;
   }
 }
@@ -939,7 +938,6 @@ export function get_focus_unit_on_tile(ptile: any): any {
 
 /****************************************************************************
   Return TRUE iff this unit is in focus.
-  TODO: not implemented yet.
 ****************************************************************************/
 export function unit_is_in_focus(cunit: any): boolean {
   const funits = get_units_in_focus();
@@ -1023,7 +1021,7 @@ export function update_unit_focus(): void {
     const punit = funits[i];
 
     if (punit['movesleft'] > 0
-      && punit['done_moving'] == false
+      && !punit['done_moving']
       && punit['ssa_controller'] == FC_SSA_NONE
       && punit['activity'] == FC_ACTIVITY_IDLE) {
       return;
@@ -1446,12 +1444,12 @@ export function find_best_focus_candidate(accept_current: boolean): any {
       && client.conn.playing != null
       && punit['owner'] == client.conn.playing.playerno
       && ((punit['activity'] == FC_ACTIVITY_IDLE
-        && punit['done_moving'] == false
+        && !punit['done_moving']
         && punit['movesleft'] > 0)
         || should_ask_server_for_actions(punit))
       && punit['ssa_controller'] == FC_SSA_NONE
       && waiting_units_list.indexOf(punit['id']) < 0
-      && punit['transported'] == false) {
+      && !punit['transported']) {
       return punit;
     }
   }
@@ -1601,7 +1599,7 @@ export function find_visible_unit(ptile: any): any {
 
   for (i = 0; i < vunits.length; i++) {
     const tunit = vunits[i];
-    if (tunit['transported'] == false) {
+    if (!tunit['transported']) {
       return tunit;
     }
   }
@@ -1736,7 +1734,7 @@ export function do_map_click(ptile: any, qtype: any, first_time_called: boolean)
 
   if (current_focus.length > 0 && current_focus[0]['tile'] == ptile['index']) {
     /* clicked on unit at the same tile, then deactivate goto and show context menu. */
-    if (goto_active && !isTouchDevice()) {
+    if (goto_active && !is_touch_device()) {
       deactivate_goto(false);
     }
     if (renderer == RENDERER_2DCANVAS) {
@@ -1876,7 +1874,7 @@ export function do_map_click(ptile: any, qtype: any, first_time_called: boolean)
       }
       clear_goto_tiles();
 
-    } else if (isTouchDevice()) {
+    } else if (is_touch_device()) {
       /* this is to handle the case where a mobile touch device user chooses
       GOTO from the context menu or clicks the goto icon. Then the goto path
       has to be requested first, and then do_map_click will be called again
@@ -1945,7 +1943,7 @@ export function do_map_click(ptile: any, qtype: any, first_time_called: boolean)
           update_active_units_dialog();
         }
 
-        if (isTouchDevice()) {
+        if (is_touch_device()) {
           if (renderer == RENDERER_2DCANVAS) {
             $("#canvas").contextMenu();
           } else {
@@ -2395,7 +2393,7 @@ export function handle_context_menu_callback(key: string) {
       }
       break;
   }
-  if (key != "goto" && isTouchDevice()) {
+  if (key != "goto" && is_touch_device()) {
     deactivate_goto(false);
   }
 }
@@ -2421,7 +2419,7 @@ export function activate_goto_last(last_order: any, last_action: any) {
 
   if (current_focus.length > 0) {
     if (intro_click_description) {
-      if (isTouchDevice()) {
+      if (is_touch_device()) {
         message_log.update({
           event: E_BEGINNER_HELP,
           message: "Carefully drag unit to the tile you want it to go to."
@@ -2472,7 +2470,7 @@ export function send_end_turn() {
   if (store.game_info == null) return;
 
   $("#turn_done_button").button("option", "disabled", true);
-  if (!isTouchDevice()) $("#turn_done_button").tooltip({ disabled: true });
+  if (!is_touch_device()) $("#turn_done_button").tooltip({ disabled: true });
   const packet = { "pid": packet_player_phase_done, "turn": store.game_info['turn'] };
   sendRequest(JSON.stringify(packet));
   update_turn_change_timer();
@@ -2533,12 +2531,9 @@ export function key_unit_load() {
 **************************************************************************/
 export function key_unit_unload() {
   const funits = get_units_in_focus();
-  let units_on_tile: any[] = [];
-  for (let i = 0; i < funits.length; i++) {
-    const punit = funits[i];
-    const ptile = index_to_tile(punit['tile']);
-    units_on_tile = tile_units(ptile);
-  }
+  if (funits.length === 0) return;
+  const last_unit = funits[funits.length - 1];
+  const units_on_tile = tile_units(index_to_tile(last_unit['tile']));
 
   for (let i = 0; i < units_on_tile.length; i++) {
     const punit = units_on_tile[i];
@@ -2563,12 +2558,9 @@ export function key_unit_unload() {
 **************************************************************************/
 export function key_unit_show_cargo() {
   const funits = get_units_in_focus();
-  let units_on_tile: any[] = [];
-  for (let i = 0; i < funits.length; i++) {
-    const punit = funits[i];
-    const ptile = index_to_tile(punit['tile']);
-    units_on_tile = tile_units(ptile);
-  }
+  if (funits.length === 0) return;
+  const last_unit = funits[funits.length - 1];
+  const units_on_tile = tile_units(index_to_tile(last_unit['tile']));
 
   current_focus = [];
   for (let i = 0; i < units_on_tile.length; i++) {
@@ -2607,39 +2599,34 @@ export function key_unit_noorders() {
 }
 
 /**************************************************************************
+  Helper: set activity for all units in focus and schedule focus update.
+**************************************************************************/
+function set_focus_units_activity(activity: any, target: any = EXTRA_NONE) {
+  for (const punit of get_units_in_focus()) {
+    request_new_unit_activity(punit, activity, target);
+  }
+  setTimeout(update_unit_focus, 700);
+}
+
+/**************************************************************************
   Tell the units to stop what they are doing.
 **************************************************************************/
 export function key_unit_idle() {
-  const funits = get_units_in_focus();
-  for (let i = 0; i < funits.length; i++) {
-    const punit = funits[i];
-    request_new_unit_activity(punit, ACTIVITY_IDLE, EXTRA_NONE);
-  }
-  setTimeout(update_unit_focus, 700);
+  set_focus_units_activity(ACTIVITY_IDLE);
 }
 
 /**************************************************************************
   Tell the units in focus to sentry.
 **************************************************************************/
 export function key_unit_sentry() {
-  const funits = get_units_in_focus();
-  for (let i = 0; i < funits.length; i++) {
-    const punit = funits[i];
-    request_new_unit_activity(punit, ACTIVITY_SENTRY, EXTRA_NONE);
-  }
-  setTimeout(update_unit_focus, 700);
+  set_focus_units_activity(ACTIVITY_SENTRY);
 }
 
 /**************************************************************************
   Tell the units in focus to fortify.
 **************************************************************************/
 export function key_unit_fortify() {
-  const funits = get_units_in_focus();
-  for (let i = 0; i < funits.length; i++) {
-    const punit = funits[i];
-    request_new_unit_activity(punit, ACTIVITY_FORTIFYING, EXTRA_NONE);
-  }
-  setTimeout(update_unit_focus, 700);
+  set_focus_units_activity(ACTIVITY_FORTIFYING);
 }
 
 /**************************************************************************
@@ -2686,39 +2673,22 @@ export function key_unit_airbase() {
   Tell the units in focus to irrigate.
 **************************************************************************/
 export function key_unit_irrigate() {
-  const funits = get_units_in_focus();
-  for (let i = 0; i < funits.length; i++) {
-    const punit = funits[i];
-    /* EXTRA_NONE -> server decides */
-    request_new_unit_activity(punit, ACTIVITY_IRRIGATE, EXTRA_NONE);
-  }
-  setTimeout(update_unit_focus, 700);
+  /* EXTRA_NONE -> server decides */
+  set_focus_units_activity(ACTIVITY_IRRIGATE);
 }
 
 /**************************************************************************
   Tell the units in focus to cultivate.
 **************************************************************************/
 export function key_unit_cultivate() {
-  const funits = get_units_in_focus();
-  for (let i = 0; i < funits.length; i++) {
-    const punit = funits[i];
-    request_new_unit_activity(punit, ACTIVITY_CULTIVATE, EXTRA_NONE);
-  }
-  setTimeout(update_unit_focus, 700);
+  set_focus_units_activity(ACTIVITY_CULTIVATE);
 }
 
 /**************************************************************************
   Tell the units to clean pollution.
 **************************************************************************/
 export function key_unit_clean() {
-  const funits = get_units_in_focus();
-
-  for (let i = 0; i < funits.length; i++) {
-    const punit = funits[i];
-
-    request_new_unit_activity(punit, ACTIVITY_CLEAN, EXTRA_NONE);
-  }
-  setTimeout(update_unit_focus, 700);
+  set_focus_units_activity(ACTIVITY_CLEAN);
 }
 
 
@@ -2771,12 +2741,7 @@ export function key_unit_airlift() {
   Tell the units to transform the terrain.
 **************************************************************************/
 export function key_unit_transform() {
-  const funits = get_units_in_focus();
-  for (let i = 0; i < funits.length; i++) {
-    const punit = funits[i];
-    request_new_unit_activity(punit, ACTIVITY_TRANSFORM, EXTRA_NONE);
-  }
-  setTimeout(update_unit_focus, 700);
+  set_focus_units_activity(ACTIVITY_TRANSFORM);
 }
 
 /**************************************************************************
@@ -2803,25 +2768,15 @@ export function key_unit_pillage() {
   Tell the units in focus to mine.
 **************************************************************************/
 export function key_unit_mine() {
-  const funits = get_units_in_focus();
-  for (let i = 0; i < funits.length; i++) {
-    const punit = funits[i];
-    /* EXTRA_NONE -> server decides */
-    request_new_unit_activity(punit, ACTIVITY_MINE, EXTRA_NONE);
-  }
-  setTimeout(update_unit_focus, 700);
+  /* EXTRA_NONE -> server decides */
+  set_focus_units_activity(ACTIVITY_MINE);
 }
 
 /**************************************************************************
   Tell the units in focus to plant.
 **************************************************************************/
 export function key_unit_plant() {
-  const funits = get_units_in_focus();
-  for (let i = 0; i < funits.length; i++) {
-    const punit = funits[i];
-    request_new_unit_activity(punit, ACTIVITY_PLANT, EXTRA_NONE);
-  }
-  setTimeout(update_unit_focus, 700);
+  set_focus_units_activity(ACTIVITY_PLANT);
 }
 
 /**************************************************************************
@@ -2864,7 +2819,7 @@ export function key_unit_homecity() {
   Show action selection dialog for unit(s).
 **************************************************************************/
 export function key_unit_action_select() {
-  if (action_tgt_sel_active == true) {
+  if (action_tgt_sel_active) {
     /* The 2nd key press means that the actor should target its own
      * tile. */
     action_tgt_sel_active = false;
