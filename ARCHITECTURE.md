@@ -136,7 +136,7 @@ The SSE event stream (`GET /game/events`) publishes:
 
 ## Freeciv Server Source
 
-The Freeciv C server is included as a git submodule at `freeciv/freeciv`,
+The Freeciv C server is included as a git submodule at `xbworld-backend/freeciv/freeciv`,
 pointing to the `xbworld` branch of [xingbo778/freeciv](https://github.com/xingbo778/freeciv)
 (forked from [freeciv/freeciv](https://github.com/freeciv/freeciv)).
 
@@ -151,14 +151,14 @@ The `xbworld` branch starts from upstream commit `add9f4e1` and includes:
 ### Customization Layers
 
 ```
-Layer 1: Rulesets          freeciv/freeciv/data/xbworld/*.ruleset
+Layer 1: Rulesets          xbworld-backend/freeciv/freeciv/data/xbworld/*.ruleset
          (no recompile     Edit text files, rebuild to install.
           for testing)     Covers: techs, units, buildings, terrain, victory.
 
-Layer 2: Lua Scripts       freeciv/freeciv/data/xbworld/script.lua
+Layer 2: Lua Scripts       xbworld-backend/freeciv/freeciv/data/xbworld/script.lua
                            Event-driven logic: turn triggers, special events.
 
-Layer 3: C Source          freeciv/freeciv/server/*.c, common/*.c, ai/*.c
+Layer 3: C Source          xbworld-backend/freeciv/freeciv/server/*.c, common/*.c, ai/*.c
                            Full engine control: combat formulas, turn flow,
                            packet protocol, diplomacy logic.
 ```
@@ -166,7 +166,7 @@ Layer 3: C Source          freeciv/freeciv/server/*.c, common/*.c, ai/*.c
 ### Build Workflow
 
 ```bash
-cd freeciv
+cd xbworld-backend/freeciv
 ./prepare_freeciv.sh          # configure + build + install to ~/freeciv/
 ./prepare_freeciv.sh clean    # full rebuild from scratch
 ```
@@ -180,13 +180,13 @@ Changes to the Freeciv source are committed in two places:
 
 ```bash
 # 1. Inside the submodule (push to xingbo778/freeciv xbworld branch)
-cd freeciv/freeciv
+cd xbworld-backend/freeciv/freeciv
 git add -A && git commit -m "feat: description"
 git push origin xbworld
 
 # 2. In the main repo (update submodule reference)
-cd ../..
-git add freeciv/freeciv
+cd ../../..
+git add xbworld-backend/freeciv/freeciv
 git commit -m "chore: update freeciv submodule"
 ```
 

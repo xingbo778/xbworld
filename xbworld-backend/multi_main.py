@@ -133,7 +133,7 @@ class GameOrchestrator:
         """
         freeciv_bin = os.path.expanduser("~/freeciv/bin/freeciv-web")
         freeciv_data = os.path.expanduser("~/freeciv/share/freeciv/")
-        project_root = Path(__file__).resolve().parent.parent
+        project_root = Path(__file__).resolve().parent
         proxy_script = Path(__file__).resolve().parent / "standalone_proxy.py"
         log_dir = project_root / "logs"
         log_dir.mkdir(exist_ok=True)

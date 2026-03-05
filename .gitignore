@@ -1,5 +1,5 @@
 # Freeciv C server build artifacts (source is a git submodule)
-freeciv/build/
+xbworld-backend/freeciv/build/
 
 # Python
 .venv/
@@ -46,7 +46,7 @@ xbworld-web/test-results/
 xbworld-web/playwright-report/
 
 # Data directory runtime files
-data/savegames/
+xbworld-backend/data/savegames/
 
 # Vite-built TS bundle (generated during Docker build)
 xbworld-web/src/main/webapp/javascript/ts-bundle/

@@ -1,14 +1,10 @@
 ###############################################################################
-# Backend-only Docker image
+# XBWorld Backend Docker image
 #
-# Contains the freeciv C server + Python agent orchestrator.
-# Does NOT serve frontend static files — use Dockerfile.frontend for that.
-#
-# This image is much faster to build when only backend code changes,
-# because it skips the Node.js/Vite build stage entirely.
+# Contains the freeciv C server + Python agent orchestrator + WS proxy.
 #
 # Build:
-#   docker build -f Dockerfile.backend -t xbworld-backend .
+#   docker build -t xbworld-backend .
 #
 # Run:
 #   docker run -p 8080:8080 xbworld-backend
@@ -49,9 +45,13 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
         libcurl4 libjansson4 libicu72 libsqlite3-0 liblzma5 libzstd1 zlib1g \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /opt/freeciv /opt/freeciv
-COPY xbworld-agent/ /app/xbworld-agent/
+COPY server.py ws_proxy.py standalone_proxy.py config.py \
+     agent.py agent_tools.py game_client.py decision_engine.py \
+     llm_providers.py state_api.py main.py multi_main.py \
+     run_remote.py requirements.txt /app/
+COPY static/ /app/static/
 COPY data/ /app/data/
-WORKDIR /app/xbworld-agent
+WORKDIR /app
 RUN pip install --no-cache-dir -r requirements.txt
 RUN useradd -m -s /bin/bash xbworld && \
     chown -R xbworld:xbworld /app /opt/freeciv

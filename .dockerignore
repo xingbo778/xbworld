@@ -3,15 +3,10 @@
 .gitignore
 .mailmap
 .venv
-ADVANCED.md
 CONTRIBUTING.md
-Dockerfile
 README.md
-README-One-Turn-Per-Day.md
 ARCHITECTURE.md
 LICENSE.txt
-TODO
-Vagrantfile
 railway.toml
 *.log
 __pycache__
@@ -19,16 +14,10 @@ __pycache__
 # Not needed for server deployment
 logs/
 tests/
-blender/
 music/
-pbem/
-scripts/freeciv-web-*
-scripts/migration/
-scripts/install/
 config/
-xbworld-proxy/
-xbworld-agent/test_*
-xbworld-agent/static/
+xbworld-backend/test_*
+xbworld-backend/static/
 xbworld-web/src/main/java/
 xbworld-web/tests/
 xbworld-web/pom.xml
@@ -39,15 +28,12 @@ xbworld-web/eslint.config.mjs
 xbworld-web/vitest.config.ts
 # Note: src/ts/, package*.json, tsconfig*.json, vite.config.ts are now
 # INCLUDED in the build context for the Vite TS build stage (Stage 3).
-install-macos.sh
-start-macos.sh
-stop-macos.sh
 
 # Build artifacts
-freeciv/build/
-freeciv/freeciv/client/
-freeciv/freeciv/tools/
-freeciv/freeciv/translations/
-freeciv/freeciv/doc/
-freeciv/freeciv/tests/
-freeciv/freeciv/platforms/
+xbworld-backend/freeciv/build/
+xbworld-backend/freeciv/freeciv/client/
+xbworld-backend/freeciv/freeciv/tools/
+xbworld-backend/freeciv/freeciv/translations/
+xbworld-backend/freeciv/freeciv/doc/
+xbworld-backend/freeciv/freeciv/tests/
+xbworld-backend/freeciv/freeciv/platforms/

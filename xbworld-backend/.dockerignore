@@ -1,0 +1,12 @@
+.git
+.github
+.venv
+__pycache__
+*.pyc
+logs/
+freeciv/build/
+data/savegames/
+.DS_Store
+*.md
+!README.md
+test_*.py

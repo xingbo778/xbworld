@@ -1,4 +1,12 @@
 ###############################################################################
+# Railway full-stack image (builds backend from xbworld-backend/ + frontend)
+#
+# For separated deployments, use:
+#   - xbworld-backend/Dockerfile   (backend only)
+#   - Dockerfile.frontend           (frontend only)
+###############################################################################
+
+###############################################################################
 # Stage 1: Build the freeciv-web C server binary
 ###############################################################################
 FROM debian:bookworm AS builder
@@ -18,7 +26,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
         libsqlite3-dev \
         zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
-COPY freeciv/ /build/freeciv/
+COPY xbworld-backend/freeciv/ /build/freeciv/
 WORKDIR /build/freeciv
 # If submodule source is missing (GitHub deploy without --recurse-submodules),
 # clone it directly
@@ -42,7 +50,7 @@ RUN meson setup build freeciv -Dserver='freeciv-web' \
 FROM python:3.11-slim-bookworm AS tileset-builder
 RUN pip install --no-cache-dir Pillow
 COPY scripts/freeciv-img-extract/ /build/scripts/
-COPY freeciv/ /build/freeciv/
+COPY xbworld-backend/freeciv/ /build/freeciv/
 # If submodule source is missing, clone it
 RUN if [ ! -f /build/freeciv/freeciv/data/amplio2.tilespec ]; then \
         rm -rf /build/freeciv/freeciv && \
@@ -89,8 +97,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && \
         zlib1g \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /opt/freeciv /opt/freeciv
-COPY xbworld-agent/ /app/xbworld-agent/
-COPY data/ /app/data/
+# Backend Python code
+COPY xbworld-backend/*.py /app/xbworld-backend/
+COPY xbworld-backend/requirements.txt /app/xbworld-backend/
+COPY xbworld-backend/static/ /app/xbworld-backend/static/
+COPY xbworld-backend/data/ /app/xbworld-backend/data/
+# Frontend webapp
 COPY xbworld-web/src/main/webapp/ /app/xbworld-web/src/main/webapp/
 # Copy generated tileset PNGs and spec JS into the webapp
 COPY --from=tileset-builder /build/out/xbworld-tileset-amplio2-*.png \
@@ -106,12 +118,13 @@ COPY --from=ts-builder /build/xbworld-web/src/main/webapp/javascript/hbs-templat
 # Copy Handlebars runtime (needed since templates were unbundled from webclient.min.js)
 COPY xbworld-web/src/main/webapp/javascript/libs/handlebars.runtime.min.js \
      /app/xbworld-web/src/main/webapp/javascript/libs/handlebars.runtime.min.js
-WORKDIR /app/xbworld-agent
+WORKDIR /app/xbworld-backend
 RUN pip install --no-cache-dir -r requirements.txt
 RUN useradd -m -s /bin/bash xbworld && \
     chown -R xbworld:xbworld /app /opt/freeciv
 ENV FREECIV_BIN=/opt/freeciv/bin/freeciv-web \
     FREECIV_DATA_PATH=/opt/freeciv/share/freeciv/ \
+    WEBAPP_DIR=/app/xbworld-web/src/main/webapp \
     PYTHONUNBUFFERED=1
 USER xbworld
 EXPOSE 8080
