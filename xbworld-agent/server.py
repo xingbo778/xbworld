@@ -30,6 +30,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, WebSocket
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
@@ -112,7 +113,7 @@ class ServerManager:
 
         self._servers[port] = subprocess.Popen(
             [freeciv_bin, "--debug", "1", "--port", str(port),
-             "--Announce", "none", "--exit-on-end", "--quitidle", "120",
+             "--Announce", "none",
              "--read", serv_script],
             stdout=open(log_file, "w"),
             stderr=subprocess.STDOUT,
@@ -314,6 +315,16 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="XBWorld Server", lifespan=lifespan)
+
+# --- CORS middleware (allow local frontend to connect to remote backend) ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["port", "result"],
+)
 
 
 # --- Metaserver API ---
