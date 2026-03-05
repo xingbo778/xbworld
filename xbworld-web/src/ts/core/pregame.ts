@@ -1395,11 +1395,10 @@ export function create_new_freeciv_user_account_request(action_type: string): bo
   Customize nation: choose nation name and upload new flag.
 **************************************************************************/
 export function show_customize_nation_dialog(player_id: number): void {
-  const w = window as any;
-  if (chosen_nation == -1 || w.client.conn['player_num'] == null
+  if (chosen_nation == -1 || client.conn['player_num'] == null
       || choosing_player == null || choosing_player < 0) return;
 
-  const pnation = w.nations[chosen_nation];
+  const pnation = nations[chosen_nation];
 
   $("#dialog").remove();
   $("<div id='dialog'></div>").appendTo("div#game_page");
@@ -1432,20 +1431,19 @@ export function show_customize_nation_dialog(player_id: number): void {
   Handle customized nation flag upload.
 **************************************************************************/
 export function handle_customized_nation(player_id: number): void {
-  const w = window as any;
   const new_nation_name = $("#new_nation_adjective").val();
-  w.nations[chosen_nation]['adjective'] = new_nation_name;
+  nations[chosen_nation]['adjective'] = new_nation_name;
 
   const fileInput = document.getElementById('newFlagFileInput') as HTMLInputElement;
   const file = fileInput.files?.[0];
 
   if (file == null) {
-    w.swal("Please upload a image file!");
+    swal("Please upload a image file!");
     return;
   }
 
   if (!(window.FileReader)) {
-    w.swal("Uploading files not supported");
+    swal("Uploading files not supported");
     return;
   }
 
@@ -1460,7 +1458,7 @@ export function handle_customized_nation(player_id: number): void {
     reader.readAsDataURL(file);
   } else {
     $.unblockUI();
-    w.swal("Image file " + file.name + "  not supported: " + file.type);
+    swal("Image file " + file.name + "  not supported: " + file.type);
   }
 }
 
@@ -1468,21 +1466,20 @@ export function handle_customized_nation(player_id: number): void {
   Update flag sprites based on user uploaded flags.
 **************************************************************************/
 export function handle_new_flag(image_data: string, player_id: number): void {
-  const w = window as any;
-  const pnation = w.nations[chosen_nation];
+  const pnation = nations[chosen_nation];
   const flag_tag = "f." + pnation['graphic_str'];
   const shield_tag = "f.shield." + pnation['graphic_str'];
 
   const new_flag_canvas = document.createElement('canvas');
-  new_flag_canvas.width = w.sprites[flag_tag].width;
-  new_flag_canvas.height = w.sprites[flag_tag].height;
-  w.sprites[flag_tag] = new_flag_canvas;
+  new_flag_canvas.width = sprites[flag_tag].width;
+  new_flag_canvas.height = sprites[flag_tag].height;
+  sprites[flag_tag] = new_flag_canvas;
   const ctx_flag = new_flag_canvas.getContext("2d")!;
 
   const new_shield_canvas = document.createElement('canvas');
-  new_shield_canvas.width = w.sprites[shield_tag].width;
-  new_shield_canvas.height = w.sprites[shield_tag].height;
-  w.sprites[shield_tag] = new_shield_canvas;
+  new_shield_canvas.width = sprites[shield_tag].width;
+  new_shield_canvas.height = sprites[shield_tag].height;
+  sprites[shield_tag] = new_shield_canvas;
   const ctx_shield = new_shield_canvas.getContext("2d")!;
 
   const img = new Image();
@@ -1493,7 +1490,7 @@ export function handle_new_flag(image_data: string, player_id: number): void {
     pick_nation(player_id);
   };
   img.src = image_data;
-  w.nations[chosen_nation]['customized'] = true;
+  nations[chosen_nation]['customized'] = true;
 }
 
 /**************************************************************************
@@ -1507,7 +1504,6 @@ export function onloadCallback(): void {
   Reset the password for the user.
 **************************************************************************/
 export function forgot_password(): void {
-  const w = window as any;
   let password_reset_count = 0;
 
   const title = "Forgot your password?";
@@ -1532,28 +1528,28 @@ export function forgot_password(): void {
       "Send password": function() {
         password_reset_count++;
         if (password_reset_count > 3) {
-          w.swal("Unable to reset password.");
+          swal("Unable to reset password.");
           return;
         }
         const reset_email = $("#email_reset").val();
         const captcha = $("#g-recaptcha-response").val();
         if (reset_email == null || (reset_email as string).length == 0) {
-          w.swal("Please fill in e-mail.");
+          swal("Please fill in e-mail.");
           return;
         }
-        if (w.captcha_site_key != '' && (captcha == null || (captcha as string).length == 0)) {
-          w.swal("Please fill complete the captcha.");
+        if (captcha_site_key != '' && (captcha == null || (captcha as string).length == 0)) {
+          swal("Please fill complete the captcha.");
           return;
         }
         $.ajax({
           type: 'POST',
           url: "/reset_password?email=" + reset_email + "&captcha=" + encodeURIComponent(captcha as string),
           success: function(data: any, textStatus: string, request: any) {
-            w.swal("Password reset. Please check your email.");
+            swal("Password reset. Please check your email.");
             $("#pwd_dialog").remove();
           },
           error: function(request: any, textStatus: string, errorThrown: string) {
-            w.swal("Error, password was not reset.");
+            swal("Error, password was not reset.");
           }
         });
       }
@@ -1561,14 +1557,14 @@ export function forgot_password(): void {
   });
   ($("#pwd_dialog") as any).dialog('open');
 
-  if (w.captcha_site_key != '') {
-    if (w.grecaptcha !== undefined && w.grecaptcha != null) {
+  if (captcha_site_key != '') {
+    if (grecaptcha !== undefined && grecaptcha != null) {
       $('#captcha_element').html('');
-      w.grecaptcha.render('captcha_element', {
-        'sitekey': w.captcha_site_key
+      grecaptcha.render('captcha_element', {
+        'sitekey': captcha_site_key
       });
     } else {
-      w.swal("Captcha not available. This could be caused by a browser plugin.");
+      swal("Captcha not available. This could be caused by a browser plugin.");
     }
   }
 }
@@ -1577,7 +1573,6 @@ export function forgot_password(): void {
   User signed in with Google account.
 **************************************************************************/
 export function google_signin_on_success(googleUser: any): void {
-  const w = window as any;
   const id_token = googleUser.getAuthResponse().id_token;
 
   if (!validate_username()) {
@@ -1590,13 +1585,13 @@ export function google_signin_on_success(googleUser: any): void {
   xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
   xhr.onload = function() {
     if (xhr.responseText == "OK") {
-      w.google_user_token = id_token;
-      w.simpleStorage.set("username", uname);
+      (window as any).google_user_token = id_token;
+      simpleStorage.set("username", uname);
       ($("#dialog") as any).dialog('close');
     } else if (xhr.responseText == "Email not verified") {
-      w.swal("Login failed. E-mail not verified.");
+      swal("Login failed. E-mail not verified.");
     } else {
-      w.swal("Login failed.");
+      swal("Login failed.");
     }
   };
   xhr.send('idtoken=' + id_token + "&username=" + uname);

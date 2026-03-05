@@ -7,17 +7,13 @@
  */
 
 import { MAX_NUM_BUILDINGS } from '../core/constants';
-
-const w = window as any;
+import { store } from './store';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 export const B_AIRPORT_NAME = 'Airport';
 export const B_LAST = MAX_NUM_BUILDINGS;
-
-// Ensure global improvements object exists before any handler runs
-if (!w.improvements) w.improvements = {};
 
 // Module-local name→id cache (mirrors Legacy improvements_name_index)
 const improvements_name_index: Record<string, number> = {};
@@ -30,8 +26,8 @@ const improvements_name_index: Record<string, number> = {};
  * Prepare improvements for use, resetting state from any previous ruleset.
  */
 export function improvements_init(): void {
-  const improvements = w.improvements;
-  Object.keys(improvements).forEach((k) => delete improvements[k]);
+  const improvements = store.improvements;
+  Object.keys(improvements).forEach((k) => delete (improvements as any)[k]);
   Object.keys(improvements_name_index).forEach(
     (k) => delete improvements_name_index[k]
   );
@@ -41,7 +37,7 @@ export function improvements_init(): void {
  * Add a new improvement definition.
  */
 export function improvements_add_building(improvement: any): void {
-  w.improvements[improvement.id] = improvement;
+  store.improvements[improvement.id] = improvement;
   improvements_name_index[improvement.name] = improvement.id;
 }
 
@@ -53,7 +49,7 @@ export function improvements_add_building(improvement: any): void {
  * Returns list of improvements that require the given tech.
  */
 export function get_improvements_from_tech(techId: number): any[] {
-  const improvements = w.improvements as Record<string, any>;
+  const improvements = store.improvements as Record<string, any>;
   const result: any[] = [];
   for (const improvementId in improvements) {
     const pimprovement = improvements[improvementId];
@@ -79,7 +75,7 @@ export function is_wonder(improvement: any): boolean {
  * Returns list of tech ids which are a requirement for the given improvement.
  */
 export function get_improvement_requirements(improvementId: number): number[] {
-  const improvements = w.improvements as Record<number, any>;
+  const improvements = store.improvements as Record<number, any>;
   const result: number[] = [];
   const improvement = improvements[improvementId];
   if (improvement != null && improvement['reqs'] != null) {

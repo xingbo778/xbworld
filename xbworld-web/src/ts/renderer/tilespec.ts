@@ -1591,13 +1591,12 @@ export function fill_path_sprite_array(ptile: any, pcity: any): any[] {
   Fill layer 1 sprite array (fortress background).
 **************************************************************************/
 export function fill_layer1_sprite_array(ptile: any, pcity: any): any[] {
-  const w = window as any;
   const result_sprites: any[] = [];
 
   if (pcity == null) {
     if (tile_has_extra(ptile, EXTRA_FORTRESS)) {
       result_sprites.push({"key": "base.fortress_bg",
-                           "offset_y": -w.normal_tile_height / 2});
+                           "offset_y": -normal_tile_height / 2});
     }
   }
 
@@ -1608,22 +1607,21 @@ export function fill_layer1_sprite_array(ptile: any, pcity: any): any[] {
   Fill layer 2 sprite array (airbase, buoy, ruins).
 **************************************************************************/
 export function fill_layer2_sprite_array(ptile: any, pcity: any): any[] {
-  const w = window as any;
   const result_sprites: any[] = [];
 
   if (pcity == null) {
     if (tile_has_extra(ptile, EXTRA_AIRBASE)) {
       result_sprites.push({"key": "base.airbase_mg",
-                           "offset_y": -w.normal_tile_height / 2});
+                           "offset_y": -normal_tile_height / 2});
     }
     if (tile_has_extra(ptile, EXTRA_BUOY)) {
-      result_sprites.push(w.get_base_flag_sprite(ptile));
+      result_sprites.push((window as any).get_base_flag_sprite(ptile));
       result_sprites.push({"key": "base.buoy_mg",
-                           "offset_y": -w.normal_tile_height / 2});
+                           "offset_y": -normal_tile_height / 2});
     }
     if (tile_has_extra(ptile, EXTRA_RUINS)) {
       result_sprites.push({"key": "extra.ruins_mg",
-                           "offset_y": -w.normal_tile_height / 2});
+                           "offset_y": -normal_tile_height / 2});
     }
   }
 
@@ -1634,13 +1632,12 @@ export function fill_layer2_sprite_array(ptile: any, pcity: any): any[] {
   Fill layer 3 sprite array (fortress foreground).
 **************************************************************************/
 export function fill_layer3_sprite_array(ptile: any, pcity: any): any[] {
-  const w = window as any;
   const result_sprites: any[] = [];
 
   if (pcity == null) {
     if (tile_has_extra(ptile, EXTRA_FORTRESS)) {
       result_sprites.push({"key": "base.fortress_fg",
-                           "offset_y": -w.normal_tile_height / 2});
+                           "offset_y": -normal_tile_height / 2});
     }
   }
 
@@ -1651,16 +1648,15 @@ export function fill_layer3_sprite_array(ptile: any, pcity: any): any[] {
   Assigns the nation's color based on the color of the flag.
 **************************************************************************/
 export function assign_nation_color(nation_id: number): void {
-  const w = window as any;
-  const nation = w.nations[nation_id];
+  const nation = nations[nation_id];
   if (nation == null || nation['color'] != null) return;
 
   const flag_key = "f." + nation['graphic_str'];
-  const flag_sprite = w.sprites[flag_key];
+  const flag_sprite = sprites[flag_key];
   if (flag_sprite == null) return;
   const c = flag_sprite.getContext('2d');
-  const width = w.tileset[flag_key][2];
-  const height = w.tileset[flag_key][3];
+  const width = tileset[flag_key][2];
+  const height = tileset[flag_key][3];
   const color_counts: Record<string, number> = {};
   if (c == null) return;
   const img_data = c.getImageData(1, 1, width - 2, height - 2).data;

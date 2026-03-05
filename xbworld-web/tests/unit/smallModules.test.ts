@@ -15,6 +15,7 @@ import {
   improvements_init,
   improvements_add_building,
 } from '@/data/improvement';
+import { store } from '@/data/store';
 import {
   EXTRA_NONE,
   BASE_GUI_FORTRESS,
@@ -72,12 +73,12 @@ describe('improvement.ts', () => {
 
   describe('is_wonder', () => {
     it('should return true for wonders (soundtag starts with w)', () => {
-      expect(is_wonder(win.improvements[2])).toBe(true);
+      expect(is_wonder(store.improvements[2])).toBe(true);
     });
 
     it('should return false for buildings (soundtag starts with b)', () => {
-      expect(is_wonder(win.improvements[0])).toBe(false);
-      expect(is_wonder(win.improvements[1])).toBe(false);
+      expect(is_wonder(store.improvements[0])).toBe(false);
+      expect(is_wonder(store.improvements[1])).toBe(false);
     });
   });
 
