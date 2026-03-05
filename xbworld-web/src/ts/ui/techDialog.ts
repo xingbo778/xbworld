@@ -13,10 +13,7 @@ import { clientState as client_state, C_S_RUNNING } from '../client/clientState'
 import { clientIsObserver as client_is_observer } from '../client/clientState';
 declare const client: any;
 import { isSmallScreen as is_small_screen } from '../utils/helpers';
-import { isPbem as is_pbem } from '../client/clientCore';
 import { move_points_text } from '../data/unit';
-declare const get_pbem_game_key: any;
-declare const pbem_phase_ended: any;
 declare const EventAggregator: any;
 declare const unit_types: any;
 declare const improvements: any;
@@ -482,26 +479,12 @@ export function get_tech_infobox_html(tech_id: number): string | null {
 }
 
 export function check_queued_tech_gained_dialog(): void {
-  if (!is_pbem() || players.length < 2) return;
-
-  const queued_tech: string | null = simpleStorage.get(get_pbem_game_key(), "");
-
-  if (queued_tech != null && queued_tech !== "") {
-    $("#dialog").remove();
-    show_tech_gained_dialog(parseInt(queued_tech));
-    simpleStorage.set(get_pbem_game_key(), null);
-  }
-
+  // PBEM mode removed - no-op
 }
 
 export function queue_tech_gained_dialog(tech_gained_id: number): void {
   if (client_is_observer() || C_S_RUNNING != client_state()) return;
-
-  if (is_pbem() && pbem_phase_ended) {
-    simpleStorage.set(get_pbem_game_key(), tech_gained_id);
-  } else {
-    show_tech_gained_dialog(tech_gained_id);
-  }
+  show_tech_gained_dialog(tech_gained_id);
 
 }
 

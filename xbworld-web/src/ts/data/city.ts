@@ -79,9 +79,6 @@ export function removeCity(pcityId: number): void {
     cityOwner(pcity).playerno === w.client.conn.playing.playerno;
   const ptile = cityTile(w.cities[pcityId]);
   delete w.cities[pcityId];
-  if (w.renderer === w.RENDERER_WEBGL) {
-    w.update_city_position(ptile);
-  }
   if (update) {
     w.city_screen_updater?.update();
     w.bulbs_output_updater?.update();
@@ -591,56 +588,6 @@ export function showCityTraderoutes(): string {
 }
 
 // ---------------------------------------------------------------------------
-// 3D model helpers
-// ---------------------------------------------------------------------------
-
-/** Returns the 3d model name for the given city. */
-export function cityTo3dModelName(pcity: any): string {
-  let size = 0;
-  if (pcity['size'] >= 3 && pcity['size'] <= 6) {
-    size = 1;
-  } else if (pcity['size'] > 6 && pcity['size'] <= 9) {
-    size = 2;
-  } else if (pcity['size'] > 9 && pcity['size'] <= 11) {
-    size = 3;
-  } else if (pcity['size'] > 11) {
-    size = 4;
-  }
-
-  let styleId = pcity['style'];
-  if (styleId === -1) styleId = 0;
-  const cityRule = w.city_rules[styleId];
-
-  let cityStyleName = 'european';
-  if (
-    cityRule['rule_name'] === 'Industrial' ||
-    cityRule['rule_name'] === 'ElectricAge' ||
-    cityRule['rule_name'] === 'Modern' ||
-    cityRule['rule_name'] === 'PostModern' ||
-    cityRule['rule_name'] === 'Asian'
-  ) {
-    cityStyleName = 'modern';
-  }
-
-  return 'city_' + cityStyleName + '_' + size;
-}
-
-/** Returns the city walls scale for the given city. */
-export function getCitywallsScale(pcity: any): number {
-  let scale = 8;
-  if (pcity['size'] >= 3 && pcity['size'] <= 6) {
-    scale = 9;
-  } else if (pcity['size'] > 6 && pcity['size'] <= 9) {
-    scale = 10;
-  } else if (pcity['size'] > 9 && pcity['size'] <= 11) {
-    scale = 11;
-  } else if (pcity['size'] > 11) {
-    scale = 12;
-  }
-  return scale;
-}
-
-// ---------------------------------------------------------------------------
 // Expose to legacy JS
 // ---------------------------------------------------------------------------
 
@@ -651,4 +598,3 @@ export function getCitywallsScale(pcity: any): number {
 // Growth and state
 // Tile map
 // Trade routes
-// 3D model helpers

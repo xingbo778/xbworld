@@ -98,7 +98,6 @@ import './utils/bitvector';
 import './utils/helpers';
 import './utils/banlist';
 import './utils/mobile';
-import './utils/replay';
 import './utils/savegame';
 
 // Network layer
@@ -131,7 +130,6 @@ import './renderer/tilespec';
 
 // Audio layer
 import './audio/sounds';
-import './audio/speech';
 
 // UI layer
 import './ui/GameDialog';
@@ -143,16 +141,11 @@ import './ui/techDialog';
 import './ui/governmentDialog';
 import './ui/cma';
 import './ui/diplomacy';
-import './ui/hallOfFame';
 import './ui/helpdata';
-import './ui/hotseat';
 import './ui/intelDialog';
-import './ui/mapFromImage';
 import './ui/options';
 import './ui/pillageDialog';
 import './ui/rates';
-import './ui/scorelog';
-import './ui/spacerace';
 
 // ---------------------------------------------------------------------------
 // Step 3: Register all exports to window (transitional).

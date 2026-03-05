@@ -53,17 +53,8 @@ export function setClientState(newstate: number): void {
       if (typeof w.set_client_page === 'function') w.set_client_page(w.PAGE_GAME);
       if (typeof w.setup_window_size === 'function') w.setup_window_size();
       if (typeof w.update_metamessage_on_gamestart === 'function') w.update_metamessage_on_gamestart();
-      if (w.is_pbem && w.is_pbem()) {
-        setTimeout(function () {
-          if (typeof w.set_human_pbem_players === 'function') w.set_human_pbem_players();
-          if (typeof w.advance_unit_focus === 'function') w.advance_unit_focus();
-        }, 1500);
-      }
       // remove context menu from pregame
       if (w.$) w.$('.context-menu-root').remove();
-      if (w.renderer === w.RENDERER_WEBGL && typeof w.init_webgl_mapview === 'function') {
-        w.init_webgl_mapview();
-      }
       if (w.observing || w.$.getUrlVar('action') === 'multi' || (w.is_longturn && w.is_longturn()) || w.game_loaded) {
         if (typeof w.center_on_any_city === 'function') w.center_on_any_city();
         if (typeof w.advance_unit_focus === 'function') w.advance_unit_focus();
@@ -158,16 +149,6 @@ export function showNewGameMessage(): void {
 
   if (w.observing || w.$.getUrlVar('autostart') === 'true') {
     return;
-  } else if (w.is_hotseat && w.is_hotseat()) {
-    if (typeof w.show_hotseat_new_phase === 'function') w.show_hotseat_new_phase();
-    return;
-  } else if (w.is_pbem && w.is_pbem()) {
-    message = 'Welcome ' + w.username + '! It is now your turn to play. Each player will ' +
-      'get an e-mail when it is their turn to play, and can only play one turn at a time. ' +
-      'Click the end turn button to end your turn and let the next opponent play.';
-    setTimeout(function () {
-      if (typeof w.check_queued_tech_gained_dialog === 'function') w.check_queued_tech_gained_dialog();
-    }, 2500);
   } else if (w.is_longturn && w.is_longturn()) {
     message = 'Welcome ' + w.username + '! This is a One Turn per Day game, where you play one ' +
       'turn every day. Click the Turn Done button when you are done with your turn. To play your next ' +
@@ -257,13 +238,6 @@ export function showEndgameDialog(): void {
     modal: true,
     width: (w.is_small_screen && w.is_small_screen()) ? '90%' : '50%',
     buttons: {
-      'Game replay': function () {
-        if (typeof w.show_replay === 'function') w.show_replay();
-      },
-      'Show Scores': function () {
-        w.$('#dialog').dialog('close');
-        if (typeof w.view_game_scores === 'function') w.view_game_scores();
-      },
       Ok: function () {
         w.$('#dialog').dialog('close');
         w.$('#game_text_input').blur();
@@ -273,9 +247,6 @@ export function showEndgameDialog(): void {
   w.$('#dialog').dialog('open');
   w.$('#game_text_input').blur();
   w.$('#dialog').css('max-height', '500px');
-  setTimeout(function () {
-    if (typeof w.submit_game_to_hall_of_fame === 'function') w.submit_game_to_hall_of_fame();
-  }, 1000);
 }
 
 // ---------------------------------------------------------------------------
@@ -299,20 +270,12 @@ export function updateMetamessageOnGamestart(): void {
   }
   const action = w.$.getUrlVar('action');
   if (action === 'new' || action === 'earthload' || w.$.getUrlVar('scenario') === 'true') {
-    if (w.renderer === w.RENDERER_2DCANVAS) {
-      w.$.post('/freeciv_time_played_stats?type=single2d').fail(function () {});
-    } else {
-      w.$.post('/freeciv_time_played_stats?type=single3d').fail(function () {});
-    }
+    w.$.post('/freeciv_time_played_stats?type=single2d').fail(function () {});
   }
   if (action === 'multi' && w.client?.conn?.playing != null &&
       w.client.conn.playing['pid'] === w.players[0]?.['pid'] &&
       !(w.is_longturn && w.is_longturn())) {
     w.$.post('/freeciv_time_played_stats?type=multi').fail(function () {});
-  }
-  if (action === 'hotseat') {
-    w.$.post('/freeciv_time_played_stats?type=hotseat').fail(function () {});
-    if (typeof w.send_message === 'function') w.send_message('/metamessage hotseat game');
   }
 }
 

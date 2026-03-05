@@ -62,14 +62,7 @@ export function civClientInit(): void {
   w.$.blockUI.defaults['theme'] = true;
 
   const action = w.$.getUrlVar('action');
-  w.game_type = w.$.getUrlVar('type');
-  if (w.game_type == null) {
-    if (action === 'pbem') {
-      w.game_type = 'pbem';
-    } else {
-      w.game_type = 'singleplayer';
-    }
-  }
+  w.game_type = w.$.getUrlVar('type') ?? 'singleplayer';
 
   if (action === 'observe') {
     w.observing = true;
@@ -97,8 +90,6 @@ export function civClientInit(): void {
   if (typeof w.game_init === 'function') w.game_init();
   w.$('#tabs').tabs({ heightStyle: 'fill' });
   if (typeof w.control_init === 'function') w.control_init();
-  if (typeof w.init_replay === 'function') w.init_replay();
-
   w.timeoutTimerId = setInterval(function () {
     if (typeof w.update_timeout === 'function') w.update_timeout();
   }, 1000);
@@ -108,7 +99,7 @@ export function civClientInit(): void {
   }, 6000);
 
   if (w.overviewTimerId === -1) {
-    w.OVERVIEW_REFRESH = (w.renderer === w.RENDERER_WEBGL) ? 12000 : 6000;
+    w.OVERVIEW_REFRESH = 6000;
     w.overviewTimerId = setInterval(function () {
       if (typeof w.redraw_overview === 'function') w.redraw_overview();
     }, w.OVERVIEW_REFRESH);
@@ -179,10 +170,6 @@ export function initCommonIntroDialog(): void {
       w.show_intro_dialog('Welcome to XBWorld', 'You have joined the game as an observer. Please enter your name:');
     }
     w.$('#turn_done_button').button('option', 'disabled', true);
-  } else if (action === 'pbem') {
-    if (typeof w.show_pbem_dialog === 'function') w.show_pbem_dialog();
-  } else if (action === 'hotseat') {
-    if (typeof w.show_hotseat_dialog === 'function') w.show_hotseat_dialog();
   } else if (w.is_small_screen && w.is_small_screen()) {
     if (w.is_longturn && w.is_longturn()) {
       setTimeout(function () {
@@ -262,9 +249,6 @@ export function initCommonIntroDialog(): void {
         'Creating a user account is optional, but savegame support requires that you create a user account. ' +
         '(<a class=\'pwd_reset\' href=\'#\' style=\'color: #555555;\'>Forgot password?</a>) Have fun! <br>' +
         'Please enter your name: ');
-      w.$('.pwd_reset').click(function () {
-        if (typeof w.forgot_pbem_password === 'function') w.forgot_pbem_password();
-      });
     }
   }
 }
@@ -364,95 +348,10 @@ export function showAuthDialog(packet: any): void {
 // ---------------------------------------------------------------------------
 
 /**
- * Toggles between 2D isometric and 3D WebGL renderer.
+ * Only 2D renderer is supported. This is a no-op stub.
  */
 export function switchRenderer(): void {
-  w.$('#canvas_div').unbind();
-
-  if (w.renderer === w.RENDERER_WEBGL) {
-    // Activate 2D isometric renderer
-    w.renderer = w.RENDERER_2DCANVAS;
-    w.$('#canvas_div').empty();
-    if (typeof w.init_mapview === 'function') w.init_mapview();
-    if (typeof w.set_default_mapview_active === 'function') w.set_default_mapview_active();
-    if (typeof w.update_map_canvas_check === 'function') {
-      requestAnimationFrame(function () { w.update_map_canvas_check(); });
-    }
-    if (typeof w.mapctrl_init_2d === 'function') w.mapctrl_init_2d();
-
-    // Center on first known tile
-    if (w.tiles) {
-      for (const tile_id in w.tiles) {
-        if (typeof w.tile_get_known === 'function' &&
-            w.tile_get_known(w.tiles[tile_id]) === w.TILE_KNOWN_SEEN) {
-          if (typeof w.center_tile_mapcanvas === 'function') w.center_tile_mapcanvas(w.tiles[tile_id]);
-          break;
-        }
-      }
-    }
-
-    // Reset 3D WebGL data
-    if (w.tiles) {
-      for (const tile_id in w.tiles) {
-        w.tiles[tile_id]['height'] = 0;
-      }
-    }
-    w.scene = null;
-    w.heightmap = {};
-    w.unit_positions = {};
-    w.city_positions = {};
-    w.city_label_positions = {};
-    w.city_walls_positions = {};
-    w.unit_flag_positions = {};
-    w.unit_label_positions = {};
-    w.unit_activities_positions = {};
-    w.unit_health_positions = {};
-    w.unit_healthpercentage_positions = {};
-    w.forest_positions = {};
-    w.jungle_positions = {};
-    w.tile_extra_positions = {};
-    w.road_positions = {};
-    w.rail_positions = {};
-    w.river_positions = {};
-    w.tiletype_palette = [];
-    w.meshes = {};
-    w.load_count = 0;
-  } else {
-    // Activate 3D WebGL renderer
-    w.renderer = w.RENDERER_WEBGL;
-    w.load_count = 0;
-    w.mapview_model_width  = Math.floor(w.MAPVIEW_ASPECT_FACTOR * w.map['xsize']);
-    w.mapview_model_height = Math.floor(w.MAPVIEW_ASPECT_FACTOR * w.map['ysize']);
-    if (typeof w.set_default_mapview_active === 'function') w.set_default_mapview_active();
-    if (typeof w.init_webgl_renderer === 'function') w.init_webgl_renderer();
-  }
-
-  // Re-register context menu for the new renderer target
-  if (w.$.contextMenu) {
-    w.$.contextMenu({
-      selector: (w.renderer === w.RENDERER_2DCANVAS) ? '#canvas' : '#canvas_div',
-      zIndex: 5000,
-      autoHide: true,
-      callback: function (key: string) {
-        if (typeof w.handle_context_menu_callback === 'function') w.handle_context_menu_callback(key);
-      },
-      build: function (_$trigger: unknown, _e: unknown) {
-        if (!w.context_menu_active) {
-          w.context_menu_active = true;
-          return false;
-        }
-        const unit_actions = typeof w.update_unit_order_commands === 'function'
-          ? w.update_unit_order_commands()
-          : {};
-        return {
-          callback: function (key: string) {
-            if (typeof w.handle_context_menu_callback === 'function') w.handle_context_menu_callback(key);
-          },
-          items: unit_actions
-        };
-      }
-    });
-  }
+  // 3D WebGL renderer has been removed; only 2D canvas is supported.
 }
 
 // ---------------------------------------------------------------------------

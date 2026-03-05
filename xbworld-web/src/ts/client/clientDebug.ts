@@ -78,9 +78,6 @@ export function showDebugInfo(): void {
     );
   }
 
-  if (win.renderer === RENDERER_WEBGL && win.maprenderer != null) {
-    console.log(win.maprenderer.info);
-  }
 }
 
 // ---------------------------------------------------------------------------

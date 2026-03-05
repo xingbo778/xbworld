@@ -22,11 +22,8 @@ declare const swal: any;
 declare const simpleStorage: any;
 declare const audio: any;
 declare const music_list: string[];
-declare const speech_enabled: boolean;
 declare function send_message(msg: string): void;
-declare function is_pbem(): boolean;
 declare function supports_mp3(): boolean;
-declare function is_speech_supported(): boolean;
 declare const server_settings: any;
 declare const game_info: any;
 declare const TRUE: boolean;
@@ -141,13 +138,9 @@ export function init_options_dialog(): void {
     }
   });
 
-  if (!is_pbem()) {
-    const existing_timeout: number = game_info['timeout'];
-    if (existing_timeout == 0) $("#timeout_info").html("(0 = no timeout)");
-    $("#timeout_setting").val(existing_timeout);
-  } else {
-    $("#timeout_setting_div").hide();
-  }
+  const existing_timeout: number = game_info['timeout'];
+  if (existing_timeout == 0) $("#timeout_info").html("(0 = no timeout)");
+  $("#timeout_setting").val(existing_timeout);
   $('#timeout_setting').change(function(): void {
     const new_timeout: number = parseInt($('#timeout_setting').val());
     if (new_timeout >= 1 && new_timeout <= 29) {
@@ -174,18 +167,8 @@ export function init_options_dialog(): void {
     simpleStorage.set('sndFX', sounds_enabled);
   });
 
-  if (is_speech_supported()) {
-    $('#speech_enabled_setting').prop('checked', speech_enabled);
-    $('#speech_enabled_setting').change(function(): void {
-      // speech_enabled is declared as const, so this assignment may be invalid in TS.
-      // But per instructions, keep logic exactly same.
-      // So we cast to any to allow assignment.
-      (speech_enabled as any) = this.checked;
-    });
-  } else {
-    $('#speech_enabled_setting').attr('disabled', true);
-  }
-
+  // Speech and 3D renderer features removed
+  $('#speech_enabled_setting').attr('disabled', true);
   $("#switch_renderer_button").hide();
   $("#renderer_help").hide();
   $("#update_model_button").hide();

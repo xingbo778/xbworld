@@ -29,7 +29,6 @@ import { show_help } from '../ui/helpdata';
 import { show_load_game_dialog } from '../utils/savegame';
 import { pregame_start_game, pregame_settings, pick_nation } from '../core/pregame';
 import { show_intelligence_report_dialog } from '../ui/intelDialog';
-import { view_game_scores } from '../ui/scorelog';
 import { updateNationScreen as update_nation_screen, showSendPrivateMessageDialog as show_send_private_message_dialog, nationMeetClicked as nation_meet_clicked, centerOnPlayer as center_on_player, cancelTreatyClicked as cancel_treaty_clicked, withdrawVisionClicked as withdraw_vision_clicked, takePlayerClicked as take_player_clicked, toggleAiClicked as toggle_ai_clicked, handleNationTableSelect as handle_nation_table_select } from '../data/nation';
 import { globalEvents } from '../core/events';
 import { logNormal, logError } from '../core/log';
@@ -181,11 +180,7 @@ export function set_is_more_user_input_needed(val: boolean): void { is_more_user
 export function control_init(): void {
   urgent_focus_queue = [];
 
-  if (RENDERER_2DCANVAS) { // Assuming RENDERER_2DCANVAS is a global constant
-    mapctrl_init_2d();
-  } else {
-    init_webgl_mapctrl();
-  }
+  mapctrl_init_2d();
 
   $(document).keydown(global_keyboard_listener);
   $(window).resize(mapview_window_resized);
@@ -258,7 +253,7 @@ export function control_init(): void {
 
   /* disable right clicks. */
   window.addEventListener('contextmenu', function(e: MouseEvent) {
-    if (e.target != null && ((e.target as HTMLElement).id == 'game_text_input' || (e.target as HTMLElement).id == 'overview_map' || (e.target as HTMLElement).id == 'replay_result' || ((e.target as HTMLElement).parentElement != null && (e.target as HTMLElement).parentElement!.id == 'game_message_area'))) return;
+    if (e.target != null && ((e.target as HTMLElement).id == 'game_text_input' || (e.target as HTMLElement).id == 'overview_map' || ((e.target as HTMLElement).parentElement != null && (e.target as HTMLElement).parentElement!.id == 'game_message_area'))) return;
     if (!allow_right_click) e.preventDefault();
   }, false);
 
@@ -367,7 +362,6 @@ export function control_init(): void {
   $('#withdraw_vision_button').click(withdraw_vision_clicked);
   $('#take_player_button').click(take_player_clicked);
   $('#toggle_ai_button').click(toggle_ai_clicked);
-  $('#game_scores_button').click(view_game_scores);
   $('#nations_list').on('click', 'tbody tr', handle_nation_table_select);
 
   /* prevents keyboard input from changing tabs. */
@@ -411,22 +405,6 @@ export function mouse_moved_cb(e: MouseEvent): void {
       touch_start_y = mouse_y;
       update_mouse_cursor();
     }
-  } else if (RENDERER_WEBGL && active_city == null && $("#canvas_div").length) {
-    mouse_x = mouse_x - $("#canvas_div").offset().left;
-    mouse_y = mouse_y - $("#canvas_div").offset().top;
-
-    if (mapview_mouse_movement && !goto_active) {
-      // move the mapview using mouse movement.
-      const spos = webgl_canvas_pos_to_map_pos(touch_start_x, touch_start_y);
-      const epos = webgl_canvas_pos_to_map_pos(mouse_x, mouse_y);
-      if (spos != null && epos != null) {
-        camera_look_at(camera_current_x + spos['x'] - epos['x'], camera_current_y, camera_current_z + spos['y'] - epos['y']);
-      }
-
-      touch_start_x = mouse_x;
-      touch_start_y = mouse_y;
-      update_mouse_cursor();
-    }
   } else if (active_city != null && city_canvas != null
     && $("#city_canvas").length) {
     mouse_x = mouse_x - $("#city_canvas").offset().left;
@@ -458,12 +436,7 @@ export function update_mouse_cursor(): void {
     return;
   }
 
-  let ptile: any;
-  if (RENDERER_2DCANVAS) {
-    ptile = canvas_pos_to_tile(mouse_x, mouse_y);
-  } else {
-    ptile = webgl_canvas_pos_to_tile(mouse_x, mouse_y);
-  }
+  const ptile = canvas_pos_to_tile(mouse_x, mouse_y);
 
   if (ptile == null) return;
 
@@ -1127,7 +1100,6 @@ export function advance_unit_focus(): void {
   } else {
     /* Couldn't center on a unit, then try to center on a city... */
     current_focus = []; /* Reset focus units. */
-    if (RENDERER_WEBGL) webgl_clear_unit_focus();
     update_active_units_dialog();
     $("#game_unit_orders_default").hide();
 
@@ -1539,7 +1511,6 @@ export function set_unit_focus(punit: any): void {
   } else {
     current_focus[0] = punit;
     action_selection_next_in_focus(FC_IDENTITY_NUMBER_ZERO);
-    if (RENDERER_WEBGL) update_unit_position(index_to_tile(punit['tile']));
   }
   update_active_units_dialog();
   update_unit_order_commands();
@@ -1553,11 +1524,9 @@ export function set_unit_focus_and_redraw(punit: any): void {
 
   if (punit == null) {
     current_focus = [];
-    if (RENDERER_WEBGL) webgl_clear_unit_focus();
   } else {
     current_focus[0] = punit;
     action_selection_next_in_focus(FC_IDENTITY_NUMBER_ZERO);
-    if (RENDERER_WEBGL) update_unit_position(index_to_tile(punit['tile']));
   }
 
   auto_center_on_focus_unit();
@@ -2279,7 +2248,6 @@ export function
 
     case 32: // Space, will clear selection and goto.
       current_focus = [];
-      if (renderer == RENDERER_WEBGL) webgl_clear_unit_focus();
       goto_active = false;
       $("#canvas_div").css("cursor", "default");
       goto_request_map = {};
@@ -2290,37 +2258,11 @@ export function
       break;
 
     case 107:
-      //zoom in
-      if (renderer == RENDERER_WEBGL) {
-        let new_camera_dy = camera_dy - 60;
-        let new_camera_dx = camera_dx - 45;
-        let new_camera_dz = camera_dz - 45;
-        if (new_camera_dy < 250 || new_camera_dy > 1300) {
-          return;
-        } else {
-          camera_dx = new_camera_dx;
-          camera_dy = new_camera_dy;
-          camera_dz = new_camera_dz;
-        }
-        camera_look_at(camera_current_x, camera_current_y, camera_current_z);
-      }
+      //zoom in (2D only - no-op)
       break;
 
     case 109:
-      //zoom out
-      if (renderer == RENDERER_WEBGL) {
-        let new_camera_dy = camera_dy + 60;
-        let new_camera_dx = camera_dx + 45;
-        let new_camera_dz = camera_dz + 45;
-        if (new_camera_dy < 250 || new_camera_dy > 1300) {
-          return;
-        } else {
-          camera_dx = new_camera_dx;
-          camera_dy = new_camera_dy;
-          camera_dz = new_camera_dz;
-        }
-        camera_look_at(camera_current_x, camera_current_y, camera_current_z);
-      }
+      //zoom out (2D only - no-op)
       break;
 
   }
@@ -2544,9 +2486,6 @@ export function send_end_turn() {
   sendRequest(JSON.stringify(packet));
   update_turn_change_timer();
 
-  if (is_pbem()) {
-    setTimeout(pbem_end_phase, 2000);
-  }
   if (is_longturn()) {
     show_dialog_message("Turn done!",
       "Your turn in this Freeciv-web: One Turn per Day game is now over. In this game one turn is played every day. " +
@@ -3256,11 +3195,7 @@ export function check_request_goto_path() {
     && prev_mouse_x == mouse_x && prev_mouse_y == mouse_y) {
     let ptile: any;
     clear_goto_tiles();
-    if (renderer == RENDERER_2DCANVAS) {
-      ptile = canvas_pos_to_tile(mouse_x, mouse_y);
-    } else {
-      ptile = webgl_canvas_pos_to_tile(mouse_x, mouse_y);
-    }
+    ptile = canvas_pos_to_tile(mouse_x, mouse_y);
     if (ptile != null) {
       /* Send request for goto_path to server. */
       for (let i = 0; i < current_focus.length; i++) {
@@ -3282,21 +3217,17 @@ export function update_goto_path(goto_packet: any) {
   let ptile = t0;
   const goaltile = index_to_tile(goto_packet['dest']);
 
-  if (renderer == RENDERER_2DCANVAS) {
-    for (let i = 0; i < goto_packet['dir'].length; i++) {
-      if (ptile == null) break;
-      const dir = goto_packet['dir'][i];
+  for (let i = 0; i < goto_packet['dir'].length; i++) {
+    if (ptile == null) break;
+    const dir = goto_packet['dir'][i];
 
-      if (dir == -1) {
-        /* Assume that this means refuel. */
-        continue;
-      }
-
-      ptile['goto_dir'] = dir;
-      ptile = mapstep(ptile, dir);
+    if (dir == -1) {
+      /* Assume that this means refuel. */
+      continue;
     }
-  } else {
-    webgl_render_goto_line(ptile, goto_packet['dir']);
+
+    ptile['goto_dir'] = dir;
+    ptile = mapstep(ptile, dir);
   }
 
   current_goto_turns = goto_packet['turns'];
@@ -3317,11 +3248,7 @@ export function update_goto_path(goto_packet: any) {
   Centers the mapview around the given tile..
 **************************************************************************/
 export function center_tile_mapcanvas(ptile: any) {
-  if (renderer == RENDERER_2DCANVAS) {
-    center_tile_mapcanvas_2d(ptile);
-  } else {
-    center_tile_mapcanvas_3d(ptile);
-  }
+  center_tile_mapcanvas_2d(ptile);
 }
 
 /**************************************************************************
@@ -3330,11 +3257,7 @@ export function center_tile_mapcanvas(ptile: any) {
 export function popit() {
   let ptile: any;
 
-  if (renderer == RENDERER_2DCANVAS) {
-    ptile = canvas_pos_to_tile(mouse_x, mouse_y);
-  } else {
-    ptile = webgl_canvas_pos_to_tile(mouse_x, mouse_y);
-  }
+  ptile = canvas_pos_to_tile(mouse_x, mouse_y);
 
   if (ptile == null) return;
 
@@ -3474,9 +3397,6 @@ export function update_active_units_dialog() {
     if (game_unit_panel_state == "minimized") $("#game_unit_panel").dialogExtend("minimize");
   } else {
     $("#game_unit_panel").parent().hide();
-    if (renderer == RENDERER_WEBGL) {
-      webgl_clear_unit_focus();
-    }
   }
   $("#active_unit_info").tooltip();
 }

@@ -207,18 +207,10 @@ export function generate_overview_hash(cols: number, rows: number): number {
     }
   }
 
-  if (renderer == RENDERER_2DCANVAS) {
-    const r: any = base_canvas_to_map_pos(0, 0);
-    if (r != null) {
-      hash += r['map_x'];
-      hash += r['map_y'];
-    }
-  } else {
-    const ptile: any = webgl_canvas_pos_to_tile($(window).width() / 6, $(window).height() / 6);
-    if (ptile != null) {
-      hash += ptile['x'];
-      hash += ptile['y'];
-    }
+  const r: any = base_canvas_to_map_pos(0, 0);
+  if (r != null) {
+    hash += r['map_x'];
+    hash += r['map_y'];
   }
   return hash;
 }
@@ -231,7 +223,7 @@ export function render_viewrect(): void {
 
   const path: number[][] = [];
 
-  if (renderer == RENDERER_2DCANVAS && mapview['gui_x0'] != 0 && mapview['gui_y0'] != 0) {
+  if (mapview['gui_x0'] != 0 && mapview['gui_y0'] != 0) {
 
     let point: any = base_canvas_to_map_pos(0, 0);
     path.push([point.map_x, point.map_y]);
@@ -241,24 +233,6 @@ export function render_viewrect(): void {
     path.push([point.map_x, point.map_y]);
     point = base_canvas_to_map_pos(0, mapview['height']);
     path.push([point.map_x, point.map_y]);
-
-  } else {
-
-    const w: number = $(window).width();
-    const h: number = $(window).height();
-
-    let ptile: any = webgl_canvas_pos_to_tile(w / 6, h / 6);
-    if (ptile == null) return;
-    path.push([ptile.x, ptile.y]);
-    ptile = webgl_canvas_pos_to_tile(5 * w / 6, h / 6);
-    if (ptile == null) return;
-    path.push([ptile.x, ptile.y]);
-    ptile = webgl_canvas_pos_to_tile(5 * w / 6, h - height_offset);
-    if (ptile == null) return;
-    path.push([ptile.x, ptile.y]);
-    ptile = webgl_canvas_pos_to_tile(w / 6, h - height_offset);
-    if (ptile == null) return;
-    path.push([ptile.x, ptile.y]);
 
   }
 

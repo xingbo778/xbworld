@@ -166,11 +166,7 @@ export function init_sprites(): void {
     }
   } else {
     // already loaded
-    if (renderer == RENDERER_WEBGL) {
-      webgl_preload();
-    } else {
-      $.unblockUI();
-    }
+    $.unblockUI();
   }
 
 }
@@ -183,11 +179,7 @@ export function preload_check(): void {
 
   if (loaded_images == tileset_image_count) {
     init_cache_sprites();
-    if (renderer == RENDERER_WEBGL) {
-      webgl_preload();
-    } else {
-      $.unblockUI();
-    }
+    $.unblockUI();
   }
 }
 

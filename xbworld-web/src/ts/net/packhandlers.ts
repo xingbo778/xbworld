@@ -135,8 +135,8 @@ export function handle_calendar_info(packet: any): void {
   w.calendar_info = packet;
 }
 
-export function handle_spaceship_info(packet: any): void {
-  w.spaceship_info[packet['player_num']] = packet;
+export function handle_spaceship_info(_packet: any): void {
+  // spaceship/spacerace feature removed
 }
 
 export function handle_ruleset_effect(packet: any): void {
@@ -354,17 +354,7 @@ export function handle_server_join_reply(packet: any): void {
       w.change_ruleset(urlRuleset);
     }
 
-    if (w.renderer === w.RENDERER_WEBGL && !w.observing) {
-      w.send_message('/set wetness 25');
-      w.send_message('/set topology=');
-      w.send_message('/set wrap=');
-      w.send_message('/set steepness 12');
-    }
-
     if (w.autostart) {
-      if (w.renderer === w.RENDERER_WEBGL) {
-        w.$.blockUI({ message: '<h2>Generating terrain map model...</h2>' });
-      }
       if (w.loadTimerId === -1) {
         w.wait_for_text('You are logged in as', w.pregame_start_game);
       } else {
@@ -414,12 +404,6 @@ export function handle_conn_info(packet: any): void {
 export function handle_tile_info(packet: any): void {
   if (w.tiles != null) {
     packet['extras'] = new w.BitVector(packet['extras']);
-
-    if (w.renderer === w.RENDERER_WEBGL) {
-      const old_tile = Object.assign({}, w.tiles[packet['tile']]);
-      w.webgl_update_tile_known(w.tiles[packet['tile']], packet);
-      w.update_tile_extras(Object.assign(old_tile, packet));
-    }
 
     Object.assign(w.tiles[packet['tile']], packet);
 
@@ -606,10 +590,6 @@ export function handle_map_info(packet: any): void {
   w.map_allocate();
   w.mapdeco_init();
 
-  if (w.renderer === w.RENDERER_WEBGL) {
-    w.mapview_model_width = Math.floor(w.MAPVIEW_ASPECT_FACTOR * w.map['xsize']);
-    w.mapview_model_height = Math.floor(w.MAPVIEW_ASPECT_FACTOR * w.map['ysize']);
-  }
 }
 
 export function handle_authentication_req(packet: any): void {
@@ -620,11 +600,7 @@ export function handle_server_shutdown(_packet: any): void { /* TODO */ }
 
 export function handle_nuke_tile_info(packet: any): void {
   const ptile = w.index_to_tile(packet['tile']);
-  if (w.renderer === w.RENDERER_WEBGL) {
-    w.render_nuclear_explosion(ptile);
-  } else {
-    ptile['nuke'] = 60;
-  }
+  ptile['nuke'] = 60;
   w.play_sound('LrgExpl.ogg');
 }
 
@@ -682,10 +658,6 @@ export function handle_unit_remove(packet: any): void {
 
   w.clear_tile_unit(punit);
   w.client_remove_unit(punit);
-
-  if (w.renderer === w.RENDERER_WEBGL) {
-    w.update_unit_position(w.index_to_tile(punit['tile']));
-  }
 }
 
 export function handle_unit_info(packet: any): void {
@@ -824,10 +796,6 @@ export function handle_unit_packet_common(packet_unit: any): void {
     }
   }
 
-  if (w.renderer === w.RENDERER_WEBGL) {
-    if (punit != null) w.update_unit_position(old_tile);
-    w.update_unit_position(w.index_to_tile(w.units[packet_unit['id']]['tile']));
-  }
 }
 
 export function handle_unit_combat_info(packet: any): void {
@@ -836,16 +804,11 @@ export function handle_unit_combat_info(packet: any): void {
   const attacker_hp = packet['attacker_hp'];
   const defender_hp = packet['defender_hp'];
 
-  if (w.renderer === w.RENDERER_WEBGL) {
-    if (attacker_hp === 0) w.animate_explosion_on_tile(attacker['tile'], 0);
-    if (defender_hp === 0) w.animate_explosion_on_tile(defender['tile'], 0);
-  } else {
-    if (attacker_hp === 0 && w.is_unit_visible(attacker)) {
-      w.explosion_anim_map[attacker['tile']] = 25;
-    }
-    if (defender_hp === 0 && w.is_unit_visible(defender)) {
-      w.explosion_anim_map[defender['tile']] = 25;
-    }
+  if (attacker_hp === 0 && w.is_unit_visible(attacker)) {
+    w.explosion_anim_map[attacker['tile']] = 25;
+  }
+  if (defender_hp === 0 && w.is_unit_visible(defender)) {
+    w.explosion_anim_map[defender['tile']] = 25;
   }
 }
 
@@ -956,7 +919,6 @@ export function handle_unit_actions(packet: any): void {
 }
 
 export function handle_diplomacy_init_meeting(packet: any): void {
-  if (w.is_hotseat() && packet['initiated_from'] !== w.client.conn.playing['playerno']) return;
   w.diplomacy_clause_map[packet['counterpart']] = [];
   w.show_diplomacy_dialog(packet['counterpart']);
   w.show_diplomacy_clauses(packet['counterpart']);
@@ -1014,19 +976,12 @@ export function handle_conn_ping_info(packet: any): void {
 
 export function handle_end_phase(_packet: any): void {
   w.chatbox_clip_messages();
-  if (w.is_pbem()) {
-    w.pbem_end_phase();
-  }
-  if (w.is_hotseat()) {
-    w.hotseat_next_player();
-  }
 }
 
 export function handle_start_phase(_packet: any): void {
   w.set_client_state(w.C_S_RUNNING);
   w.set_phase_start();
   w.saved_this_turn = false;
-  w.add_replay_frame();
 }
 
 export function handle_ruleset_control(packet: any): void {

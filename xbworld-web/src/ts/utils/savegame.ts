@@ -26,7 +26,6 @@ declare const logged_in_with_password: boolean;
 declare let keyboard_input: boolean;
 declare const send_message: (msg: string) => void;
 declare const is_small_screen: () => boolean;
-declare const is_pbem: () => boolean;
 declare const message_log: any;
 declare const E_SCRIPT: any;
 declare const E_LOG_ERROR: any;
@@ -37,8 +36,6 @@ declare const wait_for_text: (text: string, callback: () => void) => void;
 declare const players: any[];
 declare let metamessage_changed: boolean;
 declare let loaded_game_type: string;
-declare let hotseat_enabled: boolean;
-declare const show_map_from_image_dialog: () => void;
 declare const $id: (id: string) => any;
 // $.getUrlVar is a jQuery plugin, accessed via ($ as any).getUrlVar()
 
@@ -105,11 +102,6 @@ export function save_game(): void
 				}
 			});
 
-  if (is_pbem()) {
-    swal("Play-By-Email games can not be saved. Please use the end turn button.");
-    return;
-  }
-
   $("#save_dialog").dialog('open');
   saved_this_turn = true;
 }
@@ -119,11 +111,6 @@ export function save_game(): void
 **************************************************************************/
 export function quicksave(): void
 {
-  if (is_pbem()) {
-    swal("Play-By-Email games can not be saved. Please use the end turn button.");
-    return;
-  }
-
   if (saved_this_turn) {
     swal("You have already saved this turn, and you can only save once every turn each game-session.");
     return;
@@ -380,9 +367,6 @@ export function set_metamessage_on_loaded_game(game_type: string): void
     metamessage_changed = true;
     send_message("/metamessage Multiplayer game loaded by " + username);
     loaded_game_type = game_type;
-  } else if (game_type == "hotseat") {
-    hotseat_enabled = true;
-    loaded_game_type = game_type;
   }
 
 }
@@ -451,10 +435,6 @@ export function show_scenario_dialog(): void
 			buttons: {
                                 "Cancel" : function() {
 					$("#dialog").dialog('close');
-                                },
-                                "Create map from image upload.." : function() {
-                                  $("#dialog").dialog('close');
-                                  show_map_from_image_dialog();
                                 },
 	  			"Select scenario": function() {
 	  			    if ($('#selectable .ui-selected').index() == -1) {

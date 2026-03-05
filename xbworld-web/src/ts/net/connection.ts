@@ -150,8 +150,6 @@ export function websocket_init(): void {
     try { w.$('#turn_done_button').button('option', 'disabled', true); } catch (_e) { /* ok */ }
     try { w.$('#save_button').button('option', 'disabled', true); } catch (_e) { /* ok */ }
 
-    if (typeof w.pbem_phase_ended !== 'undefined') w.pbem_phase_ended = true;
-
     w.$(window).unbind('beforeunload');
 
     if (ping_timer) clearInterval(ping_timer);

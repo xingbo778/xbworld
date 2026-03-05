@@ -76,7 +76,6 @@ export function client_remove_unit(punit: Unit): void {
 
   if (unit_is_in_focus(punit)) {
     current_focus = [];
-    if (renderer === RENDERER_WEBGL) webgl_clear_unit_focus();
   }
 
   delete units[punit.id];
@@ -250,10 +249,6 @@ export function update_unit_anim_list(old_unit: Unit | null, new_unit: Unit | nu
 export function get_unit_anim_offset(punit: Unit): { x: number; y: number } {
   const offset = { x: 0, y: 0 };
 
-  if (renderer === RENDERER_WEBGL) {
-    return offset;
-  }
-
   const animList: AnimTuple[] | null = (punit as any)['anim_list'];
 
   if (animList != null && animList.length >= 2) {
@@ -323,7 +318,6 @@ export function get_unit_homecity_name(punit: Unit): string | null {
 
 export function is_unit_visible(punit: Unit | null): boolean {
   if (punit == null || punit.tile == null) return false;
-  if (renderer === RENDERER_WEBGL) return false;
 
   const u_tile = index_to_tile(punit.tile);
   const r = map_to_gui_pos(u_tile['x'], u_tile['y']);

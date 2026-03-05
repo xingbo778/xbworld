@@ -28,24 +28,6 @@ w['play_sound'] = play_sound;
 w['sound_error_handler'] = sound_error_handler;
 w['sound_path'] = sound_path;
 
-import {
-  filter_speech_messages,
-  is_speech_supported,
-  load_voices,
-  speak,
-  speak_unfiltered,
-  speech_enabled,
-  speech_synth,
-  voice,
-} from './audio/speech';
-w['is_speech_supported'] = is_speech_supported;
-w['speak'] = speak;
-w['speak_unfiltered'] = speak_unfiltered;
-w['speech_synth'] = speech_synth;
-w['filter_speech_messages'] = filter_speech_messages;
-w['load_voices'] = load_voices;
-w['speech_enabled'] = speech_enabled;
-w['voice'] = voice;
 
 // --- client ---
 import {
@@ -675,7 +657,6 @@ import {
   cityOwnerPlayerId,
   cityPopulation,
   cityTile,
-  cityTo3dModelName,
   cityTurnsToBuild,
   cityTurnsToGrowthText,
   cityUnhappy,
@@ -688,7 +669,6 @@ import {
   getCityProductionType,
   getCityProductionTypeSprite,
   getCityTileMapForPos,
-  getCitywallsScale,
   getProductionProgress,
   isCityCenter,
   isFreeWorked,
@@ -768,10 +748,6 @@ w['get_city_tile_map_for_pos'] = getCityTileMapForPos;
 w['getCityTileMapForPos'] = getCityTileMapForPos;
 w['show_city_traderoutes'] = showCityTraderoutes;
 w['showCityTraderoutes'] = showCityTraderoutes;
-w['city_to_3d_model_name'] = cityTo3dModelName;
-w['cityTo3dModelName'] = cityTo3dModelName;
-w['get_citywalls_scale'] = getCitywallsScale;
-w['getCitywallsScale'] = getCitywallsScale;
 
 import {
   BASE_GUI_AIRBASE,
@@ -2283,9 +2259,6 @@ w['REPORT_TOP_CITIES'] = REPORT_TOP_CITIES;
 w['REPORT_DEMOGRAPHIC'] = REPORT_DEMOGRAPHIC;
 w['REPORT_ACHIEVEMENTS'] = REPORT_ACHIEVEMENTS;
 
-import { submit_game_to_hall_of_fame, submitted_to_hof } from './ui/hallOfFame';
-w['submit_game_to_hall_of_fame'] = submit_game_to_hall_of_fame;
-w['submitted_to_hof'] = submitted_to_hof;
 
 import {
   find_parent_help_key,
@@ -2316,62 +2289,12 @@ w['helpdata_tag_to_title'] = helpdata_tag_to_title;
 w['toplevel_menu_items'] = toplevel_menu_items;
 w['hidden_menu_items'] = hidden_menu_items;
 
-import {
-  add_hotseat_password,
-  add_hotseat_player,
-  hotseat_active_player,
-  hotseat_enabled,
-  hotseat_load_refresh,
-  hotseat_next_player,
-  hotseat_players,
-  hotseat_pwd,
-  is_hotseat,
-  new_hotseat_game,
-  num_hotseat_players,
-  setup_hotseat_game,
-  show_hotseat_dialog,
-  show_hotseat_new_phase,
-  validate_hotseat_username,
-} from './ui/hotseat';
-w['show_hotseat_dialog'] = show_hotseat_dialog;
-w['new_hotseat_game'] = new_hotseat_game;
-w['setup_hotseat_game'] = setup_hotseat_game;
-w['validate_hotseat_username'] = validate_hotseat_username;
-w['add_hotseat_player'] = add_hotseat_player;
-w['is_hotseat'] = is_hotseat;
-w['hotseat_next_player'] = hotseat_next_player;
-w['show_hotseat_new_phase'] = show_hotseat_new_phase;
-w['add_hotseat_password'] = add_hotseat_password;
-w['hotseat_load_refresh'] = hotseat_load_refresh;
-w['num_hotseat_players'] = num_hotseat_players;
-w['hotseat_players'] = hotseat_players;
-w['hotseat_active_player'] = hotseat_active_player;
-w['hotseat_enabled'] = hotseat_enabled;
-w['hotseat_pwd'] = hotseat_pwd;
 
 import { show_intelligence_report_dialog, show_intelligence_report_embassy, show_intelligence_report_hearsay } from './ui/intelDialog';
 w['show_intelligence_report_dialog'] = show_intelligence_report_dialog;
 w['show_intelligence_report_hearsay'] = show_intelligence_report_hearsay;
 w['show_intelligence_report_embassy'] = show_intelligence_report_embassy;
 
-import {
-  doImage,
-  get_map_terrain_type,
-  handle_image_ctx,
-  handle_map_image_upload,
-  pixel_color,
-  process_image,
-  show_map_from_image_dialog,
-  zeroFill,
-} from './ui/mapFromImage';
-w['show_map_from_image_dialog'] = show_map_from_image_dialog;
-w['handle_map_image_upload'] = handle_map_image_upload;
-w['doImage'] = doImage;
-w['handle_image_ctx'] = handle_image_ctx;
-w['process_image'] = process_image;
-w['zeroFill'] = zeroFill;
-w['get_map_terrain_type'] = get_map_terrain_type;
-w['pixel_color'] = pixel_color;
 
 import {
   ai_manual_turn_done,
@@ -2575,41 +2498,7 @@ w['freeze'] = freeze;
 w['government_list'] = government_list;
 w['current_government'] = current_government;
 
-import { get_scorelog_name, handle_scorelog, view_game_scores } from './ui/scorelog';
-w['view_game_scores'] = view_game_scores;
-w['handle_scorelog'] = handle_scorelog;
-w['get_scorelog_name'] = get_scorelog_name;
 
-import {
-  SSHIP_ARRIVED,
-  SSHIP_LAUNCHED,
-  SSHIP_NONE,
-  SSHIP_PLACE_FUEL,
-  SSHIP_PLACE_HABITATION,
-  SSHIP_PLACE_LIFE_SUPPORT,
-  SSHIP_PLACE_PROPULSION,
-  SSHIP_PLACE_SOLAR_PANELS,
-  SSHIP_PLACE_STRUCTURAL,
-  SSHIP_STARTED,
-  get_spaceship_state_text,
-  launch_spaceship,
-  show_spaceship_dialog,
-  spaceship_info,
-} from './ui/spacerace';
-w['show_spaceship_dialog'] = show_spaceship_dialog;
-w['launch_spaceship'] = launch_spaceship;
-w['get_spaceship_state_text'] = get_spaceship_state_text;
-w['spaceship_info'] = spaceship_info;
-w['SSHIP_NONE'] = SSHIP_NONE;
-w['SSHIP_STARTED'] = SSHIP_STARTED;
-w['SSHIP_LAUNCHED'] = SSHIP_LAUNCHED;
-w['SSHIP_ARRIVED'] = SSHIP_ARRIVED;
-w['SSHIP_PLACE_STRUCTURAL'] = SSHIP_PLACE_STRUCTURAL;
-w['SSHIP_PLACE_FUEL'] = SSHIP_PLACE_FUEL;
-w['SSHIP_PLACE_PROPULSION'] = SSHIP_PLACE_PROPULSION;
-w['SSHIP_PLACE_HABITATION'] = SSHIP_PLACE_HABITATION;
-w['SSHIP_PLACE_LIFE_SUPPORT'] = SSHIP_PLACE_LIFE_SUPPORT;
-w['SSHIP_PLACE_SOLAR_PANELS'] = SSHIP_PLACE_SOLAR_PANELS;
 
 import {
   AR_ONE,
@@ -2776,20 +2665,6 @@ w['civclient_benchmark'] = civclient_benchmark;
 import { orientation_changed } from './utils/mobile';
 w['orientation_changed'] = orientation_changed;
 
-import {
-  add_replay_frame,
-  init_replay,
-  replay_enabled,
-  replay_gif,
-  show_replay,
-  show_replay_dialog,
-} from './utils/replay';
-w['init_replay'] = init_replay;
-w['add_replay_frame'] = add_replay_frame;
-w['show_replay'] = show_replay;
-w['show_replay_dialog'] = show_replay_dialog;
-w['replay_enabled'] = replay_enabled;
-w['replay_gif'] = replay_gif;
 
 import {
   delete_all_savegames,
