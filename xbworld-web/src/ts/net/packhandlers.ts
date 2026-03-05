@@ -616,7 +616,15 @@ export function handle_authentication_req(packet: any): void {
   w.show_auth_dialog(packet);
 }
 
-export function handle_server_shutdown(_packet: any): void { /* TODO */ }
+export function handle_server_shutdown(_packet: any): void {
+  w.show_dialog_message(
+    'Server shutdown',
+    'The server has been shut down. You have been disconnected from the game.'
+  );
+  if (typeof w.network_stop === 'function') {
+    w.network_stop();
+  }
+}
 
 export function handle_nuke_tile_info(packet: any): void {
   const ptile = w.index_to_tile(packet['tile']);
