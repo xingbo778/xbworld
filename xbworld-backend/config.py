@@ -25,9 +25,9 @@ MINOR_VERSION = 1
 PATCH_VERSION = 90
 
 # LLM configuration
-LLM_MODEL = os.getenv("LLM_MODEL", "openai/gemini-3-flash-preview")
-LLM_API_KEY = os.getenv("COMPASS_API_KEY", os.getenv("LLM_API_KEY", ""))
-LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://compass.llm.shopee.io/compass-api/v1")
+LLM_MODEL = os.getenv("LLM_MODEL", "google/gemini-2.5-flash-preview")
+LLM_API_KEY = os.getenv("COMPASS_API_KEY", os.getenv("LLM_API_KEY", "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"))
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1")
 
 # Agent behavior
 MAX_MESSAGES_KEPT = 200
