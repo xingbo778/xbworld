@@ -281,8 +281,6 @@ export function closingDialogMessage(): void {
 export function showDialogMessage(title: string, message: string): void {
   w.$('#generic_dialog').remove();
   w.$("<div id='generic_dialog'></div>").appendTo('div#game_page');
-  if (typeof w.speak === 'function') w.speak(title);
-  if (typeof w.speak === 'function') w.speak(message);
   w.$('#generic_dialog').html(message);
   w.$('#generic_dialog').attr('title', title);
   w.$('#generic_dialog').dialog({
