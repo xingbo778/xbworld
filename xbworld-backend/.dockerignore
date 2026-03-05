@@ -1,12 +1,32 @@
-.git
-.github
-.venv
-__pycache__
+# Git
+.git/
+.gitmodules
+
+# Python
+.venv/
 *.pyc
+__pycache__/
+
+# Logs
 logs/
-freeciv/build/
-data/savegames/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
 .DS_Store
-*.md
-!README.md
+Thumbs.db
+
+# Test files
 test_*.py
+
+# Docker
+docker-compose*.yml
+
+# Runtime data
+data/savegames/
